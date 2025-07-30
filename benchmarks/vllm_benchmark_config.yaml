@@ -1,0 +1,214 @@
+# vLLM Benchmark Configuration
+
+# Model to benchmark
+
+
+# Generated test configurations
+test:
+  baseline:
+    name: exp_1000p_25r_0.0t_sharegpt
+    description: Basic vLLM performance test
+    model: Qwen/Qwen2.5-0.5B
+    runs: 1
+    vllm:
+      gpu_memory_utilization: 0.9
+      enable_prefix_caching: true
+      disable_log_requests: false
+      block_size: 16
+      max_model_len: 2048
+      max_num_batched_tokens: 2048
+      max_num_seqs: 256
+      long_prefill_token_threshold: 1000000
+      seed: 42
+    benchmark:
+      backend: vllm
+      dataset_name: sharegpt
+      dataset_path: ShareGPT_V3_unfiltered_cleaned_split.json
+      num_prompts: 1000
+      request_rate: 25
+      temperature: 0.0
+      seed: 42
+  baseline2:
+    name: exp_1000p_30r_0.0t_sharegpt
+    description: Basic vLLM performance test
+    model: Qwen/Qwen2.5-0.5B
+    runs: 1
+    vllm:
+      gpu_memory_utilization: 0.9
+      enable_prefix_caching: true
+      disable_log_requests: false
+      block_size: 16
+      max_model_len: 2048
+      max_num_batched_tokens: 2048
+      max_num_seqs: 256
+      long_prefill_token_threshold: 1000000
+      seed: 42
+    benchmark:
+      backend: vllm
+      dataset_name: sharegpt
+      dataset_path: ShareGPT_V3_unfiltered_cleaned_split.json
+      num_prompts: 1000
+      request_rate: 30
+      temperature: 0.0
+      seed: 42
+  baseline3:
+    name: exp_1000p_38r_0.0t_sharegpt
+    description: Basic vLLM performance test
+    model: Qwen/Qwen2.5-0.5B
+    runs: 1
+    vllm:
+      gpu_memory_utilization: 0.9
+      enable_prefix_caching: true
+      disable_log_requests: false
+      block_size: 16
+      max_model_len: 2048
+      max_num_batched_tokens: 2048
+      max_num_seqs: 256
+      long_prefill_token_threshold: 1000000
+      seed: 42
+    benchmark:
+      backend: vllm
+      dataset_name: sharegpt
+      dataset_path: ShareGPT_V3_unfiltered_cleaned_split.json
+      num_prompts: 1000
+      request_rate: 38
+      temperature: 0.0
+      seed: 42
+  baseline4:
+    name: exp_5000p_25r_0.0t_sharegpt
+    description: Basic vLLM performance test
+    model: Qwen/Qwen2.5-0.5B
+    runs: 1
+    vllm:
+      gpu_memory_utilization: 0.9
+      enable_prefix_caching: true
+      disable_log_requests: false
+      block_size: 16
+      max_model_len: 2048
+      max_num_batched_tokens: 2048
+      max_num_seqs: 256
+      long_prefill_token_threshold: 1000000
+      seed: 42
+    benchmark:
+      backend: vllm
+      dataset_name: sharegpt
+      dataset_path: ShareGPT_V3_unfiltered_cleaned_split.json
+      num_prompts: 5000
+      request_rate: 25
+      temperature: 0.0
+      seed: 42
+  baseline5:
+    name: exp_5000p_30r_0.0t_sharegpt
+    description: Basic vLLM performance test
+    model: Qwen/Qwen2.5-0.5B
+    runs: 1
+    vllm:
+      gpu_memory_utilization: 0.9
+      enable_prefix_caching: true
+      disable_log_requests: false
+      block_size: 16
+      max_model_len: 2048
+      max_num_batched_tokens: 2048
+      max_num_seqs: 256
+      long_prefill_token_threshold: 1000000
+      seed: 42
+    benchmark:
+      backend: vllm
+      dataset_name: sharegpt
+      dataset_path: ShareGPT_V3_unfiltered_cleaned_split.json
+      num_prompts: 5000
+      request_rate: 30
+      temperature: 0.0
+      seed: 42
+  baseline6:
+    name: exp_5000p_38r_0.0t_sharegpt
+    description: Basic vLLM performance test
+    model: Qwen/Qwen2.5-0.5B
+    runs: 1
+    vllm:
+      gpu_memory_utilization: 0.9
+      enable_prefix_caching: true
+      disable_log_requests: false
+      block_size: 16
+      max_model_len: 2048
+      max_num_batched_tokens: 2048
+      max_num_seqs: 256
+      long_prefill_token_threshold: 1000000
+      seed: 42
+    benchmark:
+      backend: vllm
+      dataset_name: sharegpt
+      dataset_path: ShareGPT_V3_unfiltered_cleaned_split.json
+      num_prompts: 5000
+      request_rate: 38
+      temperature: 0.0
+      seed: 42
+  baseline7:
+    name: exp_10000p_25r_0.0t_sharegpt
+    description: Basic vLLM performance test
+    model: Qwen/Qwen2.5-0.5B
+    runs: 1
+    vllm:
+      gpu_memory_utilization: 0.9
+      enable_prefix_caching: true
+      disable_log_requests: false
+      block_size: 16
+      max_model_len: 2048
+      max_num_batched_tokens: 2048
+      max_num_seqs: 256
+      long_prefill_token_threshold: 1000000
+      seed: 42
+    benchmark:
+      backend: vllm
+      dataset_name: sharegpt
+      dataset_path: ShareGPT_V3_unfiltered_cleaned_split.json
+      num_prompts: 10000
+      request_rate: 25
+      temperature: 0.0
+      seed: 42
+  baseline8:
+    name: exp_10000p_30r_0.0t_sharegpt
+    description: Basic vLLM performance test
+    model: Qwen/Qwen2.5-0.5B
+    runs: 1
+    vllm:
+      gpu_memory_utilization: 0.9
+      enable_prefix_caching: true
+      disable_log_requests: false
+      block_size: 16
+      max_model_len: 2048
+      max_num_batched_tokens: 2048
+      max_num_seqs: 256
+      long_prefill_token_threshold: 1000000
+      seed: 42
+    benchmark:
+      backend: vllm
+      dataset_name: sharegpt
+      dataset_path: ShareGPT_V3_unfiltered_cleaned_split.json
+      num_prompts: 10000
+      request_rate: 30
+      temperature: 0.0
+      seed: 42
+  baseline9:
+    name: exp_10000p_38r_0.0t_sharegpt
+    description: Basic vLLM performance test
+    model: Qwen/Qwen2.5-0.5B
+    runs: 1
+    vllm:
+      gpu_memory_utilization: 0.9
+      enable_prefix_caching: true
+      disable_log_requests: false
+      block_size: 16
+      max_model_len: 2048
+      max_num_batched_tokens: 2048
+      max_num_seqs: 256
+      long_prefill_token_threshold: 1000000
+      seed: 42
+    benchmark:
+      backend: vllm
+      dataset_name: sharegpt
+      dataset_path: ShareGPT_V3_unfiltered_cleaned_split.json
+      num_prompts: 10000
+      request_rate: 38
+      temperature: 0.0
+      seed: 42

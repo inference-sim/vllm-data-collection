@@ -41,6 +41,7 @@ class RequestFuncOutput:
     generated_text: str = ""
     success: bool = False
     latency: float = 0.0
+    endtime: float = 0.0  # End time of the request
     output_tokens: int = 0
     ttft: float = 0.0  # Time to first token
     itl: list[float] = field(default_factory=list)  # list of inter-token latencies
@@ -289,6 +290,7 @@ async def async_request_openai_completions(
 
         generated_text = ""
         st = time.perf_counter()
+        # print(f"Sending API request at timestamp: {st}")
         most_recent_timestamp = st
         try:
             async with session.post(
@@ -302,6 +304,7 @@ async def async_request_openai_completions(
                             continue
 
                         chunk = chunk_bytes.decode("utf-8").removeprefix("data: ")
+                        finish_time = 0
                         if chunk != "[DONE]":
                             data = json.loads(chunk)
 
@@ -318,6 +321,9 @@ async def async_request_openai_completions(
                                     first_chunk_received = True
                                     ttft = time.perf_counter() - st
                                     output.ttft = ttft
+                                    # print(
+                                    #     f"First token received at timestamp: {timestamp}"
+                                    # )
 
                                 # Decoding phase
                                 else:
@@ -327,6 +333,7 @@ async def async_request_openai_completions(
                                 generated_text += text or ""
                             if usage := data.get("usage"):
                                 output.output_tokens = usage.get("completion_tokens")
+                        
                     if first_chunk_received:
                         output.success = True
                     else:
@@ -336,6 +343,7 @@ async def async_request_openai_completions(
                             "This response will be marked as failed!"
                         )
                     output.generated_text = generated_text
+                    output.endtime = most_recent_timestamp
                     output.latency = most_recent_timestamp - st
                 else:
                     output.error = response.reason or ""
@@ -404,14 +412,8 @@ async def async_request_openai_chat_completions(
                         chunk_bytes = chunk_bytes.strip()
                         if not chunk_bytes:
                             continue
-                        chunk_bytes = chunk_bytes.decode("utf-8")
-                        # NOTE: SSE comments (often used as pings) start with a colon.
-                        # These are not JSON data payload and should be skipped.
-                        if chunk_bytes.startswith(":"):
-                            continue
 
-                        chunk = chunk_bytes.removeprefix("data: ")
-
+                        chunk = chunk_bytes.decode("utf-8").removeprefix("data: ")
                         if chunk != "[DONE]":
                             timestamp = time.perf_counter()
                             data = json.loads(chunk)
