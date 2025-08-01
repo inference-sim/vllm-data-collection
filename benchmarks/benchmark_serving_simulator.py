@@ -712,6 +712,7 @@ def save_to_pytorch_benchmark_format(
 
 
 def main(args: argparse.Namespace):
+    print ("Calling simulator benchmark_serving.py")
     print(args)
     random.seed(args.seed)
     np.random.seed(args.seed)

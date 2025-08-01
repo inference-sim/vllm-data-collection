@@ -1,23 +1,26 @@
-#!/usr/bin/env python3
-"""
-Simple vLLM Benchmark Runner
-"""
-
+from datetime import datetime
 import argparse
+import json
 import os
+import requests
 import subprocess
 import time
-import yaml
-import requests
 from pathlib import Path
-from datetime import datetime
-import json
 
+def download_dataset(url, filename):
+    if not os.path.exists(filename):
+        try:
+            print(f"Downloading {filename}...")
+            with requests.get(url, stream=True) as r:
+                r.raise_for_status()
+                with open(filename, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=8192): 
+                        f.write(chunk)
+                        
+            print(f"Dataset Download complete! File saved as {filename}")
 
-def load_config(config_file):
-    """Load YAML configuration file"""
-    with open(config_file, 'r') as f:
-        return yaml.safe_load(f)
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
 def start_vllm_server(config, run):
     """Start vLLM server with config parameters"""
@@ -78,7 +81,7 @@ def run_benchmark(config, output_folder, run_number):
     os.environ["VLLM_ENABLE_V1_MULTIPROCESSING"] = "0"
     
     cmd = [
-        'python', 'benchmark_serving.py',
+        'python', 'benchmark_serving_simulator.py',
         '--backend', benchmark_params['backend'],
         '--model', model,
         '--dataset-name', benchmark_params['dataset_name'],
@@ -126,17 +129,16 @@ def stop_vllm_server(process):
         process.wait()
     print("Server stopped")
 
-def save_results(outputs, config, config_file, output_folder):
+def save_results(outputs, params, output_folder):
     """Save all benchmark outputs to file"""
-    benchmark_params = config['benchmark']
+    benchmark_params = params['benchmark']
 
-    config_name = f"{config['name']}_{benchmark_params['request_rate']}_{benchmark_params['num_prompts']}_{benchmark_params['temperature']}"
+    config_name = f"{params['name']}"
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_file = Path(output_folder) / f"{config_name}_{timestamp}.txt"
     
-    
     with open(output_file, 'w') as f:
-        f.write(f"Benchmark Results: {config['name']}\n")
+        f.write(f"Benchmark Results: {params['name']}\n")
         f.write(f"Config: {config_name}\n")
         f.write(f"Timestamp: {timestamp}\n")
         f.write(f"Request Rate: {benchmark_params['request_rate']}\n")
@@ -155,56 +157,61 @@ def save_results(outputs, config, config_file, output_folder):
     print(f"Results saved to: {output_file}")
 
 def main():
-    parser = argparse.ArgumentParser(description='Simple vLLM Benchmark Runner')
-    parser.add_argument('config', help='Path to YAML config file')
-    # parser.add_argument('--runs', type=int, default=1, help='Number of benchmark runs')
-    parser.add_argument('--output', default='./outputs', help='Output folder for results')
+    parser = argparse.ArgumentParser(
+        description="Run Container with different experiments")
     
+    parser.add_argument(
+        "--benchmark",
+        type=str,
+        default="baseline0",
+        help="Baseline name"
+    )
+
+    parser.add_argument('--params', type=json.loads)
+
     args = parser.parse_args()
-    
+
+    # Download ShareGPT dataset into container
+    url = "https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered/resolve/main/ShareGPT_V3_unfiltered_cleaned_split.json"
+    filename = "ShareGPT_V3_unfiltered_cleaned_split.json"
+    download_dataset(url, filename)
+
     # Create output folder
-    os.makedirs(args.output, exist_ok=True)
-    
-    # Load config
-    config = load_config(args.config)
-    config = config['test']
-    
+    output_path = './outputs_vllm'
+    os.makedirs(output_path, exist_ok=True)
+
     outputs = []
     curr_run = 1
-    
-    for benchmark, params in config.items():
-        runs = params['runs']
-        outputs = []
-        for run in range(1, runs + 1):
-
-            print(f"\n{'='*50}")
-            print(f"STARTING RUN {run}/{params['runs']} for benchmark: {benchmark}")
-            print(f"{'='*50}")
+    runs = args.params['runs']
+    for run in range(1, runs + 1):
+        print(f"\n{'='*50}")
+        print(f"STARTING RUN {run}/{args.params['runs']} for benchmark: {args.benchmark}")
+        print(f"{'='*50}")
+        
+        # Start server
+        server_process = start_vllm_server(args.params, curr_run)
+        curr_run += 1
+        try:
+            # Wait for server
+            if not wait_for_server(args.params['model']):
+                print("Skipping this run due to server startup failure")
+                continue
             
-            # Start server
-            server_process = start_vllm_server(params, curr_run)
-            curr_run += 1
-            try:
-                # Wait for server
-                if not wait_for_server(params['model']):
-                    print("Skipping this run due to server startup failure")
-                    continue
-                
-                # Run benchmark
-                output = run_benchmark(params, args.output, run)
-                if output:
-                    outputs.append(output)
-                
-            finally:
-                # Always stop server
-                stop_vllm_server(server_process)
-                time.sleep(2)  # Brief pause between runs
-    
-        # Save all results
-        if outputs:
-            save_results(outputs, params, args.config, args.output)
-        else:
-            print("No successful runs to save")
+            # Run benchmark
+            output = run_benchmark(args.params, output_path, run)
+            if output:
+                outputs.append(output)
+            
+        finally:
+            # Always stop server
+            stop_vllm_server(server_process)
+            time.sleep(2)  # Brief pause between runs
+
+    # Save all results
+    if outputs:
+        save_results(outputs, args.params, output_path)
+    else:
+        print("No successful runs to save")
 
 if __name__ == '__main__':
     main()
