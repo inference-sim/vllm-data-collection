@@ -124,8 +124,6 @@ def stop_vllm_server(process):
     except subprocess.TimeoutExpired:
         process.kill()
         process.wait()
-    # kill all vllm processes as a safety measure
-    os.system("pkill -f vllm")
     print("Server stopped")
 
 def save_results(outputs, config, config_file, output_folder):
