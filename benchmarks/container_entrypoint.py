@@ -181,16 +181,15 @@ def main():
     os.makedirs(output_path, exist_ok=True)
 
     outputs = []
-    curr_run = 1
-    runs = args.params['runs']
+    runs = int(args.params['runs'])
     for run in range(1, runs + 1):
         print(f"\n{'='*50}")
         print(f"STARTING RUN {run}/{args.params['runs']} for benchmark: {args.benchmark}")
         print(f"{'='*50}")
         
         # Start server
-        server_process = start_vllm_server(args.params, curr_run)
-        curr_run += 1
+        server_process = start_vllm_server(args.params, run)
+        run += 1
         try:
             # Wait for server
             if not wait_for_server(args.params['model']):
