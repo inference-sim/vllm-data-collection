@@ -5,6 +5,7 @@ import os
 import requests
 import subprocess
 import time
+import sys
 from pathlib import Path
 from kubernetes import config
 from kubernetes.client import Configuration
@@ -56,6 +57,10 @@ def start_vllm_server(config, run, k_client):
         # # Redirect stdout and stderr to log file
         # process = subprocess.Popen(cmd, stdout=log_file, stderr=subprocess.STDOUT)
 
+        sys.stdout = log_file
+        sys.stderr = log_file
+
+
         pod_name = "vllm-benchmark-collection"
 
         # Create a pod manifest for vllm
@@ -102,7 +107,7 @@ def start_vllm_server(config, run, k_client):
 
     return pod_name
 
-def wait_for_server(http_client, model: str):
+def wait_for_server(model: str):
     """Wait for vLLM server to be ready"""
     url = "http://localhost:8000/v1/models"
     max_attempts = 50  # 60 seconds total
@@ -131,6 +136,7 @@ def run_benchmark(config, output_folder, run_number):
 
     cmd = [
         'python', 'benchmark_serving_simulator.py',
+        '--host', 'localhost',
         '--backend', benchmark_params['backend'],
         '--model', model,
         '--dataset-name', benchmark_params['dataset_name'],

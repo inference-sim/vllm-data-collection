@@ -18,7 +18,7 @@ On the client side, run:
         --dataset-path <path to dataset> \
         --request-rate <request_rate> \ # By default <request_rate> is inf
         --num-prompts <num_prompts> # By default <num_prompts> is 1000
-    
+
 
     python benchmarks/benchmark_serving.py --backend vllm --dataset-name sharegpt --dataset-path benchmarks/ShareGPT_V3_unfiltered_cleaned_split.json --num-prompts 5000
     python benchmarks/benchmark_serving.py --backend vllm --model Qwen/Qwen2.5-0.5B --dataset-name sharegpt --dataset-path benchmarks/ShareGPT_V3_unfiltered_cleaned_split.json --num-prompts 1 --temperature=0.0 --request-rate 3
@@ -177,7 +177,7 @@ async def get_request(
     )
     theta = 1.0 / (request_rate * burstiness)
 
-    np.random.seed(42) 
+    np.random.seed(42)
 
     for request in input_requests:
         yield request
@@ -249,7 +249,7 @@ def calculate_metrics(
             e2els.append(outputs[i].latency)
             completed += 1
 
-            
+
             # append the request to the file
             output_token_json += json.dumps(
                 {
@@ -299,7 +299,7 @@ def calculate_metrics(
     )  # Create bins for each second
     hist, _ = np.histogram(endtimes, bins=bins)
     average_completions_per_second = np.mean(hist.tolist())
-    
+
     if goodput_config_dict:
         valid_metrics = []
         slo_values = []
@@ -560,7 +560,7 @@ async def benchmark(
                 "Request goodput (req/s):", metrics.request_goodput
             )
         )
-    
+
     print(
         "{:<40} {:<10.2f}".format(
             "Output token throughput (tok/s):", metrics.output_throughput
