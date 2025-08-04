@@ -73,7 +73,7 @@ def start_vllm_server(config, run, k_client):
                                 {
                                     "matchExpressions": [
                                         {
-                                            "key": "nvidia.com/gpu",
+                                            "key": "nvidia.com/gpu.product",
                                             "operator": "In",
                                             "values": [
                                                 "NVIDIA-H100-80GB-HBM3"      # edit this to land pod on the node with GPUs
