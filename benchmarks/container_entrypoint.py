@@ -5,7 +5,6 @@ import os
 import requests
 import subprocess
 import time
-import sys
 from pathlib import Path
 from kubernetes import config
 from kubernetes.client import Configuration
@@ -54,12 +53,6 @@ def start_vllm_server(config, run, k_client):
     print(f"Starting vLLM server: vllm serve {' '.join(args)}")
 
     with open(f'vllm_server_{run}.log', 'w') as log_file:
-        # # Redirect stdout and stderr to log file
-        # process = subprocess.Popen(cmd, stdout=log_file, stderr=subprocess.STDOUT)
-
-        sys.stdout = log_file
-        sys.stderr = log_file
-
 
         pod_name = "vllm-benchmark-collection"
 
@@ -144,6 +137,7 @@ def run_benchmark(config, output_folder, run_number):
         '--request-rate', str(benchmark_params['request_rate']),
         '--temperature', str(benchmark_params['temperature']),
         '--seed', str(benchmark_params['seed']),
+        '--save_result',
     ]
 
     # save request rate, temperature, dataset, distribution to env
@@ -180,13 +174,13 @@ def port_forward(k_client, pod_name):
 
     ns = 'llmdbench'
 
-    print("Waiting for vLLM pod to be Running...")
+    print("Waiting for vLLM pod to be Ready...")
     pod = Pod.get(pod_name, namespace=ns)
 
-    pod.wait("condition=Running")
+    pod.wait("condition=Ready")
     time.sleep(120)
 
-    print("vLLM pod is running, port-forwarding now...")
+    print("vLLM pod is Ready, port-forwarding now...")
 
     port = 8000
     pf = pod.portforward(remote_port=port, local_port=port)
