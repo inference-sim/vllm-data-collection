@@ -174,16 +174,13 @@ def port_forward(k_client, pod_name):
 
     ns = 'llmdbench'
 
-    print("Waiting for vLLM pod to be ready...")
+    print("Waiting for vLLM pod to be Running...")
     pod = Pod.get(pod_name, namespace=ns)
-    while True:
-        resp = k_client.read_namespaced_pod(name=pod_name,
-                                            namespace=ns)
-        if resp.status.phase != 'Pending':
-            break
-        time.sleep(1)
-    print("vLLM pod is ready, port-forwarding now...")
 
+    pod.wait("condition=Running")
+    time.sleep(120)
+
+    print("vLLM pod is running, port-forwarding now...")
 
     port = 8000
     pf = pod.portforward(remote_port=port, local_port=port)
@@ -192,14 +189,8 @@ def port_forward(k_client, pod_name):
 
 def stop_vllm_server(k_client, pod_name, pf):
     """Stop vLLM server process"""
-    print("Stopping vLLM server...")
-    # process.terminate()
-    # try:
-    #     process.wait(timeout=10)
-    # except subprocess.TimeoutExpired:
-    #     process.kill()
-    #     process.wait()
 
+    print("Stopping vLLM server...")
 
     # Close port-forward
     pf.stop()
@@ -207,7 +198,8 @@ def stop_vllm_server(k_client, pod_name, pf):
     # Delete pod
     try:
         api_response = k_client.delete_namespaced_pod(pod_name, 'llmdbench')
-        print(api_response)
+        print(f"vllm pod {pod_name} has been deleted: api response {api_response}")
+
     except ApiException as e:
         print("Exception when deleting vllm pod: %s\n" % e)
 
@@ -285,6 +277,8 @@ def main():
         # Start server
         pod_name = start_vllm_server(args.params, run, core_v1)
         try:
+
+            time.sleep(15)
 
             # Port forward the vllm pod
             pf = port_forward(core_v1, pod_name)
