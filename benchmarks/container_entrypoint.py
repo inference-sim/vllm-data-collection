@@ -76,6 +76,16 @@ def start_vllm_server(config, run, k_client):
                                             "values": [
                                                 "NVIDIA-H100-80GB-HBM3"      # edit this to land pod on the node with GPUs
                                             ]
+                                        },
+                                        # Short-term solution
+                                        # TODO: ask how to set gpu memory for affinity
+                                        # https://kubernetes.io/docs/tasks/manage-gpus/scheduling-gpus/
+                                        {
+                                            "key": "kubernetes.io/hostname",
+                                            "operator": "In",
+                                            "values": [
+                                                "pokprod-b93r38s2"      # edit this to land pod on the node with GPUs
+                                            ]
                                         }
                                     ]
                                 }
@@ -129,7 +139,6 @@ def run_benchmark(config, output_folder, run_number):
 
     cmd = [
         'python', 'benchmark_serving_simulator.py',
-        '--host', 'localhost',
         '--backend', benchmark_params['backend'],
         '--model', model,
         '--dataset-name', benchmark_params['dataset_name'],
@@ -137,7 +146,7 @@ def run_benchmark(config, output_folder, run_number):
         '--request-rate', str(benchmark_params['request_rate']),
         '--temperature', str(benchmark_params['temperature']),
         '--seed', str(benchmark_params['seed']),
-        '--save_result',
+        '--save-result',
     ]
 
     # save request rate, temperature, dataset, distribution to env

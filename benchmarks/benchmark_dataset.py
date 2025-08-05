@@ -30,11 +30,17 @@ from datasets import load_dataset
 from PIL import Image
 from transformers import PreTrainedTokenizerBase
 
-from vllm.lora.request import LoRARequest
-from vllm.lora.utils import get_adapter_absolute_path
-from vllm.multimodal import MultiModalDataDict
-from vllm.multimodal.image import convert_image_mode
-from vllm.transformers_utils.tokenizer import AnyTokenizer, get_lora_tokenizer
+try:
+    from vllm.lora.request import LoRARequest
+    from vllm.lora.utils import get_adapter_absolute_path
+    from vllm.multimodal import MultiModalDataDict
+    from vllm.multimodal.image import convert_image_mode
+    from vllm.transformers_utils.tokenizer import AnyTokenizer, get_lora_tokenizer
+except:
+    MultiModalDataDict = None
+    AnyTokenizer = None
+    LoRARequest = None
+    print("Installing vllm to use lora or multimodal benchmark.")
 
 logger = logging.getLogger(__name__)
 
