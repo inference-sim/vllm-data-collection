@@ -77,14 +77,11 @@ def start_vllm_server(config, run, k_client):
                                                 "NVIDIA-H100-80GB-HBM3"      # edit this to land pod on the node with GPUs
                                             ]
                                         },
-                                        # Short-term solution
-                                        # TODO: ask how to set gpu memory for affinity
-                                        # https://kubernetes.io/docs/tasks/manage-gpus/scheduling-gpus/
                                         {
-                                            "key": "kubernetes.io/hostname",
-                                            "operator": "In",
+                                            "key": "nvidia.com/gpu.memory",
+                                            "operator": "Gt",
                                             "values": [
-                                                "pokprod-b93r38s2"      # edit this to land pod on the node with GPUs
+                                                "30000"      # edit this to land pod on the node at least this much GPU memory (in MB)
                                             ]
                                         }
                                     ]
@@ -95,7 +92,7 @@ def start_vllm_server(config, run, k_client):
                 },
                 'containers': [
                     {
-                        'name': 'benchmark',
+                        'name': 'vllm',
                         'image': "vllm/vllm-openai:v0.10.0",
                         'command': ['vllm', 'serve'],
                         'args': args
@@ -187,7 +184,14 @@ def port_forward(k_client, pod_name):
     pod = Pod.get(pod_name, namespace=ns)
 
     pod.wait("condition=Ready")
-    time.sleep(120)
+
+    # Ensure vllm API is ready, very ad-hoc
+    pod_logs = pod.logs()
+    for log in pod_logs:
+        if "GET" in log:
+            break
+        else:
+            time.sleep(3)
 
     print("vLLM pod is Ready, port-forwarding now...")
 
@@ -196,10 +200,16 @@ def port_forward(k_client, pod_name):
     pf.start()
     return pf
 
-def stop_vllm_server(k_client, pod_name, pf):
-    """Stop vLLM server process"""
+def stop_vllm_server(k_client, run, pod_name, pf):
+    """Stop vLLM server process and returns vllm pod log file"""
 
     print("Stopping vLLM server...")
+
+    # Get pod logs
+    pod_log_filename = f"vllm_server_{run}_pod.log"
+    with open(pod_log_filename, 'w') as log_file:
+        pod = Pod.get(pod_name, namespace='llmdbench')
+        log_file.write("\n".join(pod.logs()))
 
     # Close port-forward
     pf.stop()
@@ -214,7 +224,9 @@ def stop_vllm_server(k_client, pod_name, pf):
 
     print("Server stopped")
 
-def save_results(outputs, params, output_folder):
+    return pod_log_filename
+
+def save_results(outputs, params, output_folder, pod_log_files):
     """Save all benchmark outputs to file"""
     benchmark_params = params['benchmark']
 
@@ -239,6 +251,7 @@ def save_results(outputs, params, output_folder):
             f.write(output)
             f.write("\n" + "="*60 + "\n\n")
 
+    print(f"vLLM logs saved to: {pod_log_files}")
     print(f"Results saved to: {output_file}")
 
 def main():
@@ -277,6 +290,7 @@ def main():
 
     # Run the baseline
     outputs = []
+    pod_log_files = []
     runs = args.params['runs']
     for run in range(1, runs + 1):
         print(f"\n{'='*50}")
@@ -304,12 +318,13 @@ def main():
 
         finally:
             # Always stop server
-            stop_vllm_server(core_v1, pod_name, pf)
+            pod_log_file = stop_vllm_server(core_v1, run, pod_name, pf)
+            pod_log_files.append(pod_log_file)
             time.sleep(2)  # Brief pause between runs
 
     # Save all results
     if outputs:
-        save_results(outputs, args.params, output_path)
+        save_results(outputs, args.params, output_path, pod_log_files)
     else:
         print("No successful runs to save")
 
