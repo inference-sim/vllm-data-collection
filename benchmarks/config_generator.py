@@ -89,8 +89,12 @@ def main():
         {'name': 'sharegpt', 'path': 'ShareGPT_V3_unfiltered_cleaned_split.json'},
     ]
     # map from LLM name to [GPU type, min GPU requirement]
+<<<<<<< HEAD
     # models_to_gpus = {'Qwen/Qwen2.5-14B':['NVIDIA-H100-80GB-HBM3', 50000]}
     models_to_gpus = {'google/gemma-7b': ['NVIDIA-H100-80GB-HBM3', 50000]}
+=======
+    models_to_gpus = {'Qwen/Qwen2-7B':['NVIDIA-H100-80GB-HBM3', 30000]}
+>>>>>>> 48f7ee379 (Removed subprocess in benchmark runner)
     
     # Generate configuration
     config = generate_config(num_prompts_list, request_rate_list, temperature_list, datasets_list, 

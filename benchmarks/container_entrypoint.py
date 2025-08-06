@@ -328,6 +328,8 @@ def benchmark_wrapper(params, benchmark_name):
     # Create output folder
     os.makedirs(output_path, exist_ok=True)
 
+    params = json.loads(params)
+
     # Set up K8s client
     config.load_kube_config()
     try:
