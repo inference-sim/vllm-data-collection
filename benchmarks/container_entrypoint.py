@@ -97,7 +97,17 @@ def start_vllm_server(config, run, k_client):
                         'command': ['vllm', 'serve'],
                         'args': args
                     }
-                ]
+                ],
+                'startupProbe': {
+                    "httpGet": {
+                        "path": "/v1/models",
+                        "port": 8000,
+                    },
+
+                    # Max 5 minutes (30 * 10) to finish startup
+                    "failureThreshold": 30,
+                    "periodSeconds": 10,
+                }
             }
         }
 
@@ -184,14 +194,6 @@ def port_forward(k_client, pod_name):
     pod = Pod.get(pod_name, namespace=ns)
 
     pod.wait("condition=Ready")
-
-    # Ensure vllm API is ready, very ad-hoc
-    pod_logs = pod.logs()
-    for log in pod_logs:
-        if "GET" in log:
-            break
-        else:
-            time.sleep(3)
 
     print("vLLM pod is Ready, port-forwarding now...")
 
