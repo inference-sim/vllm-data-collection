@@ -29,7 +29,7 @@ def download_dataset(url, filename):
         except Exception as e:
             print(f"An error occurred: {e}")
 
-def start_vllm_server(config, run, k_client):
+def start_vllm_server(config, benchmark_name, run, k_client):
     """Start vLLM server with config parameters"""
     model = config['model']
     vllm_params = config['vllm']
@@ -52,9 +52,9 @@ def start_vllm_server(config, run, k_client):
 
     print(f"Starting vLLM server: vllm serve {' '.join(args)}")
 
-    with open(f'vllm_server_{run}.log', 'w') as log_file:
+    pod_name = f"vllm-benchmark-collection-{benchmark_name}"
 
-        pod_name = f"vllm-benchmark-collection_run_{str(run)}"
+    with open(f'vllm_server_{run}.log', 'w') as log_file:
 
         # Create a pod manifest for vllm
         pod_manifest = {
@@ -74,7 +74,7 @@ def start_vllm_server(config, run, k_client):
                                             "key": "nvidia.com/gpu.product",
                                             "operator": "In",
                                             "values": [
-                                                "NVIDIA-H100-80GB-HBM3"      # edit this to land pod on the node with GPUs
+                                                vllm_params['gpu_type']      # land pod on the node with this GPU
                                             ]
                                         },
                                         {
@@ -83,8 +83,7 @@ def start_vllm_server(config, run, k_client):
                                             "key": "nvidia.com/gpu.memory",
                                             "operator": "Gt",
                                             "values": [
-                                                "30000"      # edit this to land pod on the node at least this much GPU memory (in MB)
-                                                "30000"      # edit this to land pod on the node at least this much GPU memory (in MB)
+                                                str(vllm_params['gpu_memory_min']) # land pod on the node at least this much GPU memory (in MB)
                                             ]
                                         }
                                     ]
@@ -182,7 +181,7 @@ def run_benchmark(config, output_folder, run_number):
     if result.returncode == 0:
         print(f"Benchmark run {run_number} completed successfully")
         return result.stdout
-    else:
+    else:   
         print(f"Benchmark run {run_number} failed: {result.stderr}")
         return None
 
@@ -193,29 +192,39 @@ def port_forward(k_client, pod_name):
 
     ns = 'llmdbench'
 
-    print("Waiting for vLLM pod to be Ready...")
     pod = Pod.get(pod_name, namespace=ns)
+    print(f"Successfully fetched pod {pod.name}")
 
-    pod.wait("condition=Ready")
+    # Wait for at least 5 min before timing out
+    print("Waiting for vLLM pod to be Ready...")
+    while not pod.ready:
+        time.sleep(5)
+        pod = Pod.get(pod_name, namespace=ns)
+
+
+    # pod.wait("condition=Ready", timeout=1000)
+    print(f"pod.condition = {pod.status}")
     print("vLLM pod is Ready, port-forwarding now...")
 
+    pod = Pod.get(pod_name, namespace=ns)
+    time.sleep(3)
     port = 8000
     pf = pod.portforward(remote_port=port, local_port=port)
     pf.start()
     return pf
 
-def stop_vllm_server(k_client, run, pod_name, pf):
+def stop_vllm_server(k_client, benchmark_name, pod_name, pf, output_path):
     """Stop vLLM server process and returns vllm pod log file and metrics json file"""
 
     # Get pod logs
-    pod_log_filename = f"vllm_server_{run}_pod.log"
+    pod_log_filename = f"{output_path}/vllm_server_{benchmark_name}_pod.log"
     with open(pod_log_filename, 'w') as log_file:
         pod = Pod.get(pod_name, namespace='llmdbench')
         log_file.write("\n".join(pod.logs()))
 
     # Get metrics
     # Metrics is plain text format
-    metrics_filename = f"vllm_server_{run}_metrics.txt"
+    metrics_filename = f"{output_path}/vllm_server_{benchmark_name}_metrics.txt"
     with open(metrics_filename, 'w') as metrics_file:
         url = "http://localhost:8000/metrics"
         try:
@@ -228,7 +237,7 @@ def stop_vllm_server(k_client, run, pod_name, pf):
     print("Stopping vLLM server...")
 
     # Get pod logs
-    pod_log_filename = f"vllm_server_{run}_pod.log"
+    pod_log_filename = f"{output_path}/vllm_server_{benchmark_name}_pod.log"
     with open(pod_log_filename, 'w') as log_file:
         pod = Pod.get(pod_name, namespace='llmdbench')
         log_file.write("\n".join(pod.logs()))
@@ -238,7 +247,7 @@ def stop_vllm_server(k_client, run, pod_name, pf):
 
     # Delete pod
     try:
-        api_response = k_client.delete_namespaced_pod(pod_name, 'llmdbench')
+        api_response = k_client.delete_namespaced_pod(pod_name, 'llmdbench', grace_period_seconds=0)
         print(f"vllm pod {pod_name} has been deleted: api response {api_response}")
 
     except ApiException as e:
@@ -277,28 +286,16 @@ def save_results(outputs, params, output_folder, pod_log_files, metrics_log_file
     print(f"vLLM metrics saved to: {metrics_log_files}")
     print(f"Results saved to: {output_file}")
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Run Container with different experiments")
-
-    parser.add_argument(
-        "--benchmark",
-        type=str,
-        default="baseline0",
-        help="Baseline name"
-    )
-
-    parser.add_argument('--params', type=json.loads)
-
-    args = parser.parse_args()
-
+def benchmark_wrapper(params, benchmark_name):
     # Download ShareGPT dataset
     url = "https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered/resolve/main/ShareGPT_V3_unfiltered_cleaned_split.json"
     filename = "ShareGPT_V3_unfiltered_cleaned_split.json"
     download_dataset(url, filename)
 
+    params = json.loads(params)
+
+    output_path = params['result_folder']
     # Create output folder
-    output_path = './outputs_vllm'
     os.makedirs(output_path, exist_ok=True)
 
     # Set up K8s client
@@ -315,14 +312,14 @@ def main():
     outputs = []
     pod_log_files = []
     metrics_files = []
-    runs = args.params['runs']
+    runs = params['runs']
     for run in range(1, runs + 1):
         print(f"\n{'='*50}")
-        print(f"STARTING RUN {run}/{args.params['runs']} for benchmark: {args.benchmark}")
+        print(f"STARTING RUN {run}/{params['runs']} for benchmark: {benchmark_name}")
         print(f"{'='*50}")
 
         # Start server
-        pod_name = start_vllm_server(args.params, run, core_v1)
+        pod_name = start_vllm_server(params, benchmark_name, run, core_v1)
         try:
             time.sleep(15)
 
@@ -330,27 +327,24 @@ def main():
             pf = port_forward(core_v1, pod_name)
 
             # Wait for server
-            if not wait_for_server(args.params['model']):
+            if not wait_for_server(params['model']):
                 print("Skipping this run due to server startup failure")
                 continue
 
             # Run benchmark
-            output = run_benchmark(args.params, output_path, run)
+            output = run_benchmark(params, output_path, run)
             if output:
                 outputs.append(output)
 
         finally:
             # Always stop server
-            pod_log_file, metrics_log_file = stop_vllm_server(core_v1, run, pod_name, pf)
+            pod_log_file, metrics_log_file = stop_vllm_server(core_v1, benchmark_name, pod_name, pf, output_path)
             pod_log_files.append(pod_log_file)
             metrics_files.append(metrics_log_file)
             time.sleep(2)  # Brief pause between runs
 
     # Save all results
     if outputs:
-        save_results(outputs, args.params, output_path, pod_log_files, metrics_files)
+        save_results(outputs, params, output_path, pod_log_files, metrics_files)
     else:
         print("No successful runs to save")
-
-if __name__ == '__main__':
-    main()

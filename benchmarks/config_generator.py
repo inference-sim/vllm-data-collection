@@ -6,7 +6,7 @@ import yaml
 from itertools import product
 
 def generate_config(num_prompts_list, request_rate_list, temperature_list, datasets_list, 
-                    max_num_batched_tokens_list, long_prefill_token_threshold_list, models):
+                    max_num_batched_tokens_list, long_prefill_token_threshold_list, models_to_gpus):
     """
     Generate YAML configuration by sweeping over parameter combinations.
     
@@ -24,6 +24,9 @@ def generate_config(num_prompts_list, request_rate_list, temperature_list, datas
     
     # Counter for experiment naming
     exp_counter = 1
+
+    # Get all LLMs to benchmark over
+    models = list(models_to_gpus.keys())
     
     # Generate all parameter combinations
     for num_prompts, request_rate, temperature, dataset, max_num_batched_tokens, long_prefill_token_threshold, model in product(
@@ -35,12 +38,14 @@ def generate_config(num_prompts_list, request_rate_list, temperature_list, datas
         # Generate experiment name based on parameters
         exp_name = f"exp_{num_prompts}p_{request_rate}r_{temperature}t_{max_num_batched_tokens}mbt_{long_prefill_token_threshold}lpt_{dataset['name']}_{model.replace('/', '_')}"
         
+        result_folder_name = model.split("/")[1].lower().replace('.', '-')
         # Create experiment configuration
         exp_config = {
             'name': exp_name,
             'description': "Basic vLLM performance test",
             'model': model,
             'runs': 1,
+            'result_folder': result_folder_name,
             'vllm': {
                 'gpu_memory_utilization': 0.9,
                 'enable_prefix_caching': True,
@@ -50,7 +55,9 @@ def generate_config(num_prompts_list, request_rate_list, temperature_list, datas
                 'max_num_batched_tokens': max_num_batched_tokens,
                 'max_num_seqs': 256,
                 'long_prefill_token_threshold': long_prefill_token_threshold,
-                'seed': 42
+                'seed': 42,
+                'gpu_type': models_to_gpus[model][0],
+                'gpu_memory_min': models_to_gpus[model][1]
             },
             'benchmark': {
                 'backend': "vllm",
@@ -73,20 +80,20 @@ def generate_config(num_prompts_list, request_rate_list, temperature_list, datas
 
 def main():
     # Define parameter sweep ranges
-    num_prompts_list = [100, 400, 800, 1600]
-    request_rate_list = [4, 8, 16, 32, 64, 128]
+    num_prompts_list = [100]
+    request_rate_list = [16]
     temperature_list = [0.0]
-    max_num_batched_tokens = [256, 1024, 8192]
-    long_prefill_token_threshold = [16, 256, 1024]
+    max_num_batched_tokens = [512, 1024]
+    long_prefill_token_threshold = [16, 256]
     datasets_list = [
         {'name': 'sharegpt', 'path': 'ShareGPT_V3_unfiltered_cleaned_split.json'},
     ]
-    # models = ['Qwen/Qwen2.5-0.5B', 'google/gemma-2b']
-    models = ['Qwen/Qwen2-7B']
+    # map from LLM name to [GPU type, min GPU requirement]
+    models_to_gpus = {'Qwen/Qwen2-7B-Instruct':['NVIDIA-H100-80GB-HBM3', 30000]}
     
     # Generate configuration
     config = generate_config(num_prompts_list, request_rate_list, temperature_list, datasets_list, 
-                             max_num_batched_tokens, long_prefill_token_threshold, models)
+                             max_num_batched_tokens, long_prefill_token_threshold, models_to_gpus)
     
     # Write to YAML file
     with open('vllm_benchmark_config.yaml', 'w') as f:

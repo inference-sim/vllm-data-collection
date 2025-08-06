@@ -5,9 +5,10 @@ Simple vLLM Benchmark Runner
 
 import argparse
 import json
-import subprocess
+import time
 import yaml
 
+from container_entrypoint import benchmark_wrapper
 
 def load_config(config_file):
     """Load YAML configuration file"""
@@ -25,15 +26,10 @@ def main():
     config = config['test']
     
     for benchmark, params in config.items():
-        # spin up each container with arguments to the entrypoint script
+        # spin up each benchmark with arguments to the entrypoint script
         params_json = json.dumps(params)
-        cmd = [
-            'python', 'container_entrypoint.py',
-            '--params', str(params_json),
-            '--benchmark', benchmark, # benchmark name, e.g: baseline, baseline0, etc.
-        ]
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        print("STDOUT:", result.stdout)
+        benchmark_wrapper(params_json, benchmark)
+        time.sleep(10)
 
 if __name__ == '__main__':
     main()
