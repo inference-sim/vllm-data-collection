@@ -6,7 +6,7 @@ import yaml
 from itertools import product
 
 def generate_config(num_prompts_list, request_rate_list, temperature_list, datasets_list, 
-                    max_num_batched_tokens_list, long_prefill_token_threshold_list, models):
+                    max_num_batched_tokens_list, long_prefill_token_threshold_list, models_to_gpus):
     """
     Generate YAML configuration by sweeping over parameter combinations.
     
@@ -24,6 +24,9 @@ def generate_config(num_prompts_list, request_rate_list, temperature_list, datas
     
     # Counter for experiment naming
     exp_counter = 1
+
+    # Get all LLMs to benchmark over
+    models = list(models_to_gpus.keys())
     
     # Generate all parameter combinations
     for num_prompts, request_rate, temperature, dataset, max_num_batched_tokens, long_prefill_token_threshold, model in product(
@@ -50,7 +53,9 @@ def generate_config(num_prompts_list, request_rate_list, temperature_list, datas
                 'max_num_batched_tokens': max_num_batched_tokens,
                 'max_num_seqs': 256,
                 'long_prefill_token_threshold': long_prefill_token_threshold,
-                'seed': 42
+                'seed': 42,
+                'gpu_type': models_to_gpus[model][0],
+                'gpu_memory_min': models_to_gpus[model][1]
             },
             'benchmark': {
                 'backend': "vllm",
@@ -81,12 +86,12 @@ def main():
     datasets_list = [
         {'name': 'sharegpt', 'path': 'ShareGPT_V3_unfiltered_cleaned_split.json'},
     ]
-    # models = ['Qwen/Qwen2.5-0.5B', 'google/gemma-2b']
-    models = ['Qwen/Qwen2-7B']
+    # map from LLM name to [GPU type, min GPU requirement]
+    models_to_gpus = {'Qwen/Qwen2-7B':['NVIDIA-H100-80GB-HBM3', 30000]}
     
     # Generate configuration
     config = generate_config(num_prompts_list, request_rate_list, temperature_list, datasets_list, 
-                             max_num_batched_tokens, long_prefill_token_threshold, models)
+                             max_num_batched_tokens, long_prefill_token_threshold, models_to_gpus)
     
     # Write to YAML file
     with open('vllm_benchmark_config.yaml', 'w') as f:

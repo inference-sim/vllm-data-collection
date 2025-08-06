@@ -74,7 +74,7 @@ def start_vllm_server(config, run, k_client):
                                             "key": "nvidia.com/gpu.product",
                                             "operator": "In",
                                             "values": [
-                                                "NVIDIA-H100-80GB-HBM3"      # edit this to land pod on the node with GPUs
+                                                vllm_params['gpu_type']      # land pod on the node with this GPU
                                             ]
                                         },
                                         {
@@ -83,8 +83,7 @@ def start_vllm_server(config, run, k_client):
                                             "key": "nvidia.com/gpu.memory",
                                             "operator": "Gt",
                                             "values": [
-                                                "30000"      # edit this to land pod on the node at least this much GPU memory (in MB)
-                                                "30000"      # edit this to land pod on the node at least this much GPU memory (in MB)
+                                                str(vllm_params['gpu_memory_min']) # land pod on the node at least this much GPU memory (in MB)
                                             ]
                                         }
                                     ]
@@ -182,7 +181,7 @@ def run_benchmark(config, output_folder, run_number):
     if result.returncode == 0:
         print(f"Benchmark run {run_number} completed successfully")
         return result.stdout
-    else:
+    else:   
         print(f"Benchmark run {run_number} failed: {result.stderr}")
         return None
 
@@ -277,21 +276,7 @@ def save_results(outputs, params, output_folder, pod_log_files, metrics_log_file
     print(f"vLLM metrics saved to: {metrics_log_files}")
     print(f"Results saved to: {output_file}")
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Run Container with different experiments")
-
-    parser.add_argument(
-        "--benchmark",
-        type=str,
-        default="baseline0",
-        help="Baseline name"
-    )
-
-    parser.add_argument('--params', type=json.loads)
-
-    args = parser.parse_args()
-
+def benchmark_wrapper(params, benchmark_name):
     # Download ShareGPT dataset
     url = "https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered/resolve/main/ShareGPT_V3_unfiltered_cleaned_split.json"
     filename = "ShareGPT_V3_unfiltered_cleaned_split.json"
@@ -300,6 +285,8 @@ def main():
     # Create output folder
     output_path = './outputs_vllm'
     os.makedirs(output_path, exist_ok=True)
+
+    params = json.loads(params)
 
     # Set up K8s client
     config.load_kube_config()
@@ -315,14 +302,14 @@ def main():
     outputs = []
     pod_log_files = []
     metrics_files = []
-    runs = args.params['runs']
+    runs = params['runs']
     for run in range(1, runs + 1):
         print(f"\n{'='*50}")
-        print(f"STARTING RUN {run}/{args.params['runs']} for benchmark: {args.benchmark}")
+        print(f"STARTING RUN {run}/{params['runs']} for benchmark: {benchmark_name}")
         print(f"{'='*50}")
 
         # Start server
-        pod_name = start_vllm_server(args.params, run, core_v1)
+        pod_name = start_vllm_server(params, run, core_v1)
         try:
             time.sleep(15)
 
@@ -330,12 +317,12 @@ def main():
             pf = port_forward(core_v1, pod_name)
 
             # Wait for server
-            if not wait_for_server(args.params['model']):
+            if not wait_for_server(params['model']):
                 print("Skipping this run due to server startup failure")
                 continue
 
             # Run benchmark
-            output = run_benchmark(args.params, output_path, run)
+            output = run_benchmark(params, output_path, run)
             if output:
                 outputs.append(output)
 
@@ -348,9 +335,6 @@ def main():
 
     # Save all results
     if outputs:
-        save_results(outputs, args.params, output_path, pod_log_files, metrics_files)
+        save_results(outputs, params, output_path, pod_log_files, metrics_files)
     else:
         print("No successful runs to save")
-
-if __name__ == '__main__':
-    main()
