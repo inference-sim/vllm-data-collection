@@ -80,7 +80,10 @@ def start_vllm_server(config, run, k_client):
                                         {
                                             "key": "nvidia.com/gpu.memory",
                                             "operator": "Gt",
+                                            "key": "nvidia.com/gpu.memory",
+                                            "operator": "Gt",
                                             "values": [
+                                                "30000"      # edit this to land pod on the node at least this much GPU memory (in MB)
                                                 "30000"      # edit this to land pod on the node at least this much GPU memory (in MB)
                                             ]
                                         }
@@ -223,6 +226,12 @@ def stop_vllm_server(k_client, run, pod_name, pf):
             print(f"Cannot get metrics response, {str(e)}")
 
     print("Stopping vLLM server...")
+
+    # Get pod logs
+    pod_log_filename = f"vllm_server_{run}_pod.log"
+    with open(pod_log_filename, 'w') as log_file:
+        pod = Pod.get(pod_name, namespace='llmdbench')
+        log_file.write("\n".join(pod.logs()))
 
     # Close port-forward
     pf.stop()
