@@ -89,7 +89,7 @@ def main():
         {'name': 'sharegpt', 'path': 'ShareGPT_V3_unfiltered_cleaned_split.json'},
     ]
     # map from LLM name to [GPU type, min GPU requirement]
-    models_to_gpus = {'Qwen/Qwen2-7B-Instruct':['NVIDIA-H100-80GB-HBM3', 30000]}
+    models_to_gpus = {'Qwen/Qwen2-7B':['NVIDIA-H100-80GB-HBM3', 30000]}
     
     # Generate configuration
     config = generate_config(num_prompts_list, request_rate_list, temperature_list, datasets_list, 
