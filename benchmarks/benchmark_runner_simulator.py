@@ -5,7 +5,7 @@ Simple vLLM Benchmark Runner
 
 import argparse
 import json
-import subprocess
+import time
 import yaml
 
 from container_entrypoint import benchmark_wrapper
@@ -29,6 +29,7 @@ def main():
         # spin up each benchmark with arguments to the entrypoint script
         params_json = json.dumps(params)
         benchmark_wrapper(params_json, benchmark)
+        time.sleep(10)
 
 if __name__ == '__main__':
     main()

@@ -52,9 +52,9 @@ def start_vllm_server(config, benchmark_name, run, k_client):
 
     print(f"Starting vLLM server: vllm serve {' '.join(args)}")
 
-    with open(f'vllm_server_{run}.log', 'w') as log_file:
+    pod_name = f"vllm-benchmark-collection-{benchmark_name}"
 
-        pod_name = f"vllm-benchmark-collection-{benchmark_name}"
+    with open(f'vllm_server_{run}.log', 'w') as log_file:
 
         # Create a pod manifest for vllm
         pod_manifest = {
@@ -192,29 +192,39 @@ def port_forward(k_client, pod_name):
 
     ns = 'llmdbench'
 
-    print("Waiting for vLLM pod to be Ready...")
     pod = Pod.get(pod_name, namespace=ns)
+    print(f"Successfully fetched pod {pod.name}")
 
-    pod.wait("condition=Ready")
+    # Wait for at least 5 min before timing out
+    print("Waiting for vLLM pod to be Ready...")
+    while not pod.ready:
+        time.sleep(5)
+        pod = Pod.get(pod_name, namespace=ns)
+
+
+    # pod.wait("condition=Ready", timeout=1000)
+    print(f"pod.condition = {pod.status}")
     print("vLLM pod is Ready, port-forwarding now...")
 
+    pod = Pod.get(pod_name, namespace=ns)
+    time.sleep(3)
     port = 8000
     pf = pod.portforward(remote_port=port, local_port=port)
     pf.start()
     return pf
 
-def stop_vllm_server(k_client, benchmark_name, pod_name, pf):
+def stop_vllm_server(k_client, benchmark_name, pod_name, pf, output_path):
     """Stop vLLM server process and returns vllm pod log file and metrics json file"""
 
     # Get pod logs
-    pod_log_filename = f"vllm_server_{benchmark_name}_pod.log"
+    pod_log_filename = f"{output_path}/vllm_server_{benchmark_name}_pod.log"
     with open(pod_log_filename, 'w') as log_file:
         pod = Pod.get(pod_name, namespace='llmdbench')
         log_file.write("\n".join(pod.logs()))
 
     # Get metrics
     # Metrics is plain text format
-    metrics_filename = f"vllm_server_{benchmark_name}_metrics.txt"
+    metrics_filename = f"{output_path}/vllm_server_{benchmark_name}_metrics.txt"
     with open(metrics_filename, 'w') as metrics_file:
         url = "http://localhost:8000/metrics"
         try:
@@ -227,7 +237,7 @@ def stop_vllm_server(k_client, benchmark_name, pod_name, pf):
     print("Stopping vLLM server...")
 
     # Get pod logs
-    pod_log_filename = f"vllm_server_{benchmark_name}_pod.log"
+    pod_log_filename = f"{output_path}/vllm_server_{benchmark_name}_pod.log"
     with open(pod_log_filename, 'w') as log_file:
         pod = Pod.get(pod_name, namespace='llmdbench')
         log_file.write("\n".join(pod.logs()))
@@ -282,11 +292,11 @@ def benchmark_wrapper(params, benchmark_name):
     filename = "ShareGPT_V3_unfiltered_cleaned_split.json"
     download_dataset(url, filename)
 
-    # Create output folder
-    output_path = './outputs_vllm'
-    os.makedirs(output_path, exist_ok=True)
-
     params = json.loads(params)
+
+    output_path = params['result_folder']
+    # Create output folder
+    os.makedirs(output_path, exist_ok=True)
 
     # Set up K8s client
     config.load_kube_config()
@@ -328,7 +338,7 @@ def benchmark_wrapper(params, benchmark_name):
 
         finally:
             # Always stop server
-            pod_log_file, metrics_log_file = stop_vllm_server(core_v1, benchmark_name, pod_name, pf)
+            pod_log_file, metrics_log_file = stop_vllm_server(core_v1, benchmark_name, pod_name, pf, output_path)
             pod_log_files.append(pod_log_file)
             metrics_files.append(metrics_log_file)
             time.sleep(2)  # Brief pause between runs
