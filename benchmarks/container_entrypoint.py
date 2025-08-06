@@ -54,7 +54,7 @@ def start_vllm_server(config, run, k_client):
 
     with open(f'vllm_server_{run}.log', 'w') as log_file:
 
-        pod_name = "vllm-benchmark-collection"
+        pod_name = f"vllm-benchmark-collection_run_{str(run)}"
 
         # Create a pod manifest for vllm
         pod_manifest = {
