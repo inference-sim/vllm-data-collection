@@ -29,7 +29,7 @@ def download_dataset(url, filename):
         except Exception as e:
             print(f"An error occurred: {e}")
 
-def start_vllm_server(config, run, k_client):
+def start_vllm_server(config, benchmark_name, run, k_client):
     """Start vLLM server with config parameters"""
     model = config['model']
     vllm_params = config['vllm']
@@ -54,7 +54,7 @@ def start_vllm_server(config, run, k_client):
 
     with open(f'vllm_server_{run}.log', 'w') as log_file:
 
-        pod_name = f"vllm-benchmark-collection_run_{str(run)}"
+        pod_name = f"vllm-benchmark-collection-{benchmark_name}"
 
         # Create a pod manifest for vllm
         pod_manifest = {
@@ -203,18 +203,18 @@ def port_forward(k_client, pod_name):
     pf.start()
     return pf
 
-def stop_vllm_server(k_client, run, pod_name, pf):
+def stop_vllm_server(k_client, benchmark_name, pod_name, pf):
     """Stop vLLM server process and returns vllm pod log file and metrics json file"""
 
     # Get pod logs
-    pod_log_filename = f"vllm_server_{run}_pod.log"
+    pod_log_filename = f"vllm_server_{benchmark_name}_pod.log"
     with open(pod_log_filename, 'w') as log_file:
         pod = Pod.get(pod_name, namespace='llmdbench')
         log_file.write("\n".join(pod.logs()))
 
     # Get metrics
     # Metrics is plain text format
-    metrics_filename = f"vllm_server_{run}_metrics.txt"
+    metrics_filename = f"vllm_server_{benchmark_name}_metrics.txt"
     with open(metrics_filename, 'w') as metrics_file:
         url = "http://localhost:8000/metrics"
         try:
@@ -227,7 +227,7 @@ def stop_vllm_server(k_client, run, pod_name, pf):
     print("Stopping vLLM server...")
 
     # Get pod logs
-    pod_log_filename = f"vllm_server_{run}_pod.log"
+    pod_log_filename = f"vllm_server_{benchmark_name}_pod.log"
     with open(pod_log_filename, 'w') as log_file:
         pod = Pod.get(pod_name, namespace='llmdbench')
         log_file.write("\n".join(pod.logs()))
@@ -237,7 +237,7 @@ def stop_vllm_server(k_client, run, pod_name, pf):
 
     # Delete pod
     try:
-        api_response = k_client.delete_namespaced_pod(pod_name, 'llmdbench')
+        api_response = k_client.delete_namespaced_pod(pod_name, 'llmdbench', grace_period_seconds=0)
         print(f"vllm pod {pod_name} has been deleted: api response {api_response}")
 
     except ApiException as e:
@@ -309,7 +309,7 @@ def benchmark_wrapper(params, benchmark_name):
         print(f"{'='*50}")
 
         # Start server
-        pod_name = start_vllm_server(params, run, core_v1)
+        pod_name = start_vllm_server(params, benchmark_name, run, core_v1)
         try:
             time.sleep(15)
 
@@ -328,7 +328,7 @@ def benchmark_wrapper(params, benchmark_name):
 
         finally:
             # Always stop server
-            pod_log_file, metrics_log_file = stop_vllm_server(core_v1, run, pod_name, pf)
+            pod_log_file, metrics_log_file = stop_vllm_server(core_v1, benchmark_name, pod_name, pf)
             pod_log_files.append(pod_log_file)
             metrics_files.append(metrics_log_file)
             time.sleep(2)  # Brief pause between runs
