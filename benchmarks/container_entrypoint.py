@@ -292,13 +292,20 @@ def benchmark_wrapper(params, benchmark_name):
     filename = "ShareGPT_V3_unfiltered_cleaned_split.json"
     download_dataset(url, filename)
 
+<<<<<<< HEAD
     params = json.loads(params)
 
     output_path = params['result_folder']
     # Create output folder
     os.makedirs(output_path, exist_ok=True)
 
+=======
+>>>>>>> 44d1449e5 (Running many experiments)
     params = json.loads(params)
+
+    output_path = params['result_folder']
+    # Create output folder
+    os.makedirs(output_path, exist_ok=True)
 
     # Set up K8s client
     config.load_kube_config()
