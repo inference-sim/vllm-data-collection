@@ -80,16 +80,17 @@ def generate_config(num_prompts_list, request_rate_list, temperature_list, datas
 
 def main():
     # Define parameter sweep ranges
-    num_prompts_list = [100]
-    request_rate_list = [16]
+    num_prompts_list = [100, 400, 800, 1000]
+    request_rate_list = [4, 8, 16, 32, 64]
     temperature_list = [0.0]
-    max_num_batched_tokens = [512, 1024]
-    long_prefill_token_threshold = [16, 256]
+    max_num_batched_tokens = [256, 1024, 8192]
+    long_prefill_token_threshold = [16, 256, 1024]
     datasets_list = [
         {'name': 'sharegpt', 'path': 'ShareGPT_V3_unfiltered_cleaned_split.json'},
     ]
     # map from LLM name to [GPU type, min GPU requirement]
-    models_to_gpus = {'Qwen/Qwen2-7B-Instruct':['NVIDIA-H100-80GB-HBM3', 30000]}
+    # models_to_gpus = {'Qwen/Qwen2.5-14B':['NVIDIA-H100-80GB-HBM3', 50000]}
+    models_to_gpus = {'google/gemma-7b': ['NVIDIA-H100-80GB-HBM3', 50000]}
     
     # Generate configuration
     config = generate_config(num_prompts_list, request_rate_list, temperature_list, datasets_list, 

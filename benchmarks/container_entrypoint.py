@@ -9,6 +9,7 @@ from pathlib import Path
 from kubernetes import config
 from kubernetes.client import Configuration
 from kubernetes.client.api import core_v1_api
+import kubernetes.client as client
 from kubernetes.client.rest import ApiException
 from kubernetes.stream import stream
 from kr8s.objects import Pod
@@ -29,10 +30,10 @@ def download_dataset(url, filename):
         except Exception as e:
             print(f"An error occurred: {e}")
 
-def start_vllm_server(config, benchmark_name, run, k_client):
+def start_vllm_server(benchmark_config, benchmark_name, run, k_client):
     """Start vLLM server with config parameters"""
-    model = config['model']
-    vllm_params = config['vllm']
+    model = benchmark_config['model']
+    vllm_params = benchmark_config['vllm']
 
     args = [model,
         '--gpu-memory-utilization', str(vllm_params['gpu_memory_utilization']),
@@ -52,7 +53,20 @@ def start_vllm_server(config, benchmark_name, run, k_client):
 
     print(f"Starting vLLM server: vllm serve {' '.join(args)}")
 
+    config.load_kube_config()
+
     pod_name = f"vllm-benchmark-collection-{benchmark_name}"
+
+    env_var = client.V1EnvVar(
+        name="HF_TOKEN",
+        value_from=client.V1EnvVarSource(
+            secret_key_ref=client.V1SecretKeySelector(
+                name="hf-secret",
+                key="HF_TOKEN"
+            )
+        )
+    )
+    args_sep = " ".join(args)
 
     with open(f'vllm_server_{run}.log', 'w') as log_file:
 
@@ -96,8 +110,9 @@ def start_vllm_server(config, benchmark_name, run, k_client):
                     {
                         'name': 'vllm',
                         'image': "vllm/vllm-openai:v0.10.0",
-                        'command': ['vllm', 'serve'],
-                        'args': args,
+                        'command': ['/bin/sh', '-c'],
+                        'args': [f'huggingface-cli login --token $HF_TOKEN && vllm serve {args_sep}'],
+                        'env': [env_var],
                         'startupProbe': {
                             "httpGet": {
                                 "path": "/v1/models",
@@ -139,10 +154,10 @@ def wait_for_server(model: str):
     print("Server failed to start within timeout")
     return False
 
-def run_benchmark(config, output_folder, run_number):
+def run_benchmark(benchmark_config, output_folder, run_number):
     """Run benchmark and return output"""
-    benchmark_params = config['benchmark']
-    model = config['model']
+    benchmark_params = benchmark_config['benchmark']
+    model = benchmark_config['model']
 
     os.environ["VLLM_ENABLE_V1_MULTIPROCESSING"] = "0"
 
