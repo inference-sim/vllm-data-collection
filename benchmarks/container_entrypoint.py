@@ -57,6 +57,17 @@ def start_vllm_server(benchmark_config, benchmark_name, run, k_client):
 
     pod_name = f"vllm-benchmark-collection-{benchmark_name}"
 
+    env_var = client.V1EnvVar(
+        name="HF_TOKEN",
+        value_from=client.V1EnvVarSource(
+            secret_key_ref=client.V1SecretKeySelector(
+                name="hf-secret",
+                key="HF_TOKEN"
+            )
+        )
+    )
+    args_sep = " ".join(args)
+
     with open(f'vllm_server_{run}.log', 'w') as log_file:
 
         # Create a pod manifest for vllm
@@ -322,15 +333,12 @@ def benchmark_wrapper(params, benchmark_name):
     filename = "ShareGPT_V3_unfiltered_cleaned_split.json"
     download_dataset(url, filename)
 
-<<<<<<< HEAD
     params = json.loads(params)
 
     output_path = params['result_folder']
     # Create output folder
     os.makedirs(output_path, exist_ok=True)
 
-=======
->>>>>>> 44d1449e5 (Running many experiments)
     params = json.loads(params)
 
     output_path = params['result_folder']
