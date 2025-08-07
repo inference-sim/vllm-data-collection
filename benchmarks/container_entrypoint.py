@@ -333,12 +333,15 @@ def benchmark_wrapper(params, benchmark_name):
     filename = "ShareGPT_V3_unfiltered_cleaned_split.json"
     download_dataset(url, filename)
 
+<<<<<<< HEAD
     params = json.loads(params)
 
     output_path = params['result_folder']
     # Create output folder
     os.makedirs(output_path, exist_ok=True)
 
+=======
+>>>>>>> 529c7eaaa (Added new config)
     params = json.loads(params)
 
     output_path = params['result_folder']
