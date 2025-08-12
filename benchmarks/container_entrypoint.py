@@ -57,15 +57,6 @@ def start_vllm_server(benchmark_config, benchmark_name, run, k_client):
 
     pod_name = f"vllm-benchmark-collection-{benchmark_name}"
 
-    env_var = client.V1EnvVar(
-        name="HF_TOKEN",
-        value_from=client.V1EnvVarSource(
-            secret_key_ref=client.V1SecretKeySelector(
-                name="hf-secret",
-                key="HF_TOKEN"
-            )
-        )
-    )
     args_sep = " ".join(args)
 
     with open(f'vllm_server_{run}.log', 'w') as log_file:
@@ -106,13 +97,26 @@ def start_vllm_server(benchmark_config, benchmark_name, run, k_client):
                         }
                     }
                 },
+                'securityContext': {
+                    'runAsUser': 0
+                },
                 'containers': [
                     {
                         'name': 'vllm',
                         'image': "vllm/vllm-openai:v0.10.0",
                         'command': ['/bin/sh', '-c'],
                         'args': [f'huggingface-cli login --token $HF_TOKEN && vllm serve {args_sep}'],
-                        'env': [env_var],
+                        'env': [
+                            {
+                                "name": "HF_TOKEN",
+                                "valueFrom": {
+                                    "secretKeyRef": {
+                                        "key": "HF_TOKEN",
+                                        "name": "hf-secret"
+                                        }
+                                    }
+                            }
+                        ],
                         'startupProbe': {
                             "httpGet": {
                                 "path": "/v1/models",
@@ -124,7 +128,7 @@ def start_vllm_server(benchmark_config, benchmark_name, run, k_client):
                             "periodSeconds": 10,
                         }
                     }
-                ],
+                ]
             }
         }
 
