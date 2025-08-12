@@ -93,6 +93,7 @@ def main():
 <<<<<<< HEAD
 <<<<<<< HEAD
     # models_to_gpus = {'Qwen/Qwen2.5-14B':['NVIDIA-H100-80GB-HBM3', 50000]}
+<<<<<<< HEAD
     models_to_gpus = {'google/gemma-7b': ['NVIDIA-H100-80GB-HBM3', 50000]}
 =======
     models_to_gpus = {'Qwen/Qwen2-7B':['NVIDIA-H100-80GB-HBM3', 30000]}
@@ -104,6 +105,9 @@ def main():
     # models_to_gpus = {'Qwen/Qwen2.5-14B':['NVIDIA-H100-80GB-HBM3', 50000]}
     models_to_gpus = {'google/gemma-7b': ['NVIDIA-H100-80GB-HBM3', 50000]}
 >>>>>>> 0b1a1d41b (Added HF_TOKEN env var)
+=======
+    models_to_gpus = {'Qwen/Qwen2-7B': ['NVIDIA-H100-80GB-HBM3', 50000]}
+>>>>>>> 664868cb2 (Support for handcrafted workloads)
     
     # Generate configuration
     config = generate_config(num_prompts_list, request_rate_list, temperature_list, datasets_list, 

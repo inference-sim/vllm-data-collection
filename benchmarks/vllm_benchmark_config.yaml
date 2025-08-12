@@ -6,11 +6,11 @@
 # Generated test configurations
 test:
   baseline:
-    name: exp_100p_4r_0.0t_256mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_100p_4r_0.0t_256mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -33,11 +33,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline2:
-    name: exp_100p_4r_0.0t_256mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_100p_4r_0.0t_256mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -60,11 +60,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline3:
-    name: exp_100p_4r_0.0t_1024mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_100p_4r_0.0t_1024mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -87,11 +87,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline4:
-    name: exp_100p_4r_0.0t_1024mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_100p_4r_0.0t_1024mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -114,11 +114,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline5:
-    name: exp_100p_4r_0.0t_1024mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_100p_4r_0.0t_1024mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -141,11 +141,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline6:
-    name: exp_100p_4r_0.0t_8192mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_100p_4r_0.0t_8192mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -168,11 +168,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline7:
-    name: exp_100p_4r_0.0t_8192mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_100p_4r_0.0t_8192mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -195,11 +195,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline8:
-    name: exp_100p_4r_0.0t_8192mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_100p_4r_0.0t_8192mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -222,11 +222,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline9:
-    name: exp_100p_8r_0.0t_256mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_100p_8r_0.0t_256mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -249,11 +249,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline10:
-    name: exp_100p_8r_0.0t_256mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_100p_8r_0.0t_256mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -276,11 +276,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline11:
-    name: exp_100p_8r_0.0t_1024mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_100p_8r_0.0t_1024mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -303,11 +303,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline12:
-    name: exp_100p_8r_0.0t_1024mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_100p_8r_0.0t_1024mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -330,11 +330,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline13:
-    name: exp_100p_8r_0.0t_1024mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_100p_8r_0.0t_1024mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -357,11 +357,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline14:
-    name: exp_100p_8r_0.0t_8192mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_100p_8r_0.0t_8192mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -384,11 +384,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline15:
-    name: exp_100p_8r_0.0t_8192mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_100p_8r_0.0t_8192mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -411,11 +411,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline16:
-    name: exp_100p_8r_0.0t_8192mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_100p_8r_0.0t_8192mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -438,11 +438,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline17:
-    name: exp_100p_16r_0.0t_256mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_100p_16r_0.0t_256mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -465,11 +465,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline18:
-    name: exp_100p_16r_0.0t_256mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_100p_16r_0.0t_256mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -492,11 +492,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline19:
-    name: exp_100p_16r_0.0t_1024mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_100p_16r_0.0t_1024mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -519,11 +519,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline20:
-    name: exp_100p_16r_0.0t_1024mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_100p_16r_0.0t_1024mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -546,11 +546,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline21:
-    name: exp_100p_16r_0.0t_1024mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_100p_16r_0.0t_1024mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -573,11 +573,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline22:
-    name: exp_100p_16r_0.0t_8192mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_100p_16r_0.0t_8192mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -600,11 +600,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline23:
-    name: exp_100p_16r_0.0t_8192mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_100p_16r_0.0t_8192mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -627,11 +627,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline24:
-    name: exp_100p_16r_0.0t_8192mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_100p_16r_0.0t_8192mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -654,11 +654,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline25:
-    name: exp_100p_32r_0.0t_256mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_100p_32r_0.0t_256mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -681,11 +681,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline26:
-    name: exp_100p_32r_0.0t_256mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_100p_32r_0.0t_256mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -708,11 +708,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline27:
-    name: exp_100p_32r_0.0t_1024mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_100p_32r_0.0t_1024mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -735,11 +735,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline28:
-    name: exp_100p_32r_0.0t_1024mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_100p_32r_0.0t_1024mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -762,11 +762,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline29:
-    name: exp_100p_32r_0.0t_1024mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_100p_32r_0.0t_1024mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -789,11 +789,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline30:
-    name: exp_100p_32r_0.0t_8192mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_100p_32r_0.0t_8192mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -816,11 +816,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline31:
-    name: exp_100p_32r_0.0t_8192mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_100p_32r_0.0t_8192mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -843,11 +843,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline32:
-    name: exp_100p_32r_0.0t_8192mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_100p_32r_0.0t_8192mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -870,11 +870,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline33:
-    name: exp_100p_64r_0.0t_256mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_100p_64r_0.0t_256mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -897,11 +897,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline34:
-    name: exp_100p_64r_0.0t_256mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_100p_64r_0.0t_256mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -924,11 +924,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline35:
-    name: exp_100p_64r_0.0t_1024mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_100p_64r_0.0t_1024mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -951,11 +951,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline36:
-    name: exp_100p_64r_0.0t_1024mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_100p_64r_0.0t_1024mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -978,11 +978,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline37:
-    name: exp_100p_64r_0.0t_1024mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_100p_64r_0.0t_1024mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1005,11 +1005,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline38:
-    name: exp_100p_64r_0.0t_8192mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_100p_64r_0.0t_8192mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1032,11 +1032,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline39:
-    name: exp_100p_64r_0.0t_8192mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_100p_64r_0.0t_8192mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1059,11 +1059,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline40:
-    name: exp_100p_64r_0.0t_8192mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_100p_64r_0.0t_8192mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1086,11 +1086,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline41:
-    name: exp_400p_4r_0.0t_256mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_400p_4r_0.0t_256mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1113,11 +1113,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline42:
-    name: exp_400p_4r_0.0t_256mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_400p_4r_0.0t_256mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1140,11 +1140,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline43:
-    name: exp_400p_4r_0.0t_1024mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_400p_4r_0.0t_1024mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1167,11 +1167,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline44:
-    name: exp_400p_4r_0.0t_1024mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_400p_4r_0.0t_1024mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1194,11 +1194,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline45:
-    name: exp_400p_4r_0.0t_1024mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_400p_4r_0.0t_1024mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1221,11 +1221,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline46:
-    name: exp_400p_4r_0.0t_8192mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_400p_4r_0.0t_8192mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1248,11 +1248,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline47:
-    name: exp_400p_4r_0.0t_8192mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_400p_4r_0.0t_8192mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1275,11 +1275,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline48:
-    name: exp_400p_4r_0.0t_8192mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_400p_4r_0.0t_8192mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1302,11 +1302,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline49:
-    name: exp_400p_8r_0.0t_256mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_400p_8r_0.0t_256mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1329,11 +1329,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline50:
-    name: exp_400p_8r_0.0t_256mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_400p_8r_0.0t_256mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1356,11 +1356,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline51:
-    name: exp_400p_8r_0.0t_1024mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_400p_8r_0.0t_1024mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1383,11 +1383,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline52:
-    name: exp_400p_8r_0.0t_1024mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_400p_8r_0.0t_1024mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1410,11 +1410,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline53:
-    name: exp_400p_8r_0.0t_1024mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_400p_8r_0.0t_1024mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1437,11 +1437,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline54:
-    name: exp_400p_8r_0.0t_8192mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_400p_8r_0.0t_8192mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1464,11 +1464,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline55:
-    name: exp_400p_8r_0.0t_8192mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_400p_8r_0.0t_8192mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1491,11 +1491,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline56:
-    name: exp_400p_8r_0.0t_8192mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_400p_8r_0.0t_8192mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1518,11 +1518,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline57:
-    name: exp_400p_16r_0.0t_256mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_400p_16r_0.0t_256mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1545,11 +1545,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline58:
-    name: exp_400p_16r_0.0t_256mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_400p_16r_0.0t_256mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1572,11 +1572,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline59:
-    name: exp_400p_16r_0.0t_1024mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_400p_16r_0.0t_1024mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1599,11 +1599,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline60:
-    name: exp_400p_16r_0.0t_1024mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_400p_16r_0.0t_1024mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1626,11 +1626,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline61:
-    name: exp_400p_16r_0.0t_1024mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_400p_16r_0.0t_1024mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1653,11 +1653,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline62:
-    name: exp_400p_16r_0.0t_8192mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_400p_16r_0.0t_8192mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1680,11 +1680,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline63:
-    name: exp_400p_16r_0.0t_8192mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_400p_16r_0.0t_8192mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1707,11 +1707,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline64:
-    name: exp_400p_16r_0.0t_8192mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_400p_16r_0.0t_8192mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1734,11 +1734,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline65:
-    name: exp_400p_32r_0.0t_256mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_400p_32r_0.0t_256mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1761,11 +1761,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline66:
-    name: exp_400p_32r_0.0t_256mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_400p_32r_0.0t_256mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1788,11 +1788,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline67:
-    name: exp_400p_32r_0.0t_1024mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_400p_32r_0.0t_1024mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1815,11 +1815,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline68:
-    name: exp_400p_32r_0.0t_1024mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_400p_32r_0.0t_1024mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1842,11 +1842,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline69:
-    name: exp_400p_32r_0.0t_1024mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_400p_32r_0.0t_1024mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1869,11 +1869,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline70:
-    name: exp_400p_32r_0.0t_8192mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_400p_32r_0.0t_8192mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1896,11 +1896,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline71:
-    name: exp_400p_32r_0.0t_8192mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_400p_32r_0.0t_8192mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1923,11 +1923,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline72:
-    name: exp_400p_32r_0.0t_8192mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_400p_32r_0.0t_8192mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1950,11 +1950,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline73:
-    name: exp_400p_64r_0.0t_256mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_400p_64r_0.0t_256mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -1977,11 +1977,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline74:
-    name: exp_400p_64r_0.0t_256mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_400p_64r_0.0t_256mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2004,11 +2004,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline75:
-    name: exp_400p_64r_0.0t_1024mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_400p_64r_0.0t_1024mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2031,11 +2031,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline76:
-    name: exp_400p_64r_0.0t_1024mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_400p_64r_0.0t_1024mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2058,11 +2058,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline77:
-    name: exp_400p_64r_0.0t_1024mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_400p_64r_0.0t_1024mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2085,11 +2085,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline78:
-    name: exp_400p_64r_0.0t_8192mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_400p_64r_0.0t_8192mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2112,11 +2112,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline79:
-    name: exp_400p_64r_0.0t_8192mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_400p_64r_0.0t_8192mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2139,11 +2139,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline80:
-    name: exp_400p_64r_0.0t_8192mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_400p_64r_0.0t_8192mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2166,11 +2166,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline81:
-    name: exp_800p_4r_0.0t_256mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_800p_4r_0.0t_256mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2193,11 +2193,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline82:
-    name: exp_800p_4r_0.0t_256mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_800p_4r_0.0t_256mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2220,11 +2220,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline83:
-    name: exp_800p_4r_0.0t_1024mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_800p_4r_0.0t_1024mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2247,11 +2247,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline84:
-    name: exp_800p_4r_0.0t_1024mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_800p_4r_0.0t_1024mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2274,11 +2274,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline85:
-    name: exp_800p_4r_0.0t_1024mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_800p_4r_0.0t_1024mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2301,11 +2301,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline86:
-    name: exp_800p_4r_0.0t_8192mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_800p_4r_0.0t_8192mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2328,11 +2328,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline87:
-    name: exp_800p_4r_0.0t_8192mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_800p_4r_0.0t_8192mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2355,11 +2355,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline88:
-    name: exp_800p_4r_0.0t_8192mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_800p_4r_0.0t_8192mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2382,11 +2382,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline89:
-    name: exp_800p_8r_0.0t_256mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_800p_8r_0.0t_256mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2409,11 +2409,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline90:
-    name: exp_800p_8r_0.0t_256mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_800p_8r_0.0t_256mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2436,11 +2436,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline91:
-    name: exp_800p_8r_0.0t_1024mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_800p_8r_0.0t_1024mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2463,11 +2463,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline92:
-    name: exp_800p_8r_0.0t_1024mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_800p_8r_0.0t_1024mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2490,11 +2490,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline93:
-    name: exp_800p_8r_0.0t_1024mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_800p_8r_0.0t_1024mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2517,11 +2517,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline94:
-    name: exp_800p_8r_0.0t_8192mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_800p_8r_0.0t_8192mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2544,11 +2544,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline95:
-    name: exp_800p_8r_0.0t_8192mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_800p_8r_0.0t_8192mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2571,11 +2571,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline96:
-    name: exp_800p_8r_0.0t_8192mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_800p_8r_0.0t_8192mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2598,11 +2598,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline97:
-    name: exp_800p_16r_0.0t_256mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_800p_16r_0.0t_256mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2625,11 +2625,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline98:
-    name: exp_800p_16r_0.0t_256mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_800p_16r_0.0t_256mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2652,11 +2652,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline99:
-    name: exp_800p_16r_0.0t_1024mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_800p_16r_0.0t_1024mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2679,11 +2679,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline100:
-    name: exp_800p_16r_0.0t_1024mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_800p_16r_0.0t_1024mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2706,11 +2706,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline101:
-    name: exp_800p_16r_0.0t_1024mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_800p_16r_0.0t_1024mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2733,11 +2733,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline102:
-    name: exp_800p_16r_0.0t_8192mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_800p_16r_0.0t_8192mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2760,11 +2760,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline103:
-    name: exp_800p_16r_0.0t_8192mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_800p_16r_0.0t_8192mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2787,11 +2787,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline104:
-    name: exp_800p_16r_0.0t_8192mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_800p_16r_0.0t_8192mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2814,11 +2814,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline105:
-    name: exp_800p_32r_0.0t_256mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_800p_32r_0.0t_256mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2841,11 +2841,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline106:
-    name: exp_800p_32r_0.0t_256mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_800p_32r_0.0t_256mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2868,11 +2868,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline107:
-    name: exp_800p_32r_0.0t_1024mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_800p_32r_0.0t_1024mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2895,11 +2895,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline108:
-    name: exp_800p_32r_0.0t_1024mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_800p_32r_0.0t_1024mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2922,11 +2922,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline109:
-    name: exp_800p_32r_0.0t_1024mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_800p_32r_0.0t_1024mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2949,11 +2949,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline110:
-    name: exp_800p_32r_0.0t_8192mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_800p_32r_0.0t_8192mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -2976,11 +2976,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline111:
-    name: exp_800p_32r_0.0t_8192mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_800p_32r_0.0t_8192mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3003,11 +3003,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline112:
-    name: exp_800p_32r_0.0t_8192mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_800p_32r_0.0t_8192mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3030,11 +3030,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline113:
-    name: exp_800p_64r_0.0t_256mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_800p_64r_0.0t_256mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3057,11 +3057,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline114:
-    name: exp_800p_64r_0.0t_256mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_800p_64r_0.0t_256mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3084,11 +3084,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline115:
-    name: exp_800p_64r_0.0t_1024mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_800p_64r_0.0t_1024mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3111,11 +3111,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline116:
-    name: exp_800p_64r_0.0t_1024mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_800p_64r_0.0t_1024mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3138,11 +3138,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline117:
-    name: exp_800p_64r_0.0t_1024mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_800p_64r_0.0t_1024mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3165,11 +3165,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline118:
-    name: exp_800p_64r_0.0t_8192mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_800p_64r_0.0t_8192mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3192,11 +3192,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline119:
-    name: exp_800p_64r_0.0t_8192mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_800p_64r_0.0t_8192mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3219,11 +3219,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline120:
-    name: exp_800p_64r_0.0t_8192mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_800p_64r_0.0t_8192mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3246,11 +3246,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline121:
-    name: exp_1000p_4r_0.0t_256mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_4r_0.0t_256mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3273,11 +3273,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline122:
-    name: exp_1000p_4r_0.0t_256mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_4r_0.0t_256mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3300,11 +3300,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline123:
-    name: exp_1000p_4r_0.0t_1024mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_4r_0.0t_1024mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3327,11 +3327,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline124:
-    name: exp_1000p_4r_0.0t_1024mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_4r_0.0t_1024mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3354,11 +3354,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline125:
-    name: exp_1000p_4r_0.0t_1024mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_4r_0.0t_1024mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3381,11 +3381,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline126:
-    name: exp_1000p_4r_0.0t_8192mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_4r_0.0t_8192mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3408,11 +3408,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline127:
-    name: exp_1000p_4r_0.0t_8192mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_4r_0.0t_8192mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3435,11 +3435,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline128:
-    name: exp_1000p_4r_0.0t_8192mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_4r_0.0t_8192mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3462,11 +3462,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline129:
-    name: exp_1000p_8r_0.0t_256mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_8r_0.0t_256mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3489,11 +3489,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline130:
-    name: exp_1000p_8r_0.0t_256mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_8r_0.0t_256mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3516,11 +3516,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline131:
-    name: exp_1000p_8r_0.0t_1024mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_8r_0.0t_1024mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3543,11 +3543,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline132:
-    name: exp_1000p_8r_0.0t_1024mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_8r_0.0t_1024mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3570,11 +3570,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline133:
-    name: exp_1000p_8r_0.0t_1024mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_8r_0.0t_1024mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3597,11 +3597,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline134:
-    name: exp_1000p_8r_0.0t_8192mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_8r_0.0t_8192mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3624,11 +3624,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline135:
-    name: exp_1000p_8r_0.0t_8192mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_8r_0.0t_8192mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3651,11 +3651,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline136:
-    name: exp_1000p_8r_0.0t_8192mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_8r_0.0t_8192mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3678,11 +3678,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline137:
-    name: exp_1000p_16r_0.0t_256mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_16r_0.0t_256mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3705,11 +3705,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline138:
-    name: exp_1000p_16r_0.0t_256mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_16r_0.0t_256mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3732,11 +3732,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline139:
-    name: exp_1000p_16r_0.0t_1024mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_16r_0.0t_1024mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3759,11 +3759,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline140:
-    name: exp_1000p_16r_0.0t_1024mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_16r_0.0t_1024mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3786,11 +3786,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline141:
-    name: exp_1000p_16r_0.0t_1024mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_16r_0.0t_1024mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3813,11 +3813,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline142:
-    name: exp_1000p_16r_0.0t_8192mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_16r_0.0t_8192mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3840,11 +3840,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline143:
-    name: exp_1000p_16r_0.0t_8192mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_16r_0.0t_8192mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3867,11 +3867,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline144:
-    name: exp_1000p_16r_0.0t_8192mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_16r_0.0t_8192mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3894,11 +3894,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline145:
-    name: exp_1000p_32r_0.0t_256mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_32r_0.0t_256mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3921,11 +3921,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline146:
-    name: exp_1000p_32r_0.0t_256mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_32r_0.0t_256mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3948,11 +3948,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline147:
-    name: exp_1000p_32r_0.0t_1024mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_32r_0.0t_1024mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -3975,11 +3975,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline148:
-    name: exp_1000p_32r_0.0t_1024mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_32r_0.0t_1024mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -4002,11 +4002,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline149:
-    name: exp_1000p_32r_0.0t_1024mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_32r_0.0t_1024mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -4029,11 +4029,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline150:
-    name: exp_1000p_32r_0.0t_8192mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_32r_0.0t_8192mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -4056,11 +4056,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline151:
-    name: exp_1000p_32r_0.0t_8192mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_32r_0.0t_8192mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -4083,11 +4083,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline152:
-    name: exp_1000p_32r_0.0t_8192mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_32r_0.0t_8192mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -4110,11 +4110,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline153:
-    name: exp_1000p_64r_0.0t_256mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_64r_0.0t_256mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -4137,11 +4137,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline154:
-    name: exp_1000p_64r_0.0t_256mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_64r_0.0t_256mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -4164,11 +4164,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline155:
-    name: exp_1000p_64r_0.0t_1024mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_64r_0.0t_1024mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -4191,11 +4191,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline156:
-    name: exp_1000p_64r_0.0t_1024mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_64r_0.0t_1024mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -4218,11 +4218,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline157:
-    name: exp_1000p_64r_0.0t_1024mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_64r_0.0t_1024mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -4245,11 +4245,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline158:
-    name: exp_1000p_64r_0.0t_8192mbt_16lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_64r_0.0t_8192mbt_16lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -4272,11 +4272,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline159:
-    name: exp_1000p_64r_0.0t_8192mbt_256lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_64r_0.0t_8192mbt_256lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true
@@ -4299,11 +4299,11 @@ test:
       temperature: 0.0
       seed: 42
   baseline160:
-    name: exp_1000p_64r_0.0t_8192mbt_1024lpt_sharegpt_google_gemma-7b
+    name: exp_1000p_64r_0.0t_8192mbt_1024lpt_sharegpt_Qwen_Qwen2-7B
     description: Basic vLLM performance test
-    model: google/gemma-7b
+    model: Qwen/Qwen2-7B
     runs: 1
-    result_folder: gemma-7b
+    result_folder: qwen2-7b
     vllm:
       gpu_memory_utilization: 0.9
       enable_prefix_caching: true

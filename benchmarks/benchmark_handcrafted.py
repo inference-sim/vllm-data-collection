@@ -114,7 +114,7 @@ from benchmark_utils import convert_to_pytorch_benchmark_format, write_to_json
 MILLISECONDS_TO_SECONDS_CONVERSION = 1000
 
 WRITE_OUTPUT_TOKENS = False
-MODEL_NAME = "Qwen/Qwen2-7B"  # Default model name, make sure no slashes are present
+MODEL_NAME = "ibm-granite/granite-3.3-8b-instruct"  # Default model name, make sure no slashes are present
 
 @dataclass
 class BenchmarkMetrics:
@@ -753,119 +753,7 @@ def main(args: argparse.Namespace):
             output_len=args.custom_output_len,
             skip_chat_template=args.custom_skip_chat_template,
         )
-
-    elif args.dataset_name == "sonnet":
-        dataset = SonnetDataset(dataset_path=args.dataset_path)
-        # For the "sonnet" dataset, formatting depends on the backend.
-        if args.backend == "openai-chat":
-            input_requests = dataset.sample(
-                num_requests=args.num_prompts,
-                input_len=args.sonnet_input_len,
-                output_len=args.sonnet_output_len,
-                prefix_len=args.sonnet_prefix_len,
-                tokenizer=tokenizer,
-                return_prompt_formatted=False,
-            )
-        else:
-            assert tokenizer.chat_template or tokenizer.default_chat_template, (
-                "Tokenizer/model must have chat template for sonnet dataset."
-            )
-            input_requests = dataset.sample(
-                num_requests=args.num_prompts,
-                input_len=args.sonnet_input_len,
-                output_len=args.sonnet_output_len,
-                prefix_len=args.sonnet_prefix_len,
-                tokenizer=tokenizer,
-                return_prompt_formatted=True,
-            )
-
-    elif args.dataset_name == "hf":
-        # all following datasets are implemented from the
-        # HuggingFaceDataset base class
-        if args.dataset_path in VisionArenaDataset.SUPPORTED_DATASET_PATHS:
-            dataset_class = VisionArenaDataset
-            args.hf_split = "train"
-            args.hf_subset = None
-        elif args.dataset_path in InstructCoderDataset.SUPPORTED_DATASET_PATHS:
-            dataset_class = InstructCoderDataset
-            args.hf_split = "train"
-        elif args.dataset_path in MTBenchDataset.SUPPORTED_DATASET_PATHS:
-            dataset_class = MTBenchDataset
-            args.hf_split = "train"
-        elif args.dataset_path in ConversationDataset.SUPPORTED_DATASET_PATHS:
-            dataset_class = ConversationDataset
-        elif args.dataset_path in AIMODataset.SUPPORTED_DATASET_PATHS:
-            dataset_class = AIMODataset
-            args.hf_split = "train"
-        elif args.dataset_path in NextEditPredictionDataset.SUPPORTED_DATASET_PATHS:  # noqa: E501
-            dataset_class = NextEditPredictionDataset
-            args.hf_split = "train"
-        elif args.dataset_path in ASRDataset.SUPPORTED_DATASET_PATHS:
-            dataset_class = ASRDataset
-            args.hf_split = "train"
-        else:
-            supported_datasets = set(
-                [
-                    dataset_name
-                    for cls in HuggingFaceDataset.__subclasses__()
-                    for dataset_name in cls.SUPPORTED_DATASET_PATHS
-                ]
-            )
-            raise ValueError(
-                f"Unsupported dataset path: {args.dataset_path}. "
-                "Huggingface dataset only supports dataset_path"
-                f" from one of following: {supported_datasets}. "
-                "Please consider contributing if you would "
-                "like to add support for additional dataset formats."
-            )
-
-        if dataset_class.IS_MULTIMODAL and backend not in [
-            "openai-chat",
-            "openai-audio",
-        ]:
-            # multi-modal benchmark is only available on OpenAI Chat backend.
-            raise ValueError(
-                "Multi-modal content is only supported on 'openai-chat' and "
-                "'openai-audio' backend."
-            )
-        input_requests = dataset_class(
-            dataset_path=args.dataset_path,
-            dataset_subset=args.hf_subset,
-            dataset_split=args.hf_split,
-            random_seed=args.seed,
-        ).sample(
-            num_requests=args.num_prompts,
-            tokenizer=tokenizer,
-            output_len=args.hf_output_len,
-        )
-
-    else:
-        # For datasets that follow a similar structure, use a mapping.
-        dataset_mapping = {
-            "sharegpt": lambda: ShareGPTDataset(
-                random_seed=args.seed, dataset_path=args.dataset_path
-            ).sample(
-                tokenizer=tokenizer,
-                num_requests=args.num_prompts,
-                output_len=args.sharegpt_output_len,
-            ),
-            "burstgpt": lambda: BurstGPTDataset(
-                random_seed=args.seed, dataset_path=args.dataset_path
-            ).sample(tokenizer=tokenizer, num_requests=args.num_prompts),
-            "random": lambda: RandomDataset(dataset_path=args.dataset_path).sample(
-                tokenizer=tokenizer,
-                num_requests=args.num_prompts,
-                prefix_len=args.random_prefix_len,
-                input_len=args.random_input_len,
-                output_len=args.random_output_len,
-                range_ratio=args.random_range_ratio,
-            ),
-        }
-
-        try:
-            input_requests = dataset_mapping[args.dataset_name]()
-        except KeyError as err:
-            raise ValueError(f"Unknown dataset: {args.dataset_name}") from err
+        
     goodput_config_dict = check_goodput_args(args)
 
     # Collect the sampling parameters.
