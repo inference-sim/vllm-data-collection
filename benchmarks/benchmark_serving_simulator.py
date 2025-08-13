@@ -113,8 +113,8 @@ from benchmark_utils import convert_to_pytorch_benchmark_format, write_to_json
 
 MILLISECONDS_TO_SECONDS_CONVERSION = 1000
 
-WRITE_OUTPUT_TOKENS = False
-MODEL_NAME = "Qwen/Qwen2-7B"  # Default model name, make sure no slashes are present
+WRITE_OUTPUT_TOKENS = True
+MODEL_NAME = "Qwen2-7B"  # Default model name, make sure no slashes are present
 
 @dataclass
 class BenchmarkMetrics:

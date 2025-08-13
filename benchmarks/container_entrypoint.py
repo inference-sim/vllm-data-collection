@@ -97,6 +97,11 @@ def start_vllm_server(benchmark_config, benchmark_name, run, k_client):
                                             "values": [
                                                 str(vllm_params['gpu_memory_min']) # land pod on the node at least this much GPU memory (in MB)
                                             ]
+                                        },
+                                        {
+                                            "key": "nvidia.com/gpu.count",
+                                            "operator": "Gt",
+                                            "values": ["1"]
                                         }
                                     ]
                                 }
@@ -396,9 +401,9 @@ def benchmark_wrapper(params = None, benchmark_name = None):
 
         finally:
             # Always stop server
-            pod_log_file, metrics_log_file = stop_vllm_server(core_v1, benchmark_name, pod_name, pf, output_path)
-            pod_log_files.append(pod_log_file)
-            metrics_files.append(metrics_log_file)
+            # pod_log_file, metrics_log_file = stop_vllm_server(core_v1, benchmark_name, pod_name, pf, output_path)
+            # pod_log_files.append(pod_log_file)
+            # metrics_files.append(metrics_log_file)
             time.sleep(2)  # Brief pause between runs
 
     # Save all results

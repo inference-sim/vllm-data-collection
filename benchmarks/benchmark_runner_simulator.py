@@ -28,6 +28,7 @@ def main():
     
     for benchmark, params in config.items():
         # spin up each benchmark with arguments to the entrypoint script
+        # if n >= 156:
         params_json = json.dumps(params)
         benchmark_wrapper(params_json, benchmark)
         time.sleep(10)
