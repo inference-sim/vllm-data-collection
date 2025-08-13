@@ -115,9 +115,15 @@ def start_vllm_server(benchmark_config, benchmark_name, run, k_client):
                         ],
                         'resources': {
                             'requests': {
+                                'memory': '2113411316',
+                                'cpu': '1',
                                 'nvidia.com/gpu': '1',
-                                'nvidia.com/gpu.memory': str(vllm_params['gpu_memory_min']),
                             },
+                            'limits': {
+                                'memory': '2113411316',
+                                'cpu': '8',
+                                'nvidia.com/gpu': '1',
+                            }
                         },
                         'startupProbe': {
                             "httpGet": {
