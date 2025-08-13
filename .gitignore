@@ -90,6 +90,8 @@ ipython_config.py
 
 # generated files
 **/generated/**
+outputs_vllm/
+*.txt
 
 # pyenv
 #   For a library or package, you might want to ignore these files since the code is
@@ -204,3 +206,9 @@ shellcheck*/
 # Ignore moe/marlin_moe gen code
 csrc/moe/marlin_moe_wna16/kernel_*
 /*/**.log
+
+# Generated model-specific outputs
+gemma-7b/
+mistral-7b-instruct-v0-3/
+qwen2-5-14b/
+qwen2-7b-instruct/

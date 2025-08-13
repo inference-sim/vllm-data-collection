@@ -9,6 +9,7 @@ from pathlib import Path
 from kubernetes import config
 from kubernetes.client import Configuration
 from kubernetes.client.api import core_v1_api
+import kubernetes.client as client
 from kubernetes.client.rest import ApiException
 from kubernetes.stream import stream
 from kr8s.objects import Pod
@@ -29,10 +30,10 @@ def download_dataset(url, filename):
         except Exception as e:
             print(f"An error occurred: {e}")
 
-def start_vllm_server(config, benchmark_name, run, k_client):
+def start_vllm_server(benchmark_config, benchmark_name, run, k_client):
     """Start vLLM server with config parameters"""
-    model = config['model']
-    vllm_params = config['vllm']
+    model = benchmark_config['model']
+    vllm_params = benchmark_config['vllm']
 
     args = [model,
         '--gpu-memory-utilization', str(vllm_params['gpu_memory_utilization']),
@@ -51,6 +52,8 @@ def start_vllm_server(config, benchmark_name, run, k_client):
         args.append('--disable-log-requests')
 
     print(f"Starting vLLM server: vllm serve {' '.join(args)}")
+
+    config.load_kube_config()
 
     pod_name = f"vllm-benchmark-collection-{benchmark_name}"
 
@@ -80,8 +83,6 @@ def start_vllm_server(config, benchmark_name, run, k_client):
                                         {
                                             "key": "nvidia.com/gpu.memory",
                                             "operator": "Gt",
-                                            "key": "nvidia.com/gpu.memory",
-                                            "operator": "Gt",
                                             "values": [
                                                 str(vllm_params['gpu_memory_min']) # land pod on the node at least this much GPU memory (in MB)
                                             ]
@@ -92,12 +93,26 @@ def start_vllm_server(config, benchmark_name, run, k_client):
                         }
                     }
                 },
+                # 'securityContext': {
+                #     'runAsUser': 0
+                # },
                 'containers': [
                     {
                         'name': 'vllm',
                         'image': "vllm/vllm-openai:v0.10.0",
                         'command': ['vllm', 'serve'],
                         'args': args,
+                        'env': [
+                            {
+                                "name": "HF_TOKEN",
+                                "valueFrom": {
+                                    "secretKeyRef": {
+                                        "key": "HF_TOKEN",
+                                        "name": "hf-secret"
+                                        }
+                                    }
+                            }
+                        ],
                         'startupProbe': {
                             "httpGet": {
                                 "path": "/v1/models",
@@ -109,7 +124,7 @@ def start_vllm_server(config, benchmark_name, run, k_client):
                             "periodSeconds": 10,
                         }
                     }
-                ],
+                ]
             }
         }
 
@@ -139,10 +154,10 @@ def wait_for_server(model: str):
     print("Server failed to start within timeout")
     return False
 
-def run_benchmark(config, output_folder, run_number):
+def run_benchmark(benchmark_config, output_folder, run_number):
     """Run benchmark and return output"""
-    benchmark_params = config['benchmark']
-    model = config['model']
+    benchmark_params = benchmark_config['benchmark']
+    model = benchmark_config['model']
 
     os.environ["VLLM_ENABLE_V1_MULTIPROCESSING"] = "0"
 
