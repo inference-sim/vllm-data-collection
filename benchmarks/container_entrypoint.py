@@ -57,8 +57,6 @@ def start_vllm_server(benchmark_config, benchmark_name, run, k_client):
 
     pod_name = f"vllm-benchmark-collection-{benchmark_name}"
 
-    args_sep = " ".join(args)
-
     with open(f'vllm_server_{run}.log', 'w') as log_file:
 
         # Create a pod manifest for vllm
@@ -85,8 +83,6 @@ def start_vllm_server(benchmark_config, benchmark_name, run, k_client):
                                         {
                                             "key": "nvidia.com/gpu.memory",
                                             "operator": "Gt",
-                                            "key": "nvidia.com/gpu.memory",
-                                            "operator": "Gt",
                                             "values": [
                                                 str(vllm_params['gpu_memory_min']) # land pod on the node at least this much GPU memory (in MB)
                                             ]
@@ -97,15 +93,15 @@ def start_vllm_server(benchmark_config, benchmark_name, run, k_client):
                         }
                     }
                 },
-                'securityContext': {
-                    'runAsUser': 0
-                },
+                # 'securityContext': {
+                #     'runAsUser': 0
+                # },
                 'containers': [
                     {
                         'name': 'vllm',
                         'image': "vllm/vllm-openai:v0.10.0",
-                        'command': ['/bin/sh', '-c'],
-                        'args': [f'huggingface-cli login --token $HF_TOKEN && vllm serve {args_sep}'],
+                        'command': ['vllm', 'serve'],
+                        'args': args,
                         'env': [
                             {
                                 "name": "HF_TOKEN",
