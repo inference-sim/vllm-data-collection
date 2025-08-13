@@ -113,6 +113,12 @@ def start_vllm_server(benchmark_config, benchmark_name, run, k_client):
                                     }
                             }
                         ],
+                        'resources': {
+                            'requests': {
+                                'nvidia.com/gpu': '1',
+                                'nvidia.com/gpu.memory': str(vllm_params['gpu_memory_min']),
+                            },
+                        },
                         'startupProbe': {
                             "httpGet": {
                                 "path": "/v1/models",
@@ -196,7 +202,7 @@ def run_benchmark(benchmark_config, output_folder, run_number):
     if result.returncode == 0:
         print(f"Benchmark run {run_number} completed successfully")
         return result.stdout
-    else:   
+    else:
         print(f"Benchmark run {run_number} failed: {result.stderr}")
         return None
 
