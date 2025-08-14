@@ -93,9 +93,10 @@ def start_vllm_server(benchmark_config, benchmark_name, run, k_client):
                         }
                     }
                 },
-                # 'securityContext': {
-                #     'runAsUser': 0
-                # },
+                # Temporary for now until cluster is fixed
+                'securityContext': {
+                    'runAsUser': 0
+                },
                 'containers': [
                     {
                         'name': 'vllm',
@@ -113,6 +114,8 @@ def start_vllm_server(benchmark_config, benchmark_name, run, k_client):
                                     }
                             }
                         ],
+
+                        # Got this info from node
                         'resources': {
                             'requests': {
                                 'memory': '2113411316',
