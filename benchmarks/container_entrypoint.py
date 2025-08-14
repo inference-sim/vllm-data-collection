@@ -134,7 +134,7 @@ def start_vllm_server(benchmark_config, benchmark_name, run, k_client):
                                 "port": 8000,
                             },
 
-                            # Max 5 minutes (30 * 10) to finish startup
+                            # Max 5 minutes (50 * 10) to finish startup
                             "failureThreshold": 50,
                             "periodSeconds": 10,
                         }
