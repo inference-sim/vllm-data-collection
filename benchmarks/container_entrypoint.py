@@ -118,12 +118,12 @@ def start_vllm_server(benchmark_config, benchmark_name, run, k_client):
                         # Got this info from node
                         'resources': {
                             'requests': {
-                                'memory': '2113411316',
+                                'memory': '50Gi',
                                 'cpu': '1',
                                 'nvidia.com/gpu': '1',
                             },
                             'limits': {
-                                'memory': '2113411316',
+                                'memory': '50Gi',
                                 'cpu': '8',
                                 'nvidia.com/gpu': '1',
                             }
@@ -135,7 +135,7 @@ def start_vllm_server(benchmark_config, benchmark_name, run, k_client):
                             },
 
                             # Max 5 minutes (30 * 10) to finish startup
-                            "failureThreshold": 30,
+                            "failureThreshold": 50,
                             "periodSeconds": 10,
                         }
                     }
