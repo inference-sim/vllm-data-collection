@@ -57,17 +57,6 @@ def start_vllm_server(benchmark_config, benchmark_name, run, k_client):
 
     pod_name = f"vllm-benchmark-collection-{benchmark_name}"
 
-    env_var = client.V1EnvVar(
-        name="HF_TOKEN",
-        value_from=client.V1EnvVarSource(
-            secret_key_ref=client.V1SecretKeySelector(
-                name="hf-secret",
-                key="HF_TOKEN"
-            )
-        )
-    )
-    args_sep = " ".join(args)
-
     with open(f'vllm_server_{run}.log', 'w') as log_file:
 
         # Create a pod manifest for vllm
@@ -97,11 +86,6 @@ def start_vllm_server(benchmark_config, benchmark_name, run, k_client):
                                             "values": [
                                                 str(vllm_params['gpu_memory_min']) # land pod on the node at least this much GPU memory (in MB)
                                             ]
-                                        },
-                                        {
-                                            "key": "nvidia.com/gpu.count",
-                                            "operator": "Gt",
-                                            "values": ["1"]
                                         }
                                     ]
                                 }
@@ -185,12 +169,10 @@ def wait_for_server(model: str):
     print("Server failed to start within timeout")
     return False
 
-
 def run_benchmark(benchmark_config, output_folder, run_number):
     """Run benchmark and return output"""
     benchmark_params = benchmark_config['benchmark']
     model = benchmark_config['model']
-
 
     os.environ["VLLM_ENABLE_V1_MULTIPROCESSING"] = "0"
 
@@ -200,24 +182,17 @@ def run_benchmark(benchmark_config, output_folder, run_number):
         '--model', model,
         '--dataset-name', benchmark_params['dataset_name'],
         '--num-prompts', str(benchmark_params['num_prompts']),
+        '--request-rate', str(benchmark_params['request_rate']),
         '--temperature', str(benchmark_params['temperature']),
         '--seed', str(benchmark_params['seed']),
         '--save-result',
     ]
 
-    if 'request_rate' in benchmark_params:
-        cmd.extend(['--request-rate', str(benchmark_params['request_rate'])])
-    if benchmark_params['dataset_name'] == 'custom':
-        cmd.extend(['--custom-output-len', str(benchmark_params['output_len'])])
-        cmd.append('--custom-skip-chat-template')
-
-    request_rate = str(benchmark_params.get('request_rate', 'inf'))
-
     # save request rate, temperature, dataset, distribution to env
 
     with open('benchmark_params.json', 'w') as f:
         json.dump({
-            'request_rate': request_rate,
+            'request_rate': str(benchmark_params['request_rate']),
             'temperature': str(benchmark_params['temperature']),
             'distribution': "poisson",
             'dataset_name': "sharegpt"
@@ -319,13 +294,12 @@ def save_results(outputs, params, output_folder, pod_log_files, metrics_log_file
     config_name = f"{params['name']}"
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_file = Path(output_folder) / f"{config_name}_{timestamp}.txt"
-    request_rate = benchmark_params.get('request_rate', 'inf')
 
     with open(output_file, 'w') as f:
         f.write(f"Benchmark Results: {params['name']}\n")
         f.write(f"Config: {config_name}\n")
         f.write(f"Timestamp: {timestamp}\n")
-        f.write(f"Request Rate: {request_rate}\n")
+        f.write(f"Request Rate: {benchmark_params['request_rate']}\n")
         f.write(f"Num Prompts: {benchmark_params['num_prompts']}\n")
         f.write(f"Temperature: {benchmark_params['temperature']}\n")
         f.write(f"Dataset: {benchmark_params['dataset_name']}\n")
@@ -342,20 +316,13 @@ def save_results(outputs, params, output_folder, pod_log_files, metrics_log_file
     print(f"vLLM metrics saved to: {metrics_log_files}")
     print(f"Results saved to: {output_file}")
 
-def benchmark_wrapper(params = None, benchmark_name = None):
+def benchmark_wrapper(params, benchmark_name):
+    # Download ShareGPT dataset
+    url = "https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered/resolve/main/ShareGPT_V3_unfiltered_cleaned_split.json"
+    filename = "ShareGPT_V3_unfiltered_cleaned_split.json"
+    download_dataset(url, filename)
 
     params = json.loads(params)
-
-    output_path = params['result_folder']
-    # Create output folder
-    os.makedirs(output_path, exist_ok=True)
-
-    params = json.loads(params)
-    if params['benchmark']['dataset_name'] == 'sharegpt':
-        # Download ShareGPT dataset
-        url = "https://huggingface.co/datasets/anon8231489123/ShareGPT_Vicuna_unfiltered/resolve/main/ShareGPT_V3_unfiltered_cleaned_split.json"
-        filename = "ShareGPT_V3_unfiltered_cleaned_split.json"
-        download_dataset(url, filename)
 
     output_path = params['result_folder']
     # Create output folder
@@ -401,9 +368,9 @@ def benchmark_wrapper(params = None, benchmark_name = None):
 
         finally:
             # Always stop server
-            # pod_log_file, metrics_log_file = stop_vllm_server(core_v1, benchmark_name, pod_name, pf, output_path)
-            # pod_log_files.append(pod_log_file)
-            # metrics_files.append(metrics_log_file)
+            pod_log_file, metrics_log_file = stop_vllm_server(core_v1, benchmark_name, pod_name, pf, output_path)
+            pod_log_files.append(pod_log_file)
+            metrics_files.append(metrics_log_file)
             time.sleep(2)  # Brief pause between runs
 
     # Save all results
