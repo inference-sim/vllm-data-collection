@@ -35,10 +35,14 @@ def start_vllm_server_client(benchmark_config, benchmark_name, k_client, mode, m
         server_args.append('--disable-log-requests')
 
     client_args = [
-        f"""git clone https://github.com/inference-sim/vllm-data-collection
+        f"""set -ex
+apt-get update && apt-get install -y git curl
+git clone -b scenario1 https://github.com/inference-sim/vllm-data-collection
 cd vllm-data-collection/scenario1
 pip install -r requirements.txt
+python generate_prompts_fixedlen.py --model {model} --mode {mode}
 python scenario1_client.py --model {model}
+sleep 30000
         """
     ]
 
@@ -165,7 +169,7 @@ def wait_for_server(model: str):
         time.sleep(5)
 
     print("Server failed to start within timeout")
-    return False
+    return False    
 
 def collect_pod_logs_metrics(k_client, benchmark_name, pod_name, mode):
     """Stop vLLM server process and returns vllm pod log file and metrics json file"""
@@ -200,15 +204,6 @@ def main():
     with open(config_file, "r") as f:
        full_config = yaml.safe_load(f) # read necessary configs and seed files
 
-    prompts_generation_command = [
-        "python",
-        "generate_prompts_fixedlen.py",
-        "--model", model,
-        "--mode", args.mode
-    ]
-
-    subprocess.run(prompts_generation_command, check=True)
-
     # Set up K8s client
     config.load_kube_config()
     try:
@@ -228,19 +223,24 @@ def main():
 
     # Start server
     pod_name = start_vllm_server_client(full_config, benchmark_name, core_v1, args.mode, model)
-    try:
-        time.sleep(15)
+    print(f"Fetching logs for pod '{pod_name}'...")
 
-        # Wait for server
-        if not wait_for_server(full_config['model']):
-            print("Skipping this run due to server startup failure")
+    # while True:
+    #     log_stream = core_v1_api.read_namespaced_pod_log(
+    #         name=pod_name,
+    #         namespace='llmdbench',
+    #         container='vllm-client',
+    #         pretty=True,
+    #         timestamps=True
+    #     )
 
-    except KeyboardInterrupt:
-        # stop server
-        pod_log_file, metrics_log_file = collect_pod_logs_metrics(core_v1, benchmark_name, pod_name, args.mode)
-        print(f"vLLM logs saved to: {pod_log_file}")
-        print(f"vLLM metrics saved to: {metrics_log_file}")
-        time.sleep(2) # give 2 seconds for server pod to spin down
+    #     target_line = "Finished workload experiment"
+
+    #     if target_line in log_stream:
+    #         print(f"\n✅ Success! Found the target line in the logs.")
+    #         print("Exiting script.")
+    #     else:
+    #         print(f"\n❌ Target line was not found in the current logs.")
 
 if __name__=="__main__":
     main()
