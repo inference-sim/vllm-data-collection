@@ -1,0 +1,21 @@
+name: simulator_testing_for_scenario_1
+description: Handcrafted test data for model
+vllm:
+      gpu_memory_utilization: 0.9
+      disable_log_requests: false
+      block_size: 16
+      max_model_len: 2048
+      max_num_batched_tokens: 2048
+      max_num_seqs: 1
+      long_prefill_token_threshold: 2048
+      seed: 42
+      gpu_type: NVIDIA-H100-80GB-HBM3
+      gpu_memory_min: 50000
+data:
+    workload:
+      input_lens: [20, 40, 80, 120, 160, 240, 320, 400, 640, 800, 1200, 1600]
+      num_exps: 20
+client:
+    temperature: 0.0
+    output_len: 1
+    seed: 42
