@@ -202,7 +202,7 @@ def main():
 
     prompts_generation_command = [
         "python",
-        "generate_prompts.py",
+        "generate_prompts_fixedlen.py",
         "--model", model,
         "--mode", args.mode
     ]
