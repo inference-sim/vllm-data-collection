@@ -139,6 +139,17 @@ sleep 30000
                         'image': "python:3.11-slim",
                         'command': ['bash', '-c'],
                         'args': client_args,
+                        'env': [
+                            {
+                                "name": "HF_TOKEN",
+                                "valueFrom": {
+                                    "secretKeyRef": {
+                                        "key": "HF_TOKEN",
+                                        "name": "hf-secret"
+                                        }
+                                    }
+                            }
+                        ],
                     }
                 ]
             }
@@ -296,9 +307,10 @@ def run_experiment(model, mode, dir_name: str):
 
 def main():
     modes = ["train", "test"]
-    # models = ["facebook/opt-125m", "Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B", "mistralai/Mistral-7B-Instruct-v0.1", "meta-llama/Llama-3.1-8B", "google/gemma-7b", "ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501"]
+    models = ["facebook/opt-125m", "Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501"]
+    # models = ["ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501"]
 
-    models = ["facebook/opt-125m"]
+    # models = ["facebook/opt-125m"]
     for model in models:
         for mode in modes:
             dir_name = model.split("/")[-1].replace(".", "_")
