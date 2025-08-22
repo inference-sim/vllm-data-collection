@@ -25,15 +25,14 @@ for i in range(97, 123):
 final_prompts = []
 for idx1, input_len in enumerate(data_config["workload"]["input_lens"]):
     for idx2 in range(data_config["workload"]["num_exps"]):
-        token_id = tokenizer.encode(token, add_special_tokens=False)
         prompt = tokens[idx1 * data_config["workload"]["num_exps"] + idx2]
-        while True:
+        token_id = tokenizer.encode(prompt, add_special_tokens=False)
+        prompt += " the" * (input_len - len(token_id))
+        encoded_prompt = tokenizer.encode(prompt, add_special_tokens=False)
+        while len(encoded_prompt) > input_len:
+            prompt = prompt[:-4]
             encoded_prompt = tokenizer.encode(prompt, add_special_tokens=False)
-            if len(encoded_prompt) == input_len - len(token_id):
-                break
-            prompt += " the"
-
-            final_prompts.append(prompt)
+        final_prompts.append(prompt)
 
 with open(filename, "w") as f:
     for prompt in final_prompts:
