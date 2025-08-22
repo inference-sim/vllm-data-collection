@@ -36,7 +36,7 @@ def start_vllm_server_client(benchmark_config, benchmark_name, k_client, mode, m
     client_args = [
         f"""set -ex
 apt-get update && apt-get install -y git curl
-git clone -b scenario1 https://github.com/inference-sim/vllm-data-collection
+git clone https://github.com/inference-sim/vllm-data-collection
 cd vllm-data-collection/scenario1
 pip install -r requirements.txt
 python generate_prompts_fixedlen.py --model {model} --mode {mode}
@@ -49,7 +49,9 @@ sleep 30000
 
     config.load_kube_config()
 
-    pod_name = f"vllm-benchmark-collection-{benchmark_name}-{mode}"
+    model_name_for_pod = model.split("/")[-1].replace(".", "-").lower()
+
+    pod_name = f"vllm-benchmark-collection-{benchmark_name}-{model_name_for_pod}-{mode}"
 
     # Create a pod manifest for vllm
     pod_manifest = {
@@ -307,13 +309,14 @@ def run_experiment(model, mode, dir_name: str):
 
 def main():
     modes = ["train", "test"]
-    models = ["facebook/opt-125m", "Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501"]
+    # models = ["facebook/opt-125m", "Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501"]
     # models = ["ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501"]
+    models = ["Qwen/Qwen2.5-3B"]
 
     # models = ["facebook/opt-125m"]
     for model in models:
         for mode in modes:
-            dir_name = model.split("/")[-1].replace(".", "_")
+            dir_name = "results/" + model.split("/")[-1].replace(".", "_")
             os.makedirs(dir_name, exist_ok=True)
             run_experiment(model, mode, dir_name)
 
