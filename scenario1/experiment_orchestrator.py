@@ -30,8 +30,7 @@ def start_vllm_server_client(benchmark_config, benchmark_name, k_client, mode, m
     if vllm_params.get('enable_prefix_caching'):
         server_args.append('--enable-prefix-caching')
 
-    if vllm_params.get('disable_log_requests'):
-        server_args.append('--disable-log-requests')
+    server_args.append('--disable-log-requests')
 
     client_args = [
         f"""set -ex
@@ -311,7 +310,8 @@ def main():
     modes = ["train", "test"]
     # models = ["facebook/opt-125m", "Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501"]
     # models = ["ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501"]
-    models = ["Qwen/Qwen2.5-3B"]
+    # models = ["Qwen/Qwen2.5-3B"]
+    models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
 
     # models = ["facebook/opt-125m"]
     for model in models:
