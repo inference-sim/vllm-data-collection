@@ -6,15 +6,15 @@
 # Single test configuration
 test:
 
-  baseline:
-    name: exp_1000p_4r_0.0t_8192mbt_256lpt_sharegpt
-    description: Basic vLLM performance test
-    model: Qwen/Qwen2-7B
-    result_folder: qwen-2-7b
+  exp1:
+    name: handcrafted_exp_1
+    description: Handcrafted prompts for model
+    model: Qwen/Qwen2-1.5B-Instruct
+    result_folder: handcrafted_prompts
     runs: 1
     vllm:
       gpu_memory_utilization: 0.9
-      enable_prefix_caching: true
+      enable_prefix_caching: false
       disable_log_requests: false
       block_size: 16
       max_model_len: 2048
@@ -26,12 +26,67 @@ test:
       gpu_memory_min: 50000
     benchmark:
       backend: vllm
-      dataset_name: sharegpt
-      dataset_path: ShareGPT_V3_unfiltered_cleaned_split.json
-      num_prompts: 1000
-      request_rate: 4
-      sharegpt_output_len: 0
+      dataset_name: custom
+      dataset_path: handcrafted_prompts_exp1.jsonl
+      num_prompts: 1
+      request_rate: 1
       temperature: 0.0
+      output_len: 2
+      seed: 42
+
+  exp2:
+    name: handcrafted_exp_2
+    description: Handcrafted prompts for model
+    model: Qwen/Qwen2-1.5B-Instruct
+    result_folder: handcrafted_prompts
+    runs: 1
+    vllm:
+      gpu_memory_utilization: 0.9
+      enable_prefix_caching: false
+      disable_log_requests: false
+      block_size: 16
+      max_model_len: 2048
+      max_num_batched_tokens: 8192
+      max_num_seqs: 256
+      long_prefill_token_threshold: 256
+      seed: 42
+      gpu_type: NVIDIA-H100-80GB-HBM3
+      gpu_memory_min: 50000
+    benchmark:
+      backend: vllm
+      dataset_name: custom
+      dataset_path: handcrafted_prompts_exp2.jsonl
+      num_prompts: 1
+      request_rate: 1
+      temperature: 0.0
+      output_len: 1
+      seed: 42
+
+  exp3:
+    name: handcrafted_exp_3
+    description: Handcrafted prompts for model
+    model: Qwen/Qwen2-1.5B-Instruct
+    result_folder: handcrafted_prompts
+    runs: 1
+    vllm:
+      gpu_memory_utilization: 0.9
+      enable_prefix_caching: false
+      disable_log_requests: false
+      block_size: 16
+      max_model_len: 2048
+      max_num_batched_tokens: 8192
+      max_num_seqs: 256
+      long_prefill_token_threshold: 256
+      seed: 42
+      gpu_type: NVIDIA-H100-80GB-HBM3
+      gpu_memory_min: 50000
+    benchmark:
+      backend: vllm
+      dataset_name: custom
+      dataset_path: handcrafted_prompts_exp3.jsonl
+      num_prompts: 2
+      temperature: 0.0
+      output_len: 2
       seed: 42
 
   # baseline2:
