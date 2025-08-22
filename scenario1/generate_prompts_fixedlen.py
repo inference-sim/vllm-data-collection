@@ -29,7 +29,7 @@ for idx1, input_len in enumerate(data_config["workload"]["input_lens"]):
         token_id = tokenizer.encode(prompt, add_special_tokens=False)
         prompt += " the" * (input_len - len(token_id))
         encoded_prompt = tokenizer.encode(prompt, add_special_tokens=False)
-        while len(encoded_prompt) > input_len:
+        while len(encoded_prompt) > (input_len - 1):
             prompt = prompt[:-4]
             encoded_prompt = tokenizer.encode(prompt, add_special_tokens=False)
         final_prompts.append(prompt)
