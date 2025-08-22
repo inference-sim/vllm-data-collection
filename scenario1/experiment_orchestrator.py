@@ -1,18 +1,17 @@
-import argparse
 from datetime import datetime
 import os
 import requests
 import subprocess
 import time
 import yaml
-from pathlib import Path
 from kubernetes import config
 from kubernetes.client import Configuration
 from kubernetes.client.api import core_v1_api
-import kubernetes.client as client
 from kubernetes.client.rest import ApiException
 from kubernetes.stream import stream
 from kr8s.objects import Pod
+
+NAMESPACE = "llmdbench"
 
 def start_vllm_server_client(benchmark_config, benchmark_name, k_client, mode, model):
     """Start vLLM server with config parameters"""
@@ -41,7 +40,7 @@ git clone -b scenario1 https://github.com/inference-sim/vllm-data-collection
 cd vllm-data-collection/scenario1
 pip install -r requirements.txt
 python generate_prompts_fixedlen.py --model {model} --mode {mode}
-python scenario1_client.py --model {model}
+python scenario1_client.py --model {model} --mode {mode}
 sleep 30000
         """
     ]
@@ -147,7 +146,7 @@ sleep 30000
     
     # Apply the pod manifest
     resp = k_client.create_namespaced_pod(body=pod_manifest,
-                                            namespace='llmdbench')      # edit ns if needed
+                                            namespace=NAMESPACE)      # edit ns if needed
 
     return pod_name
 
@@ -177,7 +176,7 @@ def collect_pod_logs_metrics(k_client, benchmark_name, pod_name, mode):
     # Get pod logs
     pod_log_filename = f"vllm_server_{benchmark_name}_pod_{mode}.log"
     with open(pod_log_filename, 'w') as log_file:
-        pod = Pod.get(pod_name, namespace='llmdbench')
+        pod = Pod.get(pod_name, namespace=NAMESPACE)
         log_file.write("\n".join(pod.logs()))
 
     # Get metrics
@@ -194,53 +193,117 @@ def collect_pod_logs_metrics(k_client, benchmark_name, pod_name, mode):
 
     return pod_log_filename, metrics_filename
 
-def main():
-    parser = argparse.ArgumentParser(description='Simple vLLM Benchmark Runner')
-    parser.add_argument('--mode', help='train/test',  default="train")
-    args = parser.parse_args()
-    config_file = f"scenario1_config_{args.mode}.yaml"
-    model = "facebook/opt-125m"
+def copy_file_from_pod_using_kubectl_cp(pod_name, namespace, container_name, remote_file_path, local_file_path):
+    try:
+        command = [
+            'oc', 'cp', 
+            f'{namespace}/{pod_name}:{remote_file_path}', 
+            '-c', container_name,
+            local_file_path,
+        ]
+        print(command)
+        result = subprocess.run(command, capture_output=True, text=True)
+        print(result)
+
+        if result.returncode == 0:
+            print(f"File '{remote_file_path}' copied to '{local_file_path}' successfully.")
+            return True
+        else:
+            print(f"Error copying file: {result.stderr}")
+            return False
+            
+    except Exception as e:
+        print(f"Error executing oc cp command: {e}")
+        return False
+    
+def stop_vllm_server(k_client, pod_name):
+    """Stop vLLM server process and returns vllm pod log file and metrics json file"""
+
+    print("Stopping vLLM server...")
+
+    # Delete pod
+    try:
+        api_response = k_client.delete_namespaced_pod(pod_name, NAMESPACE, grace_period_seconds=0)
+        print(f"vllm pod {pod_name} has been deleted: api response {api_response}")
+
+    except ApiException as e:
+        print("Exception when deleting vllm pod: %s\n" % e)
+
+    print("Server stopped")
+
+def run_experiment(model, mode, dir_name: str):
+    config_file = f"scenario1_config_{mode}.yaml"
 
     with open(config_file, "r") as f:
        full_config = yaml.safe_load(f) # read necessary configs and seed files
 
     # Set up K8s client
     config.load_kube_config()
+
     try:
         c = Configuration().get_default_copy()
+        c.verify_ssl = False
     except AttributeError:
         c = Configuration()
         c.assert_hostname = False
+        c.verify_ssl = False
     Configuration.set_default(c)
     core_v1 = core_v1_api.CoreV1Api()
 
     # Run the workload
     print(f"\n{'='*50}")
-    print(f"STARTING SCENARIO 1 benchmark in mode = {args.mode}")
+    print(f"STARTING SCENARIO 1 benchmark in mode = {mode}")
     print(f"{'='*50}")
 
     benchmark_name = "scenario1"
 
     # Start server
-    pod_name = start_vllm_server_client(full_config, benchmark_name, core_v1, args.mode, model)
-    print(f"Fetching logs for pod '{pod_name}'...")
+    pod_name = start_vllm_server_client(full_config, benchmark_name, core_v1, mode, model)
+    print(f"Created pod '{pod_name}'")
 
-    # while True:
-    #     log_stream = core_v1_api.read_namespaced_pod_log(
-    #         name=pod_name,
-    #         namespace='llmdbench',
-    #         container='vllm-client',
-    #         pretty=True,
-    #         timestamps=True
-    #     )
+    while True:
+        remote_file_path = f"/vllm-data-collection/scenario1/scenario1_output_{mode}.json"
+        local_file_path = f"./{dir_name}/results_{mode}.json"
 
-    #     target_line = "Finished workload experiment"
+        command = ["sh", "-c", f"test -f {remote_file_path} && echo 'EXISTS' || echo 'NOT_EXISTS'"]
 
-    #     if target_line in log_stream:
-    #         print(f"\n✅ Success! Found the target line in the logs.")
-    #         print("Exiting script.")
-    #     else:
-    #         print(f"\n❌ Target line was not found in the current logs.")
+        resp = None
+        # Execute the command
+        try:
+            resp = stream(core_v1.connect_get_namespaced_pod_exec,
+                name=pod_name,
+                namespace=NAMESPACE,
+                container="vllm-client", # Specify if needed
+                command=command,
+                stderr=True,
+                stdin=False,
+                stdout=True,
+                tty=False,
+            )
+        except KeyboardInterrupt:
+            break
+        except ApiException:
+            continue
+        
+        if resp and "NOT" not in resp:
+            print(f"File '{remote_file_path}' exists in container vllm-client of pod '{pod_name}'.")
+            time.sleep(20)
+            copy_file_from_pod_using_kubectl_cp(pod_name, NAMESPACE, "vllm-client", remote_file_path, local_file_path)
+            break
+        time.sleep(10)
+
+    stop_vllm_server(core_v1, pod_name)
+
+def main():
+    modes = ["train", "test"]
+    # models = ["facebook/opt-125m", "Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B", "mistralai/Mistral-7B-Instruct-v0.1", "meta-llama/Llama-3.1-8B", "google/gemma-7b", "ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501"]
+
+    models = ["facebook/opt-125m"]
+    for model in models:
+        for mode in modes:
+            dir_name = model.split("/")[-1].replace(".", "_")
+            os.makedirs(dir_name, exist_ok=True)
+            run_experiment(model, mode, dir_name)
 
 if __name__=="__main__":
     main()

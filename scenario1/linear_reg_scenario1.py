@@ -25,16 +25,16 @@ def remove_outliers(X_train, y_train):
     print ("Dataset size after filtering: ", X_train.shape[0])
     return X_train, y_train
 
-with open('scenario1_output_train.json', 'r') as f:
+with open('results_train.json', 'r') as f:
     train_data = json.load(f)
 
-with open('scenario1_output_test.json', 'r') as file:
+with open('results_test.json', 'r') as file:
     test_data = json.load(file)
 
 x_scaler = MinMaxScaler()
 
 X_train, y_train = get_variables(train_data)
-X_train, y_train = remove_outliers(X_train, y_train)
+# X_train, y_train = remove_outliers(X_train, y_train)
 
 X_test, y_test = get_variables(test_data)
 # X_test = x_scaler.fit_transform(X_test)
@@ -49,18 +49,18 @@ intercept = model.intercept_
 print("Coefficients:", str(coefficients))
 print("Intercept:", intercept)
 
-plt.figure(figsize=(8, 6))
-plt.scatter(np.array(X_train)[:, 0], y_train)
+# plt.figure(figsize=(8, 6))
+# plt.scatter(np.array(X_train)[:, 0], y_train)
 
-# Add a title and labels
-plt.title('e2e latency vs $t_{IN}$')
-plt.xlabel('$t_{IN}$')
-plt.ylabel('e2e latency')
+# # Add a title and labels
+# plt.title('e2e latency vs $t_{IN}$')
+# plt.xlabel('$t_{IN}$')
+# plt.ylabel('e2e latency')
 
-# Add a grid and a legend
-plt.grid(True)
-plt.legend()
-plt.savefig("e2e_minus_network_vs_tin_filtered_train.png")
+# # Add a grid and a legend
+# plt.grid(True)
+# plt.legend()
+# plt.savefig("e2e_minus_network_vs_tin_filtered_train.png")
 
 
 

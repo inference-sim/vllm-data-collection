@@ -18,20 +18,20 @@ tokenizer = AutoTokenizer.from_pretrained(args.model, trust_remote_code=True)
 tokens = []
 for i in range(97, 123):
     for j in range(97, 123):
-        token = chr(i) + chr(j)
-        tokens.append(token)
+        for k in range(97, 123):
+            token = chr(i) + chr(j) + chr(k)
+            tokens.append(token)
 
 final_prompts = []
 for idx1, input_len in enumerate(data_config["workload"]["input_lens"]):
     for idx2 in range(data_config["workload"]["num_exps"]):
         token_id = tokenizer.encode(token, add_special_tokens=False)
-        if len(token_id) == 1:
-            prompt = tokens[idx1 * data_config["workload"]["num_exps"] + idx2]
-            while True:
-                encoded_prompt = tokenizer.encode(prompt, add_special_tokens=False)
-                if len(encoded_prompt) == input_len - 1:
-                    break
-                prompt += " the"
+        prompt = tokens[idx1 * data_config["workload"]["num_exps"] + idx2]
+        while True:
+            encoded_prompt = tokenizer.encode(prompt, add_special_tokens=False)
+            if len(encoded_prompt) == input_len - len(token_id):
+                break
+            prompt += " the"
 
             final_prompts.append(prompt)
 

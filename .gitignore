@@ -211,4 +211,6 @@ csrc/moe/marlin_moe_wna16/kernel_*
 gemma-7b/
 mistral-7b-instruct-v0-3/
 qwen2-5-14b/
-qwen2-7b-instruct/
+qwen2-7b/
+opt-125m/
+llama-3-1-8b/
