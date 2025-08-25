@@ -270,7 +270,7 @@ def stop_vllm_server(k_client, pod_name):
 
     print("Server stopped")
 
-def run_experiment(model, mode, dir_name: str):
+def run_experiment(model, mode, local_dir_name: str, remote_exp_folder: str):
     config_file = f"scenario1_config_{mode}.yaml"
 
     with open(config_file, "r") as f:
@@ -294,16 +294,13 @@ def run_experiment(model, mode, dir_name: str):
     print(f"STARTING SCENARIO 1 benchmark in mode = {mode}")
     print(f"{'='*50}")
 
-    benchmark_name = "scenario1"
-    exp_folder = f"{time.strftime("%Y%m%d-%H%M%S")}_{benchmark_name}"
-
     # Start server
-    pod_name = start_vllm_server_client(full_config, exp_folder, core_v1, mode, model)
+    pod_name = start_vllm_server_client(full_config, remote_exp_folder, core_v1, mode, model)
     print(f"Created pod '{pod_name}'")
 
     while True:
-        remote_file_path = f"/mnt/{exp_folder}/results/scenario1_output_{mode}.json"
-        local_file_path = f"./{dir_name}/results_{mode}.json"
+        remote_file_path = f"/mnt/{remote_exp_folder}/results/scenario1_output_{mode}.json"
+        local_file_path = f"./{local_dir_name}/results_{mode}.json"
 
         command = ["sh", "-c", f"test -f {remote_file_path} && echo 'EXISTS' || echo 'NOT_EXISTS'"]
 
@@ -343,10 +340,12 @@ def main():
 
     # models = ["facebook/opt-125m"]
     for model in models:
+        benchmark_name = "scenario1"
+        remote_exp_folder = f"{time.strftime("%Y%m%d-%H%M%S")}_{benchmark_name}"
         for mode in modes:
-            dir_name = "results/" + model.split("/")[-1].replace(".", "_")
-            os.makedirs(dir_name, exist_ok=True)
-            run_experiment(model, mode, dir_name)
+            local_dir_name = "results/" + model.split("/")[-1].replace(".", "_")
+            os.makedirs(local_dir_name, exist_ok=True)
+            run_experiment(model, mode, local_dir_name, remote_exp_folder)
 
 if __name__=="__main__":
     main()
