@@ -11,9 +11,9 @@ from kubernetes.client.rest import ApiException
 from kubernetes.stream import stream
 from kr8s.objects import Pod
 
-NAMESPACE = "llmdbench"
+NAMESPACE = "blis"
 
-def start_vllm_server_client(benchmark_config, benchmark_name, k_client, mode, model):
+def start_vllm_server_client(benchmark_config, exp_folder, k_client, mode, model):
     """Start vLLM server with config parameters"""
     vllm_params = benchmark_config['vllm']
 
@@ -35,12 +35,12 @@ def start_vllm_server_client(benchmark_config, benchmark_name, k_client, mode, m
     client_args = [
         f"""set -ex
 apt-get update && apt-get install -y git curl
-git clone https://github.com/inference-sim/vllm-data-collection
+git clone -b scenario1_enhancements https://github.com/inference-sim/vllm-data-collection
 cd vllm-data-collection/scenario1
 pip install -r requirements.txt
 python generate_prompts_fixedlen.py --model {model} --mode {mode}
-python scenario1_client.py --model {model} --mode {mode}
-sleep 30000
+python scenario1_client.py --model {model} --mode {mode} --results_folder {exp_folder}
+sleep 30000000
         """
     ]
 
@@ -50,7 +50,7 @@ sleep 30000
 
     model_name_for_pod = model.split("/")[-1].replace(".", "-").lower()
 
-    pod_name = f"vllm-benchmark-collection-{benchmark_name}-{model_name_for_pod}-{mode}"
+    pod_name = f"vllm-benchmark-collection-scenario1-{model_name_for_pod}-{mode}"
 
     # Create a pod manifest for vllm
     pod_manifest = {
@@ -106,6 +106,10 @@ sleep 30000
                                         "name": "hf-secret"
                                         }
                                     }
+                            },
+                            {
+                                "name": "HF_HOME",
+                                "value": "/mnt/.cache/huggingface/hub"
                             }
                         ],
 
@@ -152,7 +156,15 @@ sleep 30000
                             }
                         ],
                     }
-                ]
+                ],
+                'volumes': [
+                    {
+                        'name': 'model-storage',
+                        'persistentVolumeClaim': {
+                            'claimName': 'blis-pvc'
+                        }
+                    }
+                ],
             }
         }
     
@@ -268,13 +280,14 @@ def run_experiment(model, mode, dir_name: str):
     print(f"{'='*50}")
 
     benchmark_name = "scenario1"
+    exp_folder = f"{time.strftime("%Y%m%d-%H%M%S")}_{benchmark_name}"
 
     # Start server
-    pod_name = start_vllm_server_client(full_config, benchmark_name, core_v1, mode, model)
+    pod_name = start_vllm_server_client(full_config, exp_folder, core_v1, mode, model)
     print(f"Created pod '{pod_name}'")
 
     while True:
-        remote_file_path = f"/vllm-data-collection/scenario1/scenario1_output_{mode}.json"
+        remote_file_path = f"/mnt/{exp_folder}/results/scenario1_output_{mode}.json"
         local_file_path = f"./{dir_name}/results_{mode}.json"
 
         command = ["sh", "-c", f"test -f {remote_file_path} && echo 'EXISTS' || echo 'NOT_EXISTS'"]
