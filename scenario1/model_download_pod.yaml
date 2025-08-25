@@ -17,8 +17,8 @@ spec:
             secretKeyRef:
               key: HF_TOKEN
               name: hf-secret
-        - name: TRANSFORMERS_CACHE
-          value: /mnt/.cache/huggingface/transformers
+        - name: HF_HUB_CACHE
+          value: /mnt/.cache/huggingface/hub
       securityContext:
         runAsUser: 0
                       
