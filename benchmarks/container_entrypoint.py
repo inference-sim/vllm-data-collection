@@ -130,7 +130,7 @@ def start_vllm_server(benchmark_config, benchmark_name, run, k_client):
 
         # Apply the pod manifest
         resp = k_client.create_namespaced_pod(body=pod_manifest,
-                                            namespace='llmdbench')      # edit ns if needed
+                                            namespace='blis')      # edit ns if needed
 
     return pod_name
 
@@ -196,7 +196,7 @@ def run_benchmark(benchmark_config, output_folder, run_number):
     if result.returncode == 0:
         print(f"Benchmark run {run_number} completed successfully")
         return result.stdout
-    else:   
+    else:
         print(f"Benchmark run {run_number} failed: {result.stderr}")
         return None
 
@@ -205,7 +205,7 @@ def port_forward(k_client, pod_name):
     Port forwards the vllm pod
     """
 
-    ns = 'llmdbench'
+    ns = 'blis'
 
     pod = Pod.get(pod_name, namespace=ns)
     print(f"Successfully fetched pod {pod.name}")
@@ -234,7 +234,7 @@ def stop_vllm_server(k_client, benchmark_name, pod_name, pf, output_path):
     # Get pod logs
     pod_log_filename = f"{output_path}/vllm_server_{benchmark_name}_pod.log"
     with open(pod_log_filename, 'w') as log_file:
-        pod = Pod.get(pod_name, namespace='llmdbench')
+        pod = Pod.get(pod_name, namespace='blis')
         log_file.write("\n".join(pod.logs()))
 
     # Get metrics
@@ -254,7 +254,7 @@ def stop_vllm_server(k_client, benchmark_name, pod_name, pf, output_path):
     # Get pod logs
     pod_log_filename = f"{output_path}/vllm_server_{benchmark_name}_pod.log"
     with open(pod_log_filename, 'w') as log_file:
-        pod = Pod.get(pod_name, namespace='llmdbench')
+        pod = Pod.get(pod_name, namespace='blis')
         log_file.write("\n".join(pod.logs()))
 
     # Close port-forward
@@ -262,7 +262,7 @@ def stop_vllm_server(k_client, benchmark_name, pod_name, pf, output_path):
 
     # Delete pod
     try:
-        api_response = k_client.delete_namespaced_pod(pod_name, 'llmdbench', grace_period_seconds=0)
+        api_response = k_client.delete_namespaced_pod(pod_name, 'blis', grace_period_seconds=0)
         print(f"vllm pod {pod_name} has been deleted: api response {api_response}")
 
     except ApiException as e:
