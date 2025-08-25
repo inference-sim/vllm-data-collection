@@ -98,8 +98,12 @@ def main():
     with open(result_filename, 'w', encoding='utf-8') as f:
        json.dump(results, f, indent=4)
 
-    pip_command = ['pip', 'freeze', '>', f"{full_spec_path}/requirements.txt"]
-    result = subprocess.run(pip_command, capture_output=True, text=True)
+    pip_command = ['pip', 'freeze']
+    result = subprocess.run(pip_command, capture_output=True, text=True, check=True)
+
+    # Write the captured output to the requirements file
+    with open(f"{full_spec_path}/requirements.txt", 'w') as f:
+        f.write(result.stdout)
 
     with open(f"{full_spec_path}/scenario1_config_{args.mode}.yaml", 'w') as f:
        yaml.dump(config, f, sort_keys=False)
