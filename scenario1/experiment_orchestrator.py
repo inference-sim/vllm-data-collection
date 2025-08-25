@@ -18,24 +18,22 @@ def start_vllm_server_client(benchmark_config, exp_folder, k_client, mode, model
     vllm_params = benchmark_config['vllm']
 
     model_alias = model.split("/")[-1].replace(".", "_")
-    server_log_path = f"/mnt/results/{model_alias}/results/{exp_folder}/scenario1_server_{mode}.log"
-    client_log_path = f"/mnt/results/{model_alias}/results/{exp_folder}/scenario1_client_{mode}.log"
+    exp_results_path = f"/mnt/results/{model_alias}/{exp_folder}"
+    server_log_path = f"{exp_results_path}/scenario1_server_{mode}.log"
+    client_log_path = f"{exp_results_path}/scenario1_client_{mode}.log"
 
-    server_args = ['--model', model,
-        '--gpu-memory-utilization', str(vllm_params['gpu_memory_utilization']),
-        '--block-size', str(vllm_params['block_size']),
-        '--max-model-len', str(vllm_params['max_model_len']),
-        '--max-num-batched-tokens', str(vllm_params['max_num_batched_tokens']),
-        '--max-num-seqs', str(vllm_params['max_num_seqs']),
-        '--long-prefill-token-threshold', str(vllm_params['long_prefill_token_threshold']),
-        '--seed', str(vllm_params['seed']),
-        '>', server_log_path
-    ]
-
-    if vllm_params.get('enable_prefix_caching'):
-        server_args.append('--enable-prefix-caching')
-
-    server_args.append('--disable-log-requests')
+    server_args = [
+        f"""mkdir -p {exp_results_path}/
+touch {server_log_path}
+python3 -m vllm.entrypoints.openai.api_server --model {model} \
+--gpu-memory-utilization {str(vllm_params['gpu_memory_utilization'])} \
+--block-size {str(vllm_params['block_size'])} --max-model-len {str(vllm_params['max_model_len'])} \
+--max-num-batched-tokens {str(vllm_params['max_num_batched_tokens'])} --max-num-seqs {str(vllm_params['max_num_seqs'])} \
+--long-prefill-token-threshold {str(vllm_params['long_prefill_token_threshold'])} --seed {str(vllm_params['seed'])} \
+--disable-log-requests"""
+]
+    
+    server_args[0] += f' > {server_log_path}'
 
     client_args = [
         f"""set -ex
@@ -44,12 +42,13 @@ git clone -b scenario1_enhancements https://github.com/inference-sim/vllm-data-c
 cd vllm-data-collection/scenario1
 pip install -r requirements.txt
 python generate_prompts_fixedlen.py --model {model} --mode {mode}
+touch {client_log_path}
 python scenario1_client.py --model {model} --mode {mode} --results_folder {exp_folder} > {client_log_path}
 sleep 30000000
         """
     ]
 
-    print(f"Starting vLLM server: vllm serve {' '.join(server_args)}")
+    print(f"Starting vLLM server: {' '.join(server_args)}")
 
     config.load_kube_config()
 
@@ -99,7 +98,7 @@ sleep 30000000
                     {
                         'name': 'vllm-server',
                         'image': "vllm/vllm-openai:v0.10.0",
-                        'command': ['python3', '-m', 'vllm.entrypoints.openai.api_server'],
+                        'command': ['bash', '-c'],
                         'restartPolicy': 'Always',
                         'args': server_args,
                         'env': [
