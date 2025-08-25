@@ -89,15 +89,19 @@ def train_lr(model_name):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 6))
 
     ax1.scatter(np.array(X_train)[:, 0], y_train)
+    ax1.scatter(np.array(X_train)[:, 0], training_preds_lr)
     ax1.set_title(f'Train R2 LR: {training_score_lr}, RANSAC: {training_score_ransac}\nTrain MAE LR: {training_mae_lr}, RANSAC: {training_mae_ransac}\nTrain MAPE LR: {training_mape_lr}, RANSAC: {training_mape_ransac}')
     ax1.set_xlabel('$t_{IN}$')
     ax1.set_ylabel('e2e latency')
+    ax1.legend(["Original", "LR predictions"])
     ax1.grid(True)
 
     ax2.scatter(np.array(X_test)[:, 0], y_test)
+    ax2.scatter(np.array(X_test)[:, 0], test_preds_lr)
     ax2.set_title(f'Test R2 LR: {test_score_lr}, RANSAC: {test_score_ransac}\nTest MAE LR: {test_mae_lr}, RANSAC: {test_mae_ransac}\nTest MAPE LR: {test_mape_lr}, RANSAC: {test_mape_ransac}')
     ax2.set_xlabel('$t_{IN}$')
     ax2.set_ylabel('e2e latency')
+    ax2.legend(["Original", "LR predictions"])
     ax2.grid(True)
 
     fig.suptitle(f'Results for {model_name}')
