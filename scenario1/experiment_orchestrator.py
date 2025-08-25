@@ -304,7 +304,7 @@ def run_experiment(model, mode, local_dir_name: str, remote_exp_folder: str):
 
     while True:
         model_alias = model.split("/")[-1].replace(".", "_")
-        remote_file_path = f"/mnt/results/{model_alias}/results/{remote_exp_folder}/scenario1_output_{mode}.json"
+        remote_file_path = f"/mnt/results/{model_alias}/{remote_exp_folder}/results/scenario1_output_{mode}.json"
         local_file_path = f"./{local_dir_name}/results_{mode}.json"
 
         command = ["sh", "-c", f"test -f {remote_file_path} && echo 'EXISTS' || echo 'NOT_EXISTS'"]
