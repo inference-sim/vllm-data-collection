@@ -17,7 +17,7 @@ def start_vllm_server_client(benchmark_config, exp_folder, k_client, mode, model
     """Start vLLM server with config parameters"""
     vllm_params = benchmark_config['vllm']
 
-    server_args = [model,
+    server_args = ['--model', model,
         '--gpu-memory-utilization', str(vllm_params['gpu_memory_utilization']),
         '--block-size', str(vllm_params['block_size']),
         '--max-model-len', str(vllm_params['max_model_len']),
@@ -94,7 +94,7 @@ sleep 30000000
                     {
                         'name': 'vllm-server',
                         'image': "vllm/vllm-openai:v0.10.0",
-                        'command': ['vllm', 'serve'],
+                        'command': ['python3', '-m', 'vllm.entrypoints.openai.api_server'],
                         'restartPolicy': 'Always',
                         'args': server_args,
                         'env': [
@@ -108,11 +108,16 @@ sleep 30000000
                                     }
                             },
                             {
-                                "name": "HF_HOME",
+                                "name": "HF_HUB_CACHE",
                                 "value": "/mnt/.cache/huggingface/hub"
                             }
                         ],
-
+                        'volumeMounts': [
+                            {
+                                "name": "model-storage",
+                                "mountPath": "/mnt"
+                            }
+                        ],
                         # Got this info from node
                         'resources': {
                             'requests': {
@@ -155,10 +160,16 @@ sleep 30000000
                                     }
                             },
                             {
-                                "name": "HF_HOME",
+                                "name": "HF_HUB_CACHE",
                                 "value": "/mnt/.cache/huggingface/hub"
                             }
                         ],
+                        'volumeMounts': [
+                            {
+                                "name": "model-storage",
+                                "mountPath": "/mnt"
+                            }
+                        ]
                     }
                 ],
                 'volumes': [
@@ -327,7 +338,7 @@ def main():
     modes = ["train", "test"]
     # models = ["facebook/opt-125m", "Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501"]
     # models = ["ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501"]
-    models = ["Qwen/Qwen3-32B"]
+    models = ["Qwen/Qwen3-14B"]
     # models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
 
     # models = ["facebook/opt-125m"]

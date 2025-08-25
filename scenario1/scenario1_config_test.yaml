@@ -13,7 +13,7 @@ vllm:
 data:
     workload:
       input_lens: [20, 40, 80, 120, 160, 240, 320, 400, 550, 640, 800, 950, 1050, 1200, 1350, 1400, 1600]
-      num_exps: 400
+      num_exps: 10
 client:
     temperature: 0.0
     output_len: 1

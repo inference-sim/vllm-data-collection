@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 import requests
+import subprocess
 import time
 import yaml
 
@@ -90,10 +91,19 @@ def main():
       results["block_size"].append(config["vllm"]["block_size"])
       
     full_results_path = f"/mnt/{args.results_folder}/results"
+    full_spec_path = f"/mnt/{args.results_folder}/spec"
     os.makedirs(full_results_path, exist_ok=True)
+    os.makedirs(full_spec_path, exist_ok=True)
     result_filename = f"{full_results_path}/scenario1_output_{args.mode}.json"
     with open(result_filename, 'w', encoding='utf-8') as f:
        json.dump(results, f, indent=4)
+
+    pip_command = ['pip', 'freeze', '>', f"{full_spec_path}/requirements.txt"]
+    result = subprocess.run(pip_command, capture_output=True, text=True)
+
+    with open(f"{full_spec_path}/scenario1_config_{args.mode}.yaml", 'w') as f:
+       yaml.dump(config, f, sort_keys=False)
+
     print ("Finished workload experiment")
 
 if __name__=="__main__":
