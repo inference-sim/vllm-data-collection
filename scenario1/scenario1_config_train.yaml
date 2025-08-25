@@ -2,7 +2,6 @@ name: simulator_training_for_scenario_1
 description: Handcrafted training data for model
 vllm:
       gpu_memory_utilization: 0.9
-      disable_log_requests: false
       block_size: 16
       max_model_len: 2048
       max_num_batched_tokens: 2048
