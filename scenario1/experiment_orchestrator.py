@@ -38,7 +38,7 @@ python3 -m vllm.entrypoints.openai.api_server --model {model} \
     client_args = [
         f"""set -ex
 apt-get update && apt-get install -y git curl
-git clone -b scenario1_enhancements https://github.com/inference-sim/vllm-data-collection
+git clone https://github.com/inference-sim/vllm-data-collection
 cd vllm-data-collection/scenario1
 pip install -r requirements.txt
 python generate_prompts_fixedlen.py --model {model} --mode {mode}
