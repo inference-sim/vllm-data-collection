@@ -1,6 +1,8 @@
 import argparse
 import json
+import os
 import requests
+import subprocess
 import time
 import yaml
 
@@ -46,6 +48,7 @@ def main():
     parser = argparse.ArgumentParser(description='Simple vLLM Benchmark Runner')
     parser.add_argument('--mode', help='train/test',  default="train")
     parser.add_argument('--model', help='LLM name',  default="facebook/opt-125m")
+    parser.add_argument('--results_folder', help='Result folder in PVC',  default="scenario1")
     args = parser.parse_args()
     config_file = f"scenario1_config_{args.mode}.yaml"
 
@@ -87,9 +90,25 @@ def main():
       results["prompt_lens"].append(res["usage"]["prompt_tokens"])
       results["block_size"].append(config["vllm"]["block_size"])
       
-    result_filename = f"scenario1_output_{args.mode}.json"
+    model_alias = args.model.split("/")[-1].replace(".", "_")
+    full_results_path = f"/mnt/results/{model_alias}/{args.results_folder}/results"
+    full_spec_path = f"/mnt/results/{model_alias}/{args.results_folder}/spec"
+    os.makedirs(full_results_path, exist_ok=True)
+    os.makedirs(full_spec_path, exist_ok=True)
+    result_filename = f"{full_results_path}/scenario1_output_{args.mode}.json"
     with open(result_filename, 'w', encoding='utf-8') as f:
        json.dump(results, f, indent=4)
+
+    pip_command = ['pip', 'freeze']
+    result = subprocess.run(pip_command, capture_output=True, text=True, check=True)
+
+    # Write the captured output to the requirements file
+    with open(f"{full_spec_path}/requirements.txt", 'w') as f:
+        f.write(result.stdout)
+
+    with open(f"{full_spec_path}/scenario1_config_{args.mode}.yaml", 'w') as f:
+       yaml.dump(config, f, sort_keys=False)
+
     print ("Finished workload experiment")
 
 if __name__=="__main__":

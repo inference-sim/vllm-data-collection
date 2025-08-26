@@ -214,3 +214,6 @@ qwen2-5-14b/
 qwen2-7b/
 opt-125m/
 llama-3-1-8b/
+
+results/
+results_small/
