@@ -24,16 +24,6 @@ def start_vllm_server_client(benchmark_config, exp_folder, mode, model):
     server_log_path = f"{exp_results_path}/scenario1_server_{mode}.log"
     client_log_path = f"{exp_results_path}/scenario1_client_{mode}.log"
 
-#     server_args = [
-#         f"""mkdir -p {exp_results_path}/
-# touch {server_log_path}
-# python3 -m vllm.entrypoints.openai.api_server --model {model} \
-# --gpu-memory-utilization {str(vllm_params['gpu_memory_utilization'])} \
-# --block-size {str(vllm_params['block_size'])} --max-model-len {str(vllm_params['max_model_len'])} \
-# --max-num-batched-tokens {str(vllm_params['max_num_batched_tokens'])} --max-num-seqs {str(vllm_params['max_num_seqs'])} \
-# --long-prefill-token-threshold {str(vllm_params['long_prefill_token_threshold'])} --seed {str(vllm_params['seed'])} \
-# --disable-log-requests"""
-# ]
     server_args = f"""              mkdir -p {exp_results_path}/
                 touch {server_log_path}
                 python3 -m vllm.entrypoints.openai.api_server --model {model} \\
@@ -129,7 +119,6 @@ def main():
     models = ["Qwen/Qwen2.5-0.5B"]
     # models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
 
-    # models = ["facebook/opt-125m"]
     for model in models:
         benchmark_name = "scenario1"
         remote_exp_folder = f"{time.strftime('%Y%m%d-%H%M%S')}_{benchmark_name}"
