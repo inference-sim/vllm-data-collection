@@ -10,6 +10,8 @@ from kubernetes.client.api import core_v1_api
 from kubernetes.client.rest import ApiException
 from kubernetes.stream import stream
 from kr8s.objects import Pod
+from jinja2 import Template, Environment, FileSystemLoader
+from kr8s.objects import Job
 
 NAMESPACE = "blis"
 
@@ -22,31 +24,51 @@ def start_vllm_server_client(benchmark_config, exp_folder, k_client, mode, model
     server_log_path = f"{exp_results_path}/scenario1_server_{mode}.log"
     client_log_path = f"{exp_results_path}/scenario1_client_{mode}.log"
 
-    server_args = [
-        f"""mkdir -p {exp_results_path}/
-touch {server_log_path}
-python3 -m vllm.entrypoints.openai.api_server --model {model} \
---gpu-memory-utilization {str(vllm_params['gpu_memory_utilization'])} \
---block-size {str(vllm_params['block_size'])} --max-model-len {str(vllm_params['max_model_len'])} \
---max-num-batched-tokens {str(vllm_params['max_num_batched_tokens'])} --max-num-seqs {str(vllm_params['max_num_seqs'])} \
---long-prefill-token-threshold {str(vllm_params['long_prefill_token_threshold'])} --seed {str(vllm_params['seed'])} \
---disable-log-requests"""
-]
-    
-    server_args[0] += f' > {server_log_path}'
+#     server_args = [
+#         f"""mkdir -p {exp_results_path}/
+# touch {server_log_path}
+# python3 -m vllm.entrypoints.openai.api_server --model {model} \
+# --gpu-memory-utilization {str(vllm_params['gpu_memory_utilization'])} \
+# --block-size {str(vllm_params['block_size'])} --max-model-len {str(vllm_params['max_model_len'])} \
+# --max-num-batched-tokens {str(vllm_params['max_num_batched_tokens'])} --max-num-seqs {str(vllm_params['max_num_seqs'])} \
+# --long-prefill-token-threshold {str(vllm_params['long_prefill_token_threshold'])} --seed {str(vllm_params['seed'])} \
+# --disable-log-requests"""
+# ]
+    server_args = f"""              mkdir -p {exp_results_path}/
+                touch {server_log_path}
+                python3 -m vllm.entrypoints.openai.api_server --model {model} \\
+                --gpu-memory-utilization {str(vllm_params['gpu_memory_utilization'])} \\
+                --block-size {str(vllm_params['block_size'])} --max-model-len {str(vllm_params['max_model_len'])} \\
+                --max-num-batched-tokens {str(vllm_params['max_num_batched_tokens'])} --max-num-seqs {str(vllm_params['max_num_seqs'])} \\
+                --long-prefill-token-threshold {str(vllm_params['long_prefill_token_threshold'])} --seed {str(vllm_params['seed'])} \\
+                --disable-log-requests > {server_log_path}
+"""
 
-    client_args = [
-        f"""set -ex
-apt-get update && apt-get install -y git curl
-git clone https://github.com/inference-sim/vllm-data-collection
-cd vllm-data-collection/scenario1
-pip install -r requirements.txt
-python generate_prompts_fixedlen.py --model {model} --mode {mode}
-touch {client_log_path}
-python scenario1_client.py --model {model} --mode {mode} --results_folder {exp_folder} > {client_log_path}
-sleep 30000000
-        """
-    ]
+    # server_args[0] += f' > {server_log_path}'
+
+#     client_args = [
+#         f"""set -ex
+# apt-get update && apt-get install -y git curl
+# git clone https://github.com/inference-sim/vllm-data-collection
+# cd vllm-data-collection/scenario1
+# pip install -r requirements.txt
+# python generate_prompts_fixedlen.py --model {model} --mode {mode}
+# touch {client_log_path}
+# python scenario1_client.py --model {model} --mode {mode} --results_folder {exp_folder} > {client_log_path}
+# sleep 30000000
+#         """
+#     ]
+
+    client_args = f"""              set -ex
+                apt-get update && apt-get install -y git curl
+                git clone https://github.com/inference-sim/vllm-data-collection
+                cd vllm-data-collection/scenario1
+                pip install -r requirements.txt
+                python generate_prompts_fixedlen.py --model {model} --mode {mode}
+                touch {client_log_path}
+                python scenario1_client.py --model {model} --mode {mode} --results_folder {exp_folder} > {client_log_path}
+                sleep 30000000
+"""
 
     print(f"Starting vLLM server: {' '.join(server_args)}")
 
@@ -54,144 +76,154 @@ sleep 30000000
 
     model_name_for_pod = model.split("/")[-1].replace(".", "-").lower()
 
-    pod_name = f"vllm-benchmark-collection-scenario1-{model_name_for_pod}-{mode}"
+    job_name = f"vllm-benchmark-collection-scenario1-{model_name_for_pod}-{mode}"
+    environment = Environment(loader=FileSystemLoader("./"))
+    template = environment.get_template("benchmark-job.yaml")
 
-    # Create a pod manifest for vllm
-    pod_manifest = {
-            'apiVersion': 'v1',
-            'kind': 'Pod',
-            'metadata': {
-                'name': pod_name,
-            },
-            'spec': {
-                'affinity': {
-                    'nodeAffinity': {
-                        'requiredDuringSchedulingIgnoredDuringExecution': {
-                            'nodeSelectorTerms': [
-                                {
-                                    "matchExpressions": [
-                                        {
-                                            "key": "nvidia.com/gpu.product",
-                                            "operator": "In",
-                                            "values": [
-                                                vllm_params['gpu_type']      # land pod on the node with this GPU
-                                            ]
-                                        },
-                                        {
-                                            "key": "nvidia.com/gpu.memory",
-                                            "operator": "Gt",
-                                            "values": [
-                                                str(vllm_params['gpu_memory_min']) # land pod on the node at least this much GPU memory (in MB)
-                                            ]
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    }
-                },
-                # Temporary for now until cluster is fixed
-                'securityContext': {
-                    'runAsUser': 0
-                },
-                'initContainers': [
-                    {
-                        'name': 'vllm-server',
-                        'image': "vllm/vllm-openai:v0.10.0",
-                        'command': ['bash', '-c'],
-                        'restartPolicy': 'Always',
-                        'args': server_args,
-                        'env': [
-                            {
-                                "name": "HF_TOKEN",
-                                "valueFrom": {
-                                    "secretKeyRef": {
-                                        "key": "HF_TOKEN",
-                                        "name": "hf-secret"
-                                        }
-                                    }
-                            },
-                            {
-                                "name": "HF_HUB_CACHE",
-                                "value": "/mnt/.cache/huggingface/hub"
-                            }
-                        ],
-                        'volumeMounts': [
-                            {
-                                "name": "model-storage",
-                                "mountPath": "/mnt"
-                            }
-                        ],
-                        # Got this info from node
-                        'resources': {
-                            'requests': {
-                                'memory': '50Gi',
-                                'cpu': '1',
-                                'nvidia.com/gpu': '1',
-                            },
-                            'limits': {
-                                'memory': '50Gi',
-                                'cpu': '8',
-                                'nvidia.com/gpu': '1',
-                            }
-                        },
-                        'startupProbe': {
-                            "httpGet": {
-                                "path": "/v1/models",
-                                "port": 8000,
-                            },
+    rendered = template.render(server_args=server_args,
+                            client_args=client_args,
+                            job_name=job_name)
+    print(rendered)
+    resource_dict = yaml.safe_load(rendered)
+    job = Job(resource_dict)
+    job.create()
 
-                            # Max 5 minutes (50 * 10) to finish startup
-                            "failureThreshold": 50,
-                            "periodSeconds": 10,
-                        }
-                    }
-                ],
-                'containers': [
-                    {
-                        'name': 'vllm-client',
-                        'image': "python:3.11-slim",
-                        'command': ['bash', '-c'],
-                        'args': client_args,
-                        'env': [
-                            {
-                                "name": "HF_TOKEN",
-                                "valueFrom": {
-                                    "secretKeyRef": {
-                                        "key": "HF_TOKEN",
-                                        "name": "hf-secret"
-                                        }
-                                    }
-                            },
-                            {
-                                "name": "HF_HUB_CACHE",
-                                "value": "/mnt/.cache/huggingface/hub"
-                            }
-                        ],
-                        'volumeMounts': [
-                            {
-                                "name": "model-storage",
-                                "mountPath": "/mnt"
-                            }
-                        ]
-                    }
-                ],
-                'volumes': [
-                    {
-                        'name': 'model-storage',
-                        'persistentVolumeClaim': {
-                            'claimName': 'blis-pvc'
-                        }
-                    }
-                ],
-            }
-        }
-    
+    # # Create a pod manifest for vllm
+    # pod_manifest = {
+    #         'apiVersion': 'v1',
+    #         'kind': 'Pod',
+    #         'metadata': {
+    #             'name': pod_name,
+    #         },
+    #         'spec': {
+    #             'affinity': {
+    #                 'nodeAffinity': {
+    #                     'requiredDuringSchedulingIgnoredDuringExecution': {
+    #                         'nodeSelectorTerms': [
+    #                             {
+    #                                 "matchExpressions": [
+    #                                     {
+    #                                         "key": "nvidia.com/gpu.product",
+    #                                         "operator": "In",
+    #                                         "values": [
+    #                                             vllm_params['gpu_type']      # land pod on the node with this GPU
+    #                                         ]
+    #                                     },
+    #                                     {
+    #                                         "key": "nvidia.com/gpu.memory",
+    #                                         "operator": "Gt",
+    #                                         "values": [
+    #                                             str(vllm_params['gpu_memory_min']) # land pod on the node at least this much GPU memory (in MB)
+    #                                         ]
+    #                                     }
+    #                                 ]
+    #                             }
+    #                         ]
+    #                     }
+    #                 }
+    #             },
+    #             # Temporary for now until cluster is fixed
+    #             'securityContext': {
+    #                 'runAsUser': 0
+    #             },
+    #             'initContainers': [
+    #                 {
+    #                     'name': 'vllm-server',
+    #                     'image': "vllm/vllm-openai:v0.10.0",
+    #                     'command': ['bash', '-c'],
+    #                     'restartPolicy': 'Always',
+    #                     'args': server_args,
+    #                     'env': [
+    #                         {
+    #                             "name": "HF_TOKEN",
+    #                             "valueFrom": {
+    #                                 "secretKeyRef": {
+    #                                     "key": "HF_TOKEN",
+    #                                     "name": "hf-secret"
+    #                                     }
+    #                                 }
+    #                         },
+    #                         {
+    #                             "name": "HF_HUB_CACHE",
+    #                             "value": "/mnt/.cache/huggingface/hub"
+    #                         }
+    #                     ],
+    #                     'volumeMounts': [
+    #                         {
+    #                             "name": "model-storage",
+    #                             "mountPath": "/mnt"
+    #                         }
+    #                     ],
+    #                     # Got this info from node
+    #                     'resources': {
+    #                         'requests': {
+    #                             'memory': '50Gi',
+    #                             'cpu': '1',
+    #                             'nvidia.com/gpu': '1',
+    #                         },
+    #                         'limits': {
+    #                             'memory': '50Gi',
+    #                             'cpu': '8',
+    #                             'nvidia.com/gpu': '1',
+    #                         }
+    #                     },
+    #                     'startupProbe': {
+    #                         "httpGet": {
+    #                             "path": "/v1/models",
+    #                             "port": 8000,
+    #                         },
+
+    #                         # Max 5 minutes (50 * 10) to finish startup
+    #                         "failureThreshold": 50,
+    #                         "periodSeconds": 10,
+    #                     }
+    #                 }
+    #             ],
+    #             'containers': [
+    #                 {
+    #                     'name': 'vllm-client',
+    #                     'image': "python:3.11-slim",
+    #                     'command': ['bash', '-c'],
+    #                     'args': client_args,
+    #                     'env': [
+    #                         {
+    #                             "name": "HF_TOKEN",
+    #                             "valueFrom": {
+    #                                 "secretKeyRef": {
+    #                                     "key": "HF_TOKEN",
+    #                                     "name": "hf-secret"
+    #                                     }
+    #                                 }
+    #                         },
+    #                         {
+    #                             "name": "HF_HUB_CACHE",
+    #                             "value": "/mnt/.cache/huggingface/hub"
+    #                         }
+    #                     ],
+    #                     'volumeMounts': [
+    #                         {
+    #                             "name": "model-storage",
+    #                             "mountPath": "/mnt"
+    #                         }
+    #                     ]
+    #                 }
+    #             ],
+    #             'volumes': [
+    #                 {
+    #                     'name': 'model-storage',
+    #                     'persistentVolumeClaim': {
+    #                         'claimName': 'blis-pvc'
+    #                     }
+    #                 }
+    #             ],
+    #         }
+    #     }
+
     # Apply the pod manifest
-    resp = k_client.create_namespaced_pod(body=pod_manifest,
-                                            namespace=NAMESPACE)      # edit ns if needed
+    # resp = k_client.create_namespaced_pod(body=pod_manifest,
+    #                                         namespace=NAMESPACE)      # edit ns if needed
 
-    return pod_name
+    return job_name
 
 def wait_for_server(model: str):
     """Wait for vLLM server to be ready"""
@@ -211,7 +243,7 @@ def wait_for_server(model: str):
         time.sleep(5)
 
     print("Server failed to start within timeout")
-    return False    
+    return False
 
 def collect_pod_logs_metrics(k_client, benchmark_name, pod_name, mode):
     """Stop vLLM server process and returns vllm pod log file and metrics json file"""
@@ -239,8 +271,8 @@ def collect_pod_logs_metrics(k_client, benchmark_name, pod_name, mode):
 def copy_file_from_pod_using_kubectl_cp(pod_name, namespace, container_name, remote_file_path, local_file_path):
     try:
         command = [
-            'oc', 'cp', 
-            f'{namespace}/{pod_name}:{remote_file_path}', 
+            'oc', 'cp',
+            f'{namespace}/{pod_name}:{remote_file_path}',
             '-c', container_name,
             local_file_path,
         ]
@@ -254,11 +286,11 @@ def copy_file_from_pod_using_kubectl_cp(pod_name, namespace, container_name, rem
         else:
             print(f"Error copying file: {result.stderr}")
             return False
-            
+
     except Exception as e:
         print(f"Error executing oc cp command: {e}")
         return False
-    
+
 def stop_vllm_server(k_client, pod_name):
     """Stop vLLM server process and returns vllm pod log file and metrics json file"""
 
@@ -299,54 +331,54 @@ def run_experiment(model, mode, local_dir_name: str, remote_exp_folder: str):
     print(f"{'='*50}")
 
     # Start server
-    pod_name = start_vllm_server_client(full_config, remote_exp_folder, core_v1, mode, model)
-    print(f"Created pod '{pod_name}'")
+    job_name = start_vllm_server_client(full_config, remote_exp_folder, core_v1, mode, model)
+    print(f"Created pod '{job_name}'")
 
-    while True:
-        model_alias = model.split("/")[-1].replace(".", "_")
-        remote_file_path = f"/mnt/results/{model_alias}/{remote_exp_folder}/results/scenario1_output_{mode}.json"
-        local_file_path = f"./{local_dir_name}/results_{mode}.json"
+    # while True:
+    #     model_alias = model.split("/")[-1].replace(".", "_")
+    #     remote_file_path = f"/mnt/results/{model_alias}/{remote_exp_folder}/results/scenario1_output_{mode}.json"
+    #     local_file_path = f"./{local_dir_name}/results_{mode}.json"
 
-        command = ["sh", "-c", f"test -f {remote_file_path} && echo 'EXISTS' || echo 'NOT_EXISTS'"]
+    #     command = ["sh", "-c", f"test -f {remote_file_path} && echo 'EXISTS' || echo 'NOT_EXISTS'"]
 
-        resp = None
+    #     resp = None
         # Execute the command
-        try:
-            resp = stream(core_v1.connect_get_namespaced_pod_exec,
-                name=pod_name,
-                namespace=NAMESPACE,
-                container="vllm-client", # Specify if needed
-                command=command,
-                stderr=True,
-                stdin=False,
-                stdout=True,
-                tty=False,
-            )
-        except KeyboardInterrupt:
-            break
-        except ApiException:
-            continue
-        
-        if resp and "NOT" not in resp:
-            print(f"File '{remote_file_path}' exists in container vllm-client of pod '{pod_name}'.")
-            time.sleep(20)
-            copy_file_from_pod_using_kubectl_cp(pod_name, NAMESPACE, "vllm-client", remote_file_path, local_file_path)
-            break
-        time.sleep(10)
+        # try:
+        #     resp = stream(core_v1.connect_get_namespaced_pod_exec,
+        #         name=job_name,
+        #         namespace=NAMESPACE,
+        #         container="vllm-client", # Specify if needed
+        #         command=command,
+        #         stderr=True,
+        #         stdin=False,
+        #         stdout=True,
+        #         tty=False,
+        #     )
+        # except KeyboardInterrupt:
+        #     break
+        # except ApiException:
+        #     continue
 
-    stop_vllm_server(core_v1, pod_name)
+        # if resp and "NOT" not in resp:
+        #     print(f"File '{remote_file_path}' exists in container vllm-client of pod '{job_name}'.")
+        #     time.sleep(20)
+        #     copy_file_from_pod_using_kubectl_cp(job_name, NAMESPACE, "vllm-client", remote_file_path, local_file_path)
+        #     break
+        # time.sleep(10)
+
+    # stop_vllm_server(core_v1, pod_name)
 
 def main():
     modes = ["train", "test"]
     # models = ["facebook/opt-125m", "Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501"]
     # models = ["ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501"]
-    models = ["mistralai/Mistral-Small-24B-Instruct-2501"]
+    models = ["Qwen/Qwen2.5-0.5B"]
     # models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
 
     # models = ["facebook/opt-125m"]
     for model in models:
         benchmark_name = "scenario1"
-        remote_exp_folder = f"{time.strftime("%Y%m%d-%H%M%S")}_{benchmark_name}"
+        remote_exp_folder = f"{time.strftime('%Y%m%d-%H%M%S')}_{benchmark_name}"
         for mode in modes:
             local_dir_name = "results/" + model.split("/")[-1].replace(".", "_")
             os.makedirs(local_dir_name, exist_ok=True)
