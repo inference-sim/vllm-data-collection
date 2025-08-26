@@ -1,12 +1,10 @@
+import argparse
 import json
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error
 from sklearn.linear_model import LinearRegression, RANSACRegressor
 import matplotlib.pyplot as plt
-from scipy.stats import zscore
 import numpy as np
-
-models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
 
 def get_variables(data):
     prompt_lens = data["prompt_lens"]
@@ -28,11 +26,11 @@ def remove_outliers(X_train, y_train):
     print ("Dataset size after filtering: ", X_train.shape[0])
     return X_train, y_train
 
-def train_lr(model_name):
-    with open(f'results/{model_name}/results_train.json', 'r') as f:
+def train_lr(model_name, run_folder_name):
+    with open(f'results/{model_name}/{run_folder_name}results/scenario1_output_train.json', 'r') as f:
         train_data = json.load(f)
 
-    with open(f'results/{model_name}/results_test.json', 'r') as file:
+    with open(f'results/{model_name}/{run_folder_name}/results/scenario1_output_test', 'r') as file:
         test_data = json.load(file)
 
     x_scaler = MinMaxScaler()
@@ -108,9 +106,14 @@ def train_lr(model_name):
 
     plt.savefig(f"results/{model_name}/{model_name}_e2e_vs_input_lens.png")
 
-for model in models:
-    model_name = model.split("/")[-1].replace(".", "_")
-    train_lr(model_name)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Simple vLLM Benchmark Runner')
+    parser.add_argument('--run_folder_name', help='latest run folder',  default="20250826-115550_scenario1")
+    args = parser.parse_args()
+    models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
+    for model in models:
+        model_name = model.split("/")[-1].replace(".", "_")
+        train_lr(model_name, args.run_folder_name)
 
 
 
