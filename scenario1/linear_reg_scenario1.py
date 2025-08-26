@@ -27,10 +27,10 @@ def remove_outliers(X_train, y_train):
     return X_train, y_train
 
 def train_lr(model_name, run_folder_name):
-    with open(f'results/{model_name}/{run_folder_name}/results/scenario1_output_train.json', 'r') as f:
+    with open(f'results_new/{model_name}/{run_folder_name}/results/scenario1_output_train.json', 'r') as f:
         train_data = json.load(f)
 
-    with open(f'results/{model_name}/{run_folder_name}/results/scenario1_output_test.json', 'r') as file:
+    with open(f'results_new/{model_name}/{run_folder_name}/results/scenario1_output_test.json', 'r') as file:
         test_data = json.load(file)
 
     x_scaler = MinMaxScaler()
