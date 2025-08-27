@@ -1,0 +1,80 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ job_name }}
+  namespace: blis
+spec:
+  ttlSecondsAfterFinished: 60
+  activeDeadlineSeconds: {{ active_deadline_sec }}
+  template:
+    spec:
+      restartPolicy: Never
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: nvidia.com/gpu.product
+                    operator: In
+                    values:
+                      - NVIDIA-H100-80GB-HBM3
+                  - key: nvidia.com/gpu.memory
+                    operator: Gt
+                    values:
+                      - '50000'
+      initContainers:
+      - name: vllm-server
+        image: vllm/vllm-openai:v0.10.0
+        command: ["bash", "-c"]
+        args:
+        - |
+{{ server_args }}
+        env:
+        - name: HF_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hf-secret
+              key: HF_TOKEN
+        - name: HF_HUB_CACHE
+          value: /mnt/.cache/huggingface/hub
+        resources:
+          requests:
+            cpu: "1"
+            memory: "50Gi"
+            nvidia.com/gpu: '1'
+          limits:
+            cpu: "1"
+            memory: "50Gi"
+            nvidia.com/gpu: '1'
+        startupProbe:
+          httpGet:
+            path: /v1/models
+            port: 8000
+          failureThreshold: 50
+          periodSeconds: 10
+        restartPolicy: Always
+        volumeMounts:
+        - name: model-storage
+          mountPath: /mnt
+      containers:
+      - name: vllm-client
+        image: python:3.11-slim
+        command: ["bash", "-c"]
+        args:
+        - |
+{{ client_args }}
+        env:
+        - name: HF_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hf-secret
+              key: HF_TOKEN
+        - name: HF_HUB_CACHE
+          value: /mnt/.cache/huggingface/hub
+        volumeMounts:
+        - name: model-storage
+          mountPath: /mnt
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: blis-pvc
