@@ -8,7 +8,7 @@ from kr8s.objects import Job
 
 NAMESPACE = "blis"
 
-def start_vllm_server_client(benchmark_config, exp_folder, mode, model):
+def start_vllm_server_client(benchmark_config, exp_folder, mode, model, active_deadline_sec):
     """Start vLLM server with config parameters"""
     vllm_params = benchmark_config['vllm']
 
@@ -50,7 +50,8 @@ def start_vllm_server_client(benchmark_config, exp_folder, mode, model):
 
     rendered = template.render(server_args=server_args,
                             client_args=client_args,
-                            job_name=job_name)
+                            job_name=job_name,
+                            active_deadline_sec=active_deadline_sec)
     print(rendered)
     resource_dict = yaml.safe_load(rendered)
     job = Job(resource_dict)
@@ -78,7 +79,7 @@ def wait_for_server(model: str):
     print("Server failed to start within timeout")
     return False
 
-def run_experiment(model, mode, remote_exp_folder: str):
+def run_experiment(model, mode, remote_exp_folder: str, active_deadline_sec: int):
     config_file = f"scenario1_config_{mode}.yaml"
 
     with open(config_file, "r") as f:
@@ -102,7 +103,7 @@ def run_experiment(model, mode, remote_exp_folder: str):
     print(f"{'='*50}")
 
     # Start server
-    job_name = start_vllm_server_client(full_config, remote_exp_folder, mode, model)
+    job_name = start_vllm_server_client(full_config, remote_exp_folder, mode, model, active_deadline_sec)
     print(f"Created pod '{job_name}'")
 
 def main():
@@ -112,11 +113,15 @@ def main():
     models = ["Qwen/Qwen3-14B"]
     # models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B"]
 
+    model_to_active_deadline_sec = {"facebook/opt-125m": 300, "Qwen/Qwen2.5-0.5B": 300, "Qwen/Qwen2-1.5B": 300, "Qwen/Qwen2.5-3B": 360, 
+                                    "Qwen/Qwen2-7B": 600, "google/gemma-7b": 600, "mistralai/Mistral-7B-Instruct-v0.1": 600, "meta-llama/Llama-3.1-8B": 600, "ibm-granite/granite-3.3-8b-instruct": 600,
+                                    "Qwen/Qwen3-14B": 600,
+                                    "mistralai/Mistral-Small-24B-Instruct-2501": 1200, "Qwen/Qwen3-32B": 1800}
     for model in models:
         benchmark_name = "scenario1"
         remote_exp_folder = f"{time.strftime('%Y%m%d-%H%M%S')}_{benchmark_name}"
         for mode in modes:
-            run_experiment(model, mode, remote_exp_folder)
+            run_experiment(model, mode, remote_exp_folder, model_to_active_deadline_sec[model])
 
 if __name__=="__main__":
     main()

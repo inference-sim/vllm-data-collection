@@ -5,7 +5,7 @@ metadata:
   namespace: blis
 spec:
   ttlSecondsAfterFinished: 60
-  activeDeadlineSeconds: 2400
+  activeDeadlineSeconds: {{ active_deadline_sec }}
   template:
     spec:
       restartPolicy: Never
@@ -37,8 +37,6 @@ spec:
               key: HF_TOKEN
         - name: HF_HUB_CACHE
           value: /mnt/.cache/huggingface/hub
-        # securityContext:
-        #   runAsUser: 0
         resources:
           requests:
             cpu: "1"
