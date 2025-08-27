@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error
 from sklearn.linear_model import LinearRegression, RANSACRegressor
@@ -27,6 +28,10 @@ def remove_outliers(X_train, y_train):
     return X_train, y_train
 
 def train_lr(model_name, run_folder_name):
+    local_folder_name = f'results_new/{model_name}'
+    items = os.listdir(local_folder_name)
+    run_folder_name = sorted([item for item in items if os.path.isdir(os.path.join(local_folder_name, item))], reverse=True)[0]
+    
     with open(f'results_new/{model_name}/{run_folder_name}/results/scenario1_output_train.json', 'r') as f:
         train_data = json.load(f)
 
@@ -49,8 +54,8 @@ def train_lr(model_name, run_folder_name):
     test_preds_lr = model_lr.predict(X_test)
     training_mae_lr = round(mean_absolute_error(training_preds_lr, y_train), 3)
     training_mape_lr = round(mean_absolute_percentage_error(training_preds_lr, y_train), 3)
-    test_mae_lr = round(mean_absolute_error(test_preds_lr, y_train), 3)
-    test_mape_lr = round(mean_absolute_percentage_error(test_preds_lr, y_train), 3)
+    test_mae_lr = round(mean_absolute_error(test_preds_lr, y_test), 3)
+    test_mape_lr = round(mean_absolute_percentage_error(test_preds_lr, y_test), 3)
 
     # huber = HuberRegressor(positive=True, ).fit(X_train, y_train)
     # training_score_huber = round(huber.score(X_train, y_train), 3)
@@ -63,8 +68,8 @@ def train_lr(model_name, run_folder_name):
     test_preds_ransac = ransac.predict(X_test)
     training_mae_ransac = round(mean_absolute_error(training_preds_ransac, y_train), 3)
     training_mape_ransac = round(mean_absolute_percentage_error(training_preds_ransac, y_train), 3)
-    test_mae_ransac = round(mean_absolute_error(test_preds_ransac, y_train), 3)
-    test_mape_ransac = round(mean_absolute_percentage_error(test_preds_ransac, y_train), 3)
+    test_mae_ransac = round(mean_absolute_error(test_preds_ransac, y_test), 3)
+    test_mape_ransac = round(mean_absolute_percentage_error(test_preds_ransac, y_test), 3)
 
 
     print (f"##################### {model_name} ############################")
@@ -84,7 +89,7 @@ def train_lr(model_name, run_folder_name):
     print("RANSAC Model Test MAE:", test_mae_ransac)
     print("RANSAC Model Test MAPE:", test_mape_ransac)
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 6))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
 
     ax1.scatter(np.array(X_train)[:, 0], y_train)
     ax1.scatter(np.array(X_train)[:, 0], training_preds_lr)
@@ -104,15 +109,16 @@ def train_lr(model_name, run_folder_name):
 
     fig.suptitle(f'Results for {model_name}')
 
-    plt.savefig(f"results/{model_name}/{model_name}_e2e_vs_input_lens.png")
+    plt.savefig(f"plots_new/{model_name}/{model_name}_e2e_vs_input_lens.png")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Simple vLLM Benchmark Runner')
     parser.add_argument('--run_folder_name', help='latest run folder',  default="20250826-115550_scenario1")
     args = parser.parse_args()
-    models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
+    models = ["facebook/opt-125m", "Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
     for model in models:
         model_name = model.split("/")[-1].replace(".", "_")
+        os.makedirs(f"plots_new/{model_name}", exist_ok=True)
         train_lr(model_name, args.run_folder_name)
 
 

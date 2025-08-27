@@ -42,7 +42,7 @@ def start_vllm_server_client(benchmark_config, exp_folder, mode, model):
 
     config.load_kube_config()
 
-    model_name_for_pod = model.split("/")[-1].replace(".", "-").lower()
+    model_name_for_pod = model.split("/")[-1].replace(".", "-").lower()[:15]
 
     job_name = f"vllm-benchmark-collection-scenario1-{model_name_for_pod}-{mode}"
     environment = Environment(loader=FileSystemLoader("./"))
@@ -107,10 +107,10 @@ def run_experiment(model, mode, remote_exp_folder: str):
 
 def main():
     modes = ["train", "test"]
-    # models = ["facebook/opt-125m", "Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501"]
+    # models = ["mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
     # models = ["ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501"]
-    models = ["Qwen/Qwen2.5-0.5B"]
-    # models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
+    models = ["Qwen/Qwen3-14B"]
+    # models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B"]
 
     for model in models:
         benchmark_name = "scenario1"
