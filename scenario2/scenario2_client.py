@@ -41,13 +41,20 @@ def post_request(endpoint, model, prompt, client_config, e2e_logging = False):
         "Content-Type": "application/json"
         }
     payload = generate_request(prompt, client_config, model)
+    output = ""
     if e2e_logging:
        start_time = time.time()
-    response = requests.post(endpoint, headers=headers, json=payload, stream = False)
-    output = json.loads(response.content)
-    if e2e_logging:
-      e2e = time.time() - start_time
-      return e2e, output
+    try:
+        response = requests.post(endpoint, headers=headers, json=payload, stream = False)
+        response.raise_for_status()
+        output = json.loads(response.content)
+        if e2e_logging:
+            e2e = time.time() - start_time
+            return e2e, output
+    except requests.exceptions.HTTPError as err:
+        print(f"HTTP Error: {err}, {prompt}")
+    except requests.exceptions.RequestException as err:
+        print(f"An error occurred: {err}, {prompt}")
     return None, output
 
 def main():
