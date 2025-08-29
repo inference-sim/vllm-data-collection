@@ -1,10 +1,10 @@
+client:
+  output_len: 1
+  seed: 42
+  temperature: 0.0
 description: Handcrafted train data for model
 experiments:
 - chunk_size: 256
-  client:
-    output_len: 1
-    seed: 42
-    temperature: 0.0
   data:
     workloads:
     - input_pairs:
@@ -887,10 +887,6 @@ experiments:
     max_num_seqs: 1
     seed: 42
 - chunk_size: 512
-  client:
-    output_len: 1
-    seed: 42
-    temperature: 0.0
   data:
     workloads:
     - input_pairs:
