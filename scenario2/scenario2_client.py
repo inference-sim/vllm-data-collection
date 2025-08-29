@@ -21,8 +21,9 @@ def generate_request(prompt, client_config, model):
 def generate_unique_prefix_prompt_pairs(prompt_len, model, extended_len):
    tokenizer = AutoTokenizer.from_pretrained(model, trust_remote_code=True)
    unique_prefix = str(prompt_len)
+   orig_prompt = unique_prefix
    
-   token_id = tokenizer.encode(unique_prefix, add_special_tokens=False)
+   token_id = tokenizer.encode(orig_prompt, add_special_tokens=False)
    orig_prompt += " the" * (prompt_len - len(token_id))
    encoded_prompt = tokenizer.encode(orig_prompt, add_special_tokens=False)
    while len(encoded_prompt) > (prompt_len - 1):
@@ -32,7 +33,7 @@ def generate_unique_prefix_prompt_pairs(prompt_len, model, extended_len):
    encoded_extended_prompt = tokenizer.encode(extended_prompt, add_special_tokens=False)
    while len(encoded_extended_prompt) > (extended_len - 1):
          extended_prompt = extended_prompt[:-4]
-         encoded_prompt = tokenizer.encode(extended_prompt, add_special_tokens=False)
+         encoded_extended_prompt = tokenizer.encode(extended_prompt, add_special_tokens=False)
    return [orig_prompt, extended_prompt]
 
 def post_request(endpoint, model, prompt, client_config, e2e_logging = False):
