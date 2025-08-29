@@ -748,10 +748,8 @@ experiments:
         - 8161
       - - 7936
         - 8186
-      - - 7936
-        - 8211
       m: 31
-  name: benchmark-0
+  name: benchmark-1
   vllm:
     block_size: 16
     gpu_memory_min: 50000
@@ -1422,10 +1420,8 @@ experiments:
         - 8155
       - - 7680
         - 8180
-      - - 7680
-        - 8205
       m: 15
-  name: benchmark-1
+  name: benchmark-2
   vllm:
     block_size: 16
     gpu_memory_min: 50000

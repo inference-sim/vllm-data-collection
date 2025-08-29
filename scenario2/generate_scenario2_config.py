@@ -24,7 +24,7 @@ for mode in modes:
     config["experiments"] = []
     for idx, lptt in enumerate(long_prefill_token_thresholds):
         experiment_specs = {}
-        experiment_specs["name"] = f"benchmark-{idx}"
+        experiment_specs["name"] = f"benchmark-{idx+1}"
         experiment_specs["chunk_size"] = lptt
         experiment_specs["vllm"] = {
             "gpu_memory_utilization": gpu_mem_util,
@@ -45,7 +45,7 @@ for mode in modes:
             workload["input_pairs"] = []
             J = deltas[mode]
             input_len = m*lptt
-            while input_len < context_length and (input_len - m*lptt) < lptt:
+            while input_len + J < context_length and (input_len - m*lptt) < lptt:
                 input_len += J
                 workload["input_pairs"].append([m*lptt, input_len])
             experiment_specs["data"]["workloads"].append(workload)
