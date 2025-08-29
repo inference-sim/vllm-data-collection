@@ -101,7 +101,7 @@ def main():
             e2e2, res2 = post_request(endpoint, args.model, prompt_pair[1], client_config, e2e_logging = True)
             results_for_m["e2e_pairs"].append([e2e1, e2e2])
             results_for_m["request_id_pairs"].append([res1["id"], res2["id"]])
-            results_for_m["prompt_len_pairs"].append([res1["id"], res2["id"]])
+            results_for_m["prompt_len_pairs"].append([res1["usage"]["prompt_tokens"], res2["usage"]["prompt_tokens"]])
         results["workloads"].append(results_for_m)
       
     model_alias = args.model.split("/")[-1].replace(".", "_")
