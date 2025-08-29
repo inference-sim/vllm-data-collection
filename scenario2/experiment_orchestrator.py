@@ -8,14 +8,14 @@ from kr8s.objects import Job
 
 NAMESPACE = "blis"
 
-def start_vllm_server_client(benchmark_config, exp_folder, mode, model):
+def start_vllm_server_client(benchmark_config, exp_folder, mode, model, chunk_size):
     """Start vLLM server with config parameters"""
     vllm_params = benchmark_config['vllm']
 
     model_alias = model.split("/")[-1].replace(".", "_")
-    exp_results_path = f"/mnt/scenario1/results/{model_alias}/{exp_folder}"
-    server_log_path = f"{exp_results_path}/scenario1_server_{mode}.log"
-    client_log_path = f"{exp_results_path}/scenario1_client_{mode}.log"
+    exp_results_path = f"/mnt/scenario2/results/{model_alias}/{exp_folder}/chunk_size_{chunk_size}"
+    server_log_path = f"{exp_results_path}/scenario2_server_{mode}.log"
+    client_log_path = f"{exp_results_path}/scenario2_client_{mode}.log"
 
     server_args = f"""              mkdir -p {exp_results_path}/
                 touch {server_log_path}
@@ -30,11 +30,10 @@ def start_vllm_server_client(benchmark_config, exp_folder, mode, model):
     client_args = f"""              set -ex
                 apt-get update && apt-get install -y git curl
                 git clone https://github.com/inference-sim/vllm-data-collection
-                cd vllm-data-collection/scenario1
+                cd vllm-data-collection/scenario2
                 pip install -r requirements.txt
-                python generate_prompts_fixedlen.py --model {model} --mode {mode}
                 touch {client_log_path}
-                python scenario1_client.py --model {model} --mode {mode} --results_folder {exp_folder} > {client_log_path}
+                python scenario2_client.py --model {model} --mode {mode} --chunk_size {chunk_size} --results_folder {exp_folder} > {client_log_path}
                 sleep 30000000
 """
 
@@ -44,7 +43,7 @@ def start_vllm_server_client(benchmark_config, exp_folder, mode, model):
 
     model_name_for_pod = model.split("/")[-1].replace(".", "-").lower()
 
-    job_name = f"scenario1-{model_name_for_pod}-{mode}"
+    job_name = f"scenario2-{mode}-{model_name_for_pod}-{chunk_size}"
     environment = Environment(loader=FileSystemLoader("./"))
     template = environment.get_template("benchmark-job.yaml")
 
@@ -79,7 +78,7 @@ def wait_for_server(model: str):
     return False
 
 def run_experiment(model, mode, remote_exp_folder: str):
-    config_file = f"scenario1_config_{mode}.yaml"
+    config_file = f"scenario2_config_{mode}.yaml"
 
     with open(config_file, "r") as f:
        full_config = yaml.safe_load(f) # read necessary configs and seed files
@@ -101,19 +100,21 @@ def run_experiment(model, mode, remote_exp_folder: str):
     print(f"STARTING SCENARIO 1 benchmark in mode = {mode}")
     print(f"{'='*50}")
 
-    # Start server
-    job_name = start_vllm_server_client(full_config, remote_exp_folder, mode, model)
-    print(f"Created pod '{job_name}'")
+    experiment_configs = full_config["experiments"]
+    for experiment in experiment_configs:
+        chunk_size = experiment["chunk_size"]
+        job_name = start_vllm_server_client(experiment, remote_exp_folder, mode, model, chunk_size)
+        print(f"Created pod '{job_name}'")
 
 def main():
     modes = ["train", "test"]
     # models = ["mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
     # models = ["ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501"]
-    models = ["Qwen/Qwen3-14B"]
-    # models = ["facebook/opt-125m", "Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B"]
+    models = ["Qwen/Qwen2.5-1.5B"]
+    # models = ["facebook/opt-125m", "Qwen/Qwen2.5-0.5B", "Qwen/Qwen2.5-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2.5-7B", "Qwen/Qwen3-14B"]
 
     for model in models:
-        benchmark_name = "scenario1"
+        benchmark_name = "scenario2"
         remote_exp_folder = f"{time.strftime('%Y%m%d-%H%M%S')}_{benchmark_name}"
         for mode in modes:
             run_experiment(model, mode, remote_exp_folder)
