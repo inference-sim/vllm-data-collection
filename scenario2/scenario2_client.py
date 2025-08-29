@@ -18,9 +18,9 @@ def generate_request(prompt, client_config, model):
    
    return payload
 
-def generate_unique_prefix_prompt_pairs(prompt_len, model, extended_len):
+def generate_unique_prefix_prompt_pairs(idx, prompt_len, model, extended_len):
    tokenizer = AutoTokenizer.from_pretrained(model, trust_remote_code=True)
-   unique_prefix = str(prompt_len)
+   unique_prefix = f"{prompt_len}-{idx}"
    orig_prompt = unique_prefix
    
    token_id = tokenizer.encode(orig_prompt, add_special_tokens=False)
@@ -69,7 +69,7 @@ def main():
 
     # warm start - discard some requests
     for it in range(warmstart_config["prompt_count"]):
-      warmstart_prompts = generate_unique_prefix_prompt_pairs(warmstart_config["prompt_len"], args.model, 20)
+      warmstart_prompts = generate_unique_prefix_prompt_pairs(it, warmstart_config["prompt_len"], args.model, 20)
       for prompt in warmstart_prompts:
          _, res = post_request(endpoint, args.model, prompt, client_config)
 
@@ -87,8 +87,8 @@ def main():
         results_for_m["e2e_pairs"] = []
         results_for_m["request_id_pairs"] = []
         results_for_m["prompt_len_pairs"] = []
-        for pair in workload["input_pairs"]:
-            prompt_pair = generate_unique_prefix_prompt_pairs(pair[0], args.model, pair[1])
+        for idx, pair in enumerate(workload["input_pairs"]):
+            prompt_pair = generate_unique_prefix_prompt_pairs(idx, pair[0], args.model, pair[1])
             results_for_m["input_prompt_pairs"].append(prompt_pair)
             e2e1, res1 = post_request(endpoint, args.model, pair[0], client_config, e2e_logging = True)
             e2e2, res2 = post_request(endpoint, args.model, pair[1], client_config, e2e_logging = True)
