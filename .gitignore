@@ -91,7 +91,6 @@ ipython_config.py
 # generated files
 **/generated/**
 outputs_vllm/
-*.txt
 
 # pyenv
 #   For a library or package, you might want to ignore these files since the code is
@@ -221,3 +220,4 @@ results_new/
 plots_new/
 
 pvc_debugger_2.yaml
+benchmarks/

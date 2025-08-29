@@ -1,6 +1,6 @@
 import yaml
 
-long_prefill_token_thresholds = [256, 512, 1024, 2048, 4096]
+long_prefill_token_thresholds = [256, 512]
 context_length = 8192
 max_num_batched_tokens = 2048
 block_size = 16
