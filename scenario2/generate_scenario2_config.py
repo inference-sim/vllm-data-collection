@@ -16,6 +16,11 @@ for mode in modes:
         "prompt_count": 50,
         "prompt_len": 128
     }
+    config["client"] = {
+        "temperature": 0.0,
+        "output_len": 1,
+        "seed": 42
+    }
     config["experiments"] = []
     for idx, lptt in enumerate(long_prefill_token_thresholds):
         experiment_specs = {}
@@ -31,12 +36,6 @@ for mode in modes:
             "gpu_type": "NVIDIA-H100-80GB-HBM3",
             "gpu_memory_min": 50000,
             "long_prefill_token_threshold": lptt
-        }
-
-        experiment_specs["client"] = {
-            "temperature": 0.0,
-            "output_len": 1,
-            "seed": 42
         }
 
         experiment_specs["data"] = {"workloads": []}

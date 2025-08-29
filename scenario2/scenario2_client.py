@@ -60,7 +60,6 @@ def main():
 
     with open(config_file, "r") as f:
        config = yaml.safe_load(f) # read necessary configs
-    data_config = config["data"]
     warmstart_config = config["warmstart"]
        
     endpoint = "http://localhost:8000/v1/completions"  # endpoint should end with /v1/completions
@@ -73,7 +72,12 @@ def main():
       for prompt in warmstart_prompts:
          _, res = post_request(endpoint, args.model, prompt, client_config)
 
+
     # real requests
+    data_config = {}
+    for experiment in config["experiments"]:
+        if experiment["chunk_size"] == int(args.chunk_size):
+            data_config = experiment["data"]
     results = {}
     results["workloads"] = []
     for workload in data_config["workloads"]:
