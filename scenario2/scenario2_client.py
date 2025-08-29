@@ -90,8 +90,8 @@ def main():
         for idx, pair in enumerate(workload["input_pairs"]):
             prompt_pair = generate_unique_prefix_prompt_pairs(idx, pair[0], args.model, pair[1])
             results_for_m["input_prompt_pairs"].append(prompt_pair)
-            e2e1, res1 = post_request(endpoint, args.model, pair[0], client_config, e2e_logging = True)
-            e2e2, res2 = post_request(endpoint, args.model, pair[1], client_config, e2e_logging = True)
+            e2e1, res1 = post_request(endpoint, args.model, prompt_pair[0], client_config, e2e_logging = True)
+            e2e2, res2 = post_request(endpoint, args.model, prompt_pair[1], client_config, e2e_logging = True)
             results_for_m["e2e_pairs"].append([e2e1, e2e2])
             results_for_m["request_id_pairs"].append([res1["id"], res2["id"]])
             results_for_m["prompt_len_pairs"].append([res1["id"], res2["id"]])
