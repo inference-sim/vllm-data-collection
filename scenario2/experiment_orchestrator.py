@@ -29,7 +29,7 @@ def start_vllm_server_client(benchmark_config, exp_folder, mode, model, chunk_si
 
     client_args = f"""              set -ex
                 apt-get update && apt-get install -y git curl
-                git clone https://github.com/inference-sim/vllm-data-collection
+                git clone -b scenario2 https://github.com/inference-sim/vllm-data-collection
                 cd vllm-data-collection/scenario2
                 pip install -r requirements.txt
                 touch {client_log_path}
