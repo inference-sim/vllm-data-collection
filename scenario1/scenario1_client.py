@@ -91,8 +91,8 @@ def main():
       results["block_size"].append(config["vllm"]["block_size"])
       
     model_alias = args.model.split("/")[-1].replace(".", "_")
-    full_results_path = f"/mnt/results/{model_alias}/{args.results_folder}/results"
-    full_spec_path = f"/mnt/results/{model_alias}/{args.results_folder}/spec"
+    full_results_path = f"/mnt/scenario1/results/{model_alias}/{args.results_folder}/results"
+    full_spec_path = f"/mnt/scenario1/results/{model_alias}/{args.results_folder}/spec"
     os.makedirs(full_results_path, exist_ok=True)
     os.makedirs(full_spec_path, exist_ok=True)
     result_filename = f"{full_results_path}/scenario1_output_{args.mode}.json"
