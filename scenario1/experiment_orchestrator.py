@@ -30,8 +30,8 @@ def start_vllm_server_client(benchmark_config, exp_folder, mode, model):
     client_args = f"""              set -ex
                 apt-get update && apt-get install -y git curl
                 git clone https://github.com/inference-sim/vllm-data-collection
-                cd vllm-data-collection/scenario1
                 pip install -r requirements.txt
+                cd vllm-data-collection/scenario1
                 python generate_prompts_fixedlen.py --model {model} --mode {mode}
                 touch {client_log_path}
                 python scenario1_client.py --model {model} --mode {mode} --results_folder {exp_folder} > {client_log_path}
@@ -46,7 +46,7 @@ def start_vllm_server_client(benchmark_config, exp_folder, mode, model):
 
     job_name = f"scenario1-{model_name_for_pod}-{mode}"
     environment = Environment(loader=FileSystemLoader("./"))
-    template = environment.get_template("benchmark-job.yaml")
+    template = environment.get_template("../benchmark-job.yaml")
 
     rendered = template.render(server_args=server_args,
                             client_args=client_args,

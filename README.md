@@ -142,3 +142,10 @@ To add a new parameter to the sweep, you need to modify `benchmarks/config_gener
     ```
 
 5.  **Verify**: Run `python benchmarks/config_generator.py` to generate the new configuration file and verify that your new parameter is included correctly in the experiments.
+
+## OpenShift configuration
+
+
+1. Create new ns
+2. `oc adm policy add-scc-to-user anyuid -z default` to allow containers to run as root, required for vLLM images
+3. Delete all jobs: `oc delete job --all`

@@ -30,21 +30,21 @@ def start_vllm_server_client(benchmark_config, exp_folder, mode, model, chunk_si
     client_args = f"""              set -ex
                 apt-get update && apt-get install -y git curl
                 git clone -b scenario2 https://github.com/inference-sim/vllm-data-collection
-                cd vllm-data-collection/scenario2
                 pip install -r requirements.txt
+                cd vllm-data-collection/scenario2
                 touch {client_log_path}
                 python scenario2_client.py --model {model} --mode {mode} --chunk_size {chunk_size} --results_folder {exp_folder} > {client_log_path}
                 sleep 30000000
 """
 
-    print(f"Starting vLLM server: {' '.join(server_args)}")
+    print(f"Starting vLLM server: {server_args}")
 
     config.load_kube_config()
 
     model_name_for_pod = model.split("/")[-1].replace(".", "-").lower()
 
     job_name = f"scenario2-{mode}-{model_name_for_pod}-{chunk_size}"
-    environment = Environment(loader=FileSystemLoader("./"))
+    environment = Environment(loader=FileSystemLoader("../"))
     template = environment.get_template("benchmark-job.yaml")
 
     rendered = template.render(server_args=server_args,
@@ -110,20 +110,22 @@ def main():
     modes = ["train", "test"]
     # models = ["mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
     # models = ["ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501"]
-    # models = ["Qwen/Qwen2.5-1.5B"]
-    models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2.5-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2.5-7B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "Qwen/Qwen3-14B", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
+    models = ["Qwen/Qwen2.5-0.5B"]
+    num_runs = 1
+    # models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2.5-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2.5-7B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "Qwen/Qwen3-14B", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
 
-    for idx, model in enumerate(models):
-        benchmark_name = "scenario2"
-        remote_exp_folder = f"{time.strftime('%Y%m%d-%H%M%S')}_{benchmark_name}"
-        for mode in modes:
-            run_experiment(model, mode, remote_exp_folder)
-        if idx < 4:
-            time.sleep(600)
-        elif idx >=4 and idx <=7:
-            time.sleep(1200)
-        else:
-            time.sleep(1800)
+    for run in range(num_runs):
+        for idx, model in enumerate(models):
+            benchmark_name = "scenario2"
+            remote_exp_folder = f"{time.strftime('%Y%m%d-%H%M%S')}_{benchmark_name}"
+            for mode in modes:
+                run_experiment(model, mode, remote_exp_folder)
+            # if idx < 4:
+            #     time.sleep(600)
+            # elif idx >=4 and idx <=7:
+            #     time.sleep(1200)
+            # else:
+            #     time.sleep(1800)
         
 
 if __name__=="__main__":

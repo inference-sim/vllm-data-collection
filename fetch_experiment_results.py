@@ -1,3 +1,4 @@
+import argparse
 import os
 import subprocess
 
@@ -29,10 +30,13 @@ def copy_file_from_pod_using_kubectl_cp(pod_name, namespace, remote_dir_path, lo
         return False
 
 def main():
+    parser = argparse.ArgumentParser(description='Simple vLLM Benchmark Runner')
+    parser.add_argument('--scenario', help='scenario X',  default="scenario2")
+    args = parser.parse_args()
     pod_name = "pvc-debugger"
     namespace = "blis"
-    local_dir_path = "results_new/"
-    remote_dir_path = "/mnt/scenario1/results/"
+    local_dir_path = f"results_new/{args.scenario}"
+    remote_dir_path = f"/mnt/{args.scenario}/results/"
     os.makedirs(local_dir_path, exist_ok=True)
     copy_file_from_pod_using_kubectl_cp(pod_name, namespace, remote_dir_path, local_dir_path)
 

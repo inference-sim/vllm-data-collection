@@ -45,7 +45,7 @@ for mode in modes:
             workload["input_pairs"] = []
             J = deltas[mode]
             input_len = m*lptt
-            while input_len + J < context_length and (input_len - m*lptt) < lptt:
+            while input_len + J < context_length and (input_len + J - m*lptt) < lptt:
                 input_len += J
                 workload["input_pairs"].append([m*lptt, input_len])
             experiment_specs["data"]["workloads"].append(workload)
