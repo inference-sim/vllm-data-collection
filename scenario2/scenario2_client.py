@@ -95,13 +95,20 @@ def main():
         results_for_m["request_id_pairs"] = []
         results_for_m["prompt_len_pairs"] = []
         for idx, pair in enumerate(workload["input_pairs"]):
-            prompt_pair = generate_unique_prefix_prompt_pairs(idx, pair[0], args.model, pair[1])
-            results_for_m["input_prompt_pairs"].append(prompt_pair)
-            e2e1, res1 = post_request(endpoint, args.model, prompt_pair[0], client_config, e2e_logging = True)
-            e2e2, res2 = post_request(endpoint, args.model, prompt_pair[1], client_config, e2e_logging = True)
-            results_for_m["e2e_pairs"].append([e2e1, e2e2])
-            results_for_m["request_id_pairs"].append([res1["id"], res2["id"]])
-            results_for_m["prompt_len_pairs"].append([res1["usage"]["prompt_tokens"], res2["usage"]["prompt_tokens"]])
+            if pair[0] == 0: #for m = 0
+                prompt = generate_unique_prefix_prompt_pairs(idx, pair[1], args.model, pair[1])
+                e2e, res = post_request(endpoint, args.model, prompt, client_config, e2e_logging = True)
+                results_for_m["e2e_pairs"].append([0, e2e])
+                results_for_m["request_id_pairs"].append(['', res["id"]])
+                results_for_m["prompt_len_pairs"].append([0, res["usage"]["prompt_tokens"]])
+            else:
+                prompt_pair = generate_unique_prefix_prompt_pairs(idx, pair[0], args.model, pair[1])
+                results_for_m["input_prompt_pairs"].append(prompt_pair)
+                e2e1, res1 = post_request(endpoint, args.model, prompt_pair[0], client_config, e2e_logging = True)
+                e2e2, res2 = post_request(endpoint, args.model, prompt_pair[1], client_config, e2e_logging = True)
+                results_for_m["e2e_pairs"].append([e2e1, e2e2])
+                results_for_m["request_id_pairs"].append([res1["id"], res2["id"]])
+                results_for_m["prompt_len_pairs"].append([res1["usage"]["prompt_tokens"], res2["usage"]["prompt_tokens"]])
         results["workloads"].append(results_for_m)
       
     model_alias = args.model.split("/")[-1].replace(".", "_")

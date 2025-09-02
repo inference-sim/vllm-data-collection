@@ -1,19 +1,34 @@
 import argparse
 import json
 import os
-from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error
 from sklearn.linear_model import LinearRegression, RANSACRegressor
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
-def get_variables(data):
-    prompt_lens = data["prompt_lens"]
-    block_size = data["block_size"][0]
-    prompt_lens_sq_by_b2 = [((x + block_size - 1) // block_size) * ((x + block_size - 1) // block_size) for x in prompt_lens]
-    x = np.array([list(pair) for pair in zip(prompt_lens, prompt_lens_sq_by_b2)])
-    y = np.array(data["e2e - network_latency"])
-    return x, y
+BLOCK_SIZE = 16
+
+def process_results(data, chunk_size):
+    processed_data = []
+    workload_data = data["workloads"]
+    for workload in workload_data:
+        for idx, pair in enumerate(workload["prompt_len_pairs"]):
+            entry1 = {"m": workload["m"], "delta": 0, "C": chunk_size, "e2e": workload["e2e_pairs"][idx][0]}
+            entry2 = {"m": workload["m"], "delta": pair[1] - pair[0], "C": chunk_size, "e2e": workload["e2e_pairs"][idx][1]}
+            # processed_data.append(entry1)
+            processed_data.append(entry2)
+    return processed_data
+
+def get_variables(df):
+    df["mC"] = df["m"] * df["C"]
+    df["C2m/2b2"] = (df["m"] * df["C"] * df["C"])/(2*BLOCK_SIZE*BLOCK_SIZE)
+    df["C2m2/2b2"] = (df["m"] * df["m"] * df["C"] * df["C"])/(2*BLOCK_SIZE*BLOCK_SIZE)
+    df["mCdelta/b2"] = (df["m"] * df["C"] * df["delta"])/(BLOCK_SIZE*BLOCK_SIZE)
+    df["delta2/b2"] = (df["delta"] * df["delta"])/(BLOCK_SIZE*BLOCK_SIZE)
+    chunk_sizes = df['C']
+    df = df.drop('C', axis=1)
+    return df, chunk_sizes
 
 def remove_outliers(X_train, y_train):
     # filter out anomalies
@@ -27,100 +42,108 @@ def remove_outliers(X_train, y_train):
     print ("Dataset size after filtering: ", X_train.shape[0])
     return X_train, y_train
 
-def train_lr(model_name, scenario):
-    local_folder_name = f'../results_new/{scenario}/{model_name}'
-    items = os.listdir(local_folder_name)
-    run_folder_name = sorted([item for item in items if os.path.isdir(os.path.join(local_folder_name, item))], reverse=True)[0]
-    
-    with open(f'{local_folder_name}/{run_folder_name}/results/{scenario}_output_train.json', 'r') as f:
-        train_data = json.load(f)
+def aggregate_results(model_name, scenario):
+    chunk_sizes = [256, 512, 1024, 2048, 4096]
+    train_data = []
+    test_data = []
+    for chunk_size in chunk_sizes:
+        local_folder_name = f'../results_new/{scenario}/{model_name}'
+        items = os.listdir(local_folder_name)
+        run_folders = [item for item in items if os.path.isdir(os.path.join(local_folder_name, item))]
 
-    with open(f'{local_folder_name}/{run_folder_name}/results/{scenario}_output_test.json', 'r') as file:
-        test_data = json.load(file)
+        for run_folder in run_folders:
+            with open(f'{local_folder_name}/{run_folder}/chunk_size_{chunk_size}/results/{scenario}_output_train.json', 'r') as f:
+                train_data_json = json.load(f)
+                train_data.extend(process_results(train_data_json, chunk_size))
 
-    x_scaler = MinMaxScaler()
+            with open(f'{local_folder_name}/{run_folder}/chunk_size_{chunk_size}/results/{scenario}_output_test.json', 'r') as file:
+                test_data_json = json.load(file)
+                test_data.extend(process_results(test_data_json, chunk_size))
+    return pd.DataFrame(train_data), pd.DataFrame(test_data)
 
-    X_train, y_train = get_variables(train_data)
-    # X_train, y_train = remove_outliers(X_train, y_train)
-
-    X_test, y_test = get_variables(test_data)
-    # X_test = x_scaler.fit_transform(X_test)
-
-    model_lr = LinearRegression(positive=True)
-    model_lr.fit(X_train, y_train)
-    training_score_lr = round(model_lr.score(X_train, y_train), 3)
-    test_score_lr = round(model_lr.score(X_test, y_test), 3)
-    training_preds_lr = model_lr.predict(X_train)
-    test_preds_lr = model_lr.predict(X_test)
-    training_mae_lr = round(mean_absolute_error(training_preds_lr, y_train), 3)
-    training_mape_lr = round(mean_absolute_percentage_error(training_preds_lr, y_train), 3)
-    test_mae_lr = round(mean_absolute_error(test_preds_lr, y_test), 3)
-    test_mape_lr = round(mean_absolute_percentage_error(test_preds_lr, y_test), 3)
-
-    # huber = HuberRegressor(positive=True, ).fit(X_train, y_train)
-    # training_score_huber = round(huber.score(X_train, y_train), 3)
-    # test_score_huber = round(huber.score(X_test, y_test), 3)
-
-    ransac = RANSACRegressor(random_state=0, estimator=model_lr).fit(X_train, y_train)
-    training_score_ransac = round(ransac.score(X_train, y_train), 3)
-    test_score_ransac = round(ransac.score(X_test, y_test), 3)
-    training_preds_ransac = ransac.predict(X_train)
-    test_preds_ransac = ransac.predict(X_test)
-    training_mae_ransac = round(mean_absolute_error(training_preds_ransac, y_train), 3)
-    training_mape_ransac = round(mean_absolute_percentage_error(training_preds_ransac, y_train), 3)
-    test_mae_ransac = round(mean_absolute_error(test_preds_ransac, y_test), 3)
-    test_mape_ransac = round(mean_absolute_percentage_error(test_preds_ransac, y_test), 3)
-
+def plot_model_results(LLM, plots_path, X_train, y_train, X_test, y_test, chunk_sizes_train, chunk_size_test, model, model_type: str):
+    training_score = round(model.score(X_train, y_train), 3)
+    test_score = round(model.score(X_test, y_test), 3)
+    training_preds = model.predict(X_train)
+    test_preds = model.predict(X_test)
+    training_mae = round(mean_absolute_error(training_preds, y_train), 3)
+    training_mape = round(mean_absolute_percentage_error(training_preds, y_train), 3)
+    test_mae = round(mean_absolute_error(test_preds, y_test), 3)
+    test_mape = round(mean_absolute_percentage_error(test_preds, y_test), 3)
 
     print (f"##################### {model_name} ############################")
-    print("LR Model Train Score:", training_score_lr)
-    print("LR Model Train MAE:", training_mae_lr)
-    print("LR Model Train MAPE:", training_mape_lr)
+    print(f"{model_type} Model Train Score: {training_score}")
+    print(f"{model_type} Model Train MAE: {training_mae}")
+    print(f"{model_type} Model Train MAPE: {training_mape}")
 
-    print("LR Model Test Score:", test_score_lr)
-    print("LR Model Test MAE:", test_mae_lr)
-    print("LR Model Test MAPE:", test_mape_lr)
+    print(f"{model_type} Model Test Score: {test_score}")
+    print(f"{model_type} Model Test MAE: {test_mae}")
+    print(f"{model_type} Model Test MAPE: {test_mape}")
 
-    print("RANSAC Model Train Score:", training_score_ransac)
-    print("RANSAC Model Train MAE:", training_mae_ransac)
-    print("RANSAC Model Train MAPE:", training_mape_ransac)
+    fig, axs = plt.subplots(3, 2, figsize=(20, 30))
+    row_order = ['C', 'm', 'delta']
 
-    print("RANSAC Model Test Score:", test_score_ransac)
-    print("RANSAC Model Test MAE:", test_mae_ransac)
-    print("RANSAC Model Test MAPE:", test_mape_ransac)
+    for idx, row in enumerate(row_order):
+        if row in X_train:
+            train_data = np.array(X_train[row])
+            test_data = np.array(X_test[row])
+        else:
+            train_data = np.array(chunk_sizes_train)
+            test_data = np.array(chunk_size_test)
+        axs[idx, 0].scatter(train_data, y_train)
+        axs[idx, 0].scatter(train_data, training_preds)
+        axs[idx, 0].set_title(f'Train R2 {model_type}: {training_score}, \nTrain MAE: {training_mae}, \nTrain MAPE: {training_mape}')
+        axs[idx, 0].set_xlabel(row)
+        axs[idx, 0].set_ylabel('e2e latency')
+        axs[idx, 0].legend(["Original", f"{model_type} predictions"])
+        axs[idx, 0].grid(True)
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
+        axs[idx, 1].scatter(test_data, y_test)
+        axs[idx, 1].scatter(test_data, test_preds)
+        axs[idx, 1].set_title(f'Test R2 {model_type}: {test_score}, \nTest MAE: {test_mae}, \nTest MAPE: {test_mape}')
+        axs[idx, 1].set_xlabel(row)
+        axs[idx, 1].set_ylabel('e2e latency')
+        axs[idx, 1].legend(["Original", f"{model_type} predictions"])
+        axs[idx, 1].grid(True)
 
-    ax1.scatter(np.array(X_train)[:, 0], y_train)
-    ax1.scatter(np.array(X_train)[:, 0], training_preds_lr)
-    ax1.set_title(f'Train R2 LR: {training_score_lr}, RANSAC: {training_score_ransac}\nTrain MAE LR: {training_mae_lr}, RANSAC: {training_mae_ransac}\nTrain MAPE LR: {training_mape_lr}, RANSAC: {training_mape_ransac}')
-    ax1.set_xlabel('$t_{IN}$')
-    ax1.set_ylabel('e2e latency')
-    ax1.legend(["Original", "LR predictions"])
-    ax1.grid(True)
+    fig.suptitle(f'Results for {LLM}')
 
-    ax2.scatter(np.array(X_test)[:, 0], y_test)
-    ax2.scatter(np.array(X_test)[:, 0], test_preds_lr)
-    ax2.set_title(f'Test R2 LR: {test_score_lr}, RANSAC: {test_score_ransac}\nTest MAE LR: {test_mae_lr}, RANSAC: {test_mae_ransac}\nTest MAPE LR: {test_mape_lr}, RANSAC: {test_mape_ransac}')
-    ax2.set_xlabel('$t_{IN}$')
-    ax2.set_ylabel('e2e latency')
-    ax2.legend(["Original", "LR predictions"])
-    ax2.grid(True)
+    plt.savefig(f"{plots_path}/{LLM}_{model_type}.png")
 
-    fig.suptitle(f'Results for {model_name}')
+def train_lr(model_name, scenario, plots_path):
+    
+    train_df, test_df = aggregate_results(model_name, scenario)
+    train_df, chunk_sizes_train = get_variables(train_df)
+    test_df, chunk_sizes_test = get_variables(test_df)
+    train_df.to_csv(f"results_processed/train_{model_name}_{scenario}.csv", index=False)
+    test_df.to_csv(f"results_processed/test_{model_name}_{scenario}.csv", index=False)
+    y_train = train_df["e2e"]
+    y_test = test_df["e2e"]
+    X_train = train_df.drop('e2e', axis=1)
+    X_test = test_df.drop('e2e', axis=1)
+    
+    model_lr = LinearRegression(positive=True)
+    model_lr.fit(X_train, y_train)
 
-    plt.savefig(f"../plots_new/{args.scenario}/{model_name}/{model_name}_e2e_vs_input_lens.png")
+    ransac = RANSACRegressor(random_state=0, estimator=model_lr).fit(X_train, y_train)
+
+    plot_model_results(model_name, plots_path, X_train, y_train, X_test, y_test, chunk_sizes_train, chunk_sizes_test, model_lr, "LR")
+    plot_model_results(model_name, plots_path, X_train, y_train, X_test, y_test, chunk_sizes_train, chunk_sizes_test, ransac, "RANSAC")
+
+    print (f"LR coefficients: {model_lr.coef_}")
+    print (f"LR intercept: {model_lr.intercept_}")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Simple vLLM Benchmark Runner')
-    parser.add_argument('--run_folder_name', help='latest run folder',  default="20250826-115550_scenario2")
     parser.add_argument('--scenario', help='scenario X',  default="scenario2")
     args = parser.parse_args()
-    models = ["facebook/opt-125m", "Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
+    models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2.5-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2.5-7B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "Qwen/Qwen3-14B", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
     for model in models:
         model_name = model.split("/")[-1].replace(".", "_")
-        os.makedirs(f"../plots_new/{args.scenario}/{model_name}", exist_ok=True)
-        train_lr(model_name, args.scenario)
+        plots_path = f"../plots_new/{args.scenario}/{model_name}"
+        os.makedirs(plots_path, exist_ok=True)
+        train_lr(model_name, args.scenario, plots_path)
 
 ## C    m     delta C*m m*delta.  e2e
 ## 256. 1.      0.                
