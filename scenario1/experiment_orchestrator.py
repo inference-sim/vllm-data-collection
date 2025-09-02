@@ -30,7 +30,7 @@ def start_vllm_server_client(benchmark_config, exp_folder, mode, model):
     client_args = f"""              set -ex
                 apt-get update && apt-get install -y git curl
                 git clone https://github.com/inference-sim/vllm-data-collection
-                pip install -r requirements.txt
+                pip install -r vllm-data-collection/requirements.txt
                 cd vllm-data-collection/scenario1
                 python generate_prompts_fixedlen.py --model {model} --mode {mode}
                 touch {client_log_path}

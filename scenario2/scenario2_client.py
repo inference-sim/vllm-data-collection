@@ -24,12 +24,12 @@ def generate_unique_prefix_prompt_pairs(idx, prompt_len, model, extended_len):
    orig_prompt = unique_prefix
    
    token_id = tokenizer.encode(orig_prompt, add_special_tokens=False)
-   orig_prompt += " 0" * (prompt_len - len(token_id))
+   orig_prompt += " 0" * ((prompt_len - len(token_id))//2 + 1)
    encoded_prompt = tokenizer.encode(orig_prompt, add_special_tokens=False)
    while len(encoded_prompt) > prompt_len:
          orig_prompt = orig_prompt[:-1]
          encoded_prompt = tokenizer.encode(orig_prompt, add_special_tokens=False)
-   extended_prompt = orig_prompt + " 0" * (extended_len - prompt_len)
+   extended_prompt = orig_prompt + (" 0" * ((extended_len - prompt_len)//2 + 1))
    encoded_extended_prompt = tokenizer.encode(extended_prompt, add_special_tokens=False)
    while len(encoded_extended_prompt) > extended_len:
          extended_prompt = extended_prompt[:-1]
