@@ -39,7 +39,7 @@ for mode in modes:
         }
 
         experiment_specs["data"] = {"workloads": []}
-        for m in range(context_length//lptt):
+        for m in range(1, context_length//lptt):
             workload = {}
             workload["m"] = m
             workload["input_pairs"] = []
