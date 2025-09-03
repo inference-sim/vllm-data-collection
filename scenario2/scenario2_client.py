@@ -95,7 +95,7 @@ def main():
         results_for_m["request_id_pairs"] = []
         results_for_m["prompt_len_pairs"] = []
         for idx, pair in enumerate(workload["input_pairs"]):
-            if pair[0] == 0: #for m = 0
+            if pair[0] == 0: # for m = 0
                 prompt = generate_unique_prefix_prompt_pairs(idx, pair[1], args.model, pair[1])
                 e2e, res = post_request(endpoint, args.model, prompt, client_config, e2e_logging = True)
                 results_for_m["e2e_pairs"].append([0, e2e])
