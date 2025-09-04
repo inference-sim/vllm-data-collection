@@ -213,11 +213,15 @@ qwen2-5-14b/
 qwen2-7b/
 opt-125m/
 llama-3-1-8b/
+scenario2/test.py
 
 results/
 results_small/
 results_new/
 plots_new/
+plots_vstack/
+plots_hstack/
 
 pvc_debugger_2.yaml
 benchmarks/
+scenario2/results_processed

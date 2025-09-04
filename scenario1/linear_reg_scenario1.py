@@ -12,7 +12,7 @@ def get_variables(data):
     block_size = data["block_size"][0]
     prompt_lens_sq_by_b2 = [((x + block_size - 1) // block_size) * ((x + block_size - 1) // block_size) for x in prompt_lens]
     x = np.array([list(pair) for pair in zip(prompt_lens, prompt_lens_sq_by_b2)])
-    y = np.array(data["e2e - network_latency"])
+    y = np.array(data["e2es"])
     return x, y
 
 def remove_outliers(X_train, y_train):
