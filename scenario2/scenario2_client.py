@@ -19,6 +19,7 @@ def generate_request(prompt, client_config, model):
    return payload
 
 def generate_unique_prefix_prompt_pairs(idx, prompt_len, model, extended_len):
+   special_models = ["mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B", "mistralai/Mistral-Small-24B-Instruct-2501"]
    tokenizer = AutoTokenizer.from_pretrained(model, trust_remote_code=True)
    unique_prefix = f"{prompt_len}-{idx}"
    orig_prompt = unique_prefix
@@ -26,12 +27,18 @@ def generate_unique_prefix_prompt_pairs(idx, prompt_len, model, extended_len):
    token_id = tokenizer.encode(orig_prompt, add_special_tokens=False)
    orig_prompt += " 0" * ((prompt_len - len(token_id))//2 + 1)
    encoded_prompt = tokenizer.encode(orig_prompt, add_special_tokens=False)
-   while len(encoded_prompt) > prompt_len:
+   prompt_len_to_reach = prompt_len
+   if model in special_models:
+       prompt_len_to_reach = prompt_len - 1
+   while len(encoded_prompt) > prompt_len_to_reach:
          orig_prompt = orig_prompt[:-1]
          encoded_prompt = tokenizer.encode(orig_prompt, add_special_tokens=False)
    extended_prompt = orig_prompt + (" 0" * ((extended_len - prompt_len)//2 + 1))
    encoded_extended_prompt = tokenizer.encode(extended_prompt, add_special_tokens=False)
-   while len(encoded_extended_prompt) > extended_len:
+   extended_prompt_len_to_reach = extended_len
+   if model in special_models:
+       extended_prompt_len_to_reach = extended_len - 1
+   while len(encoded_extended_prompt) > extended_prompt_len_to_reach:
          extended_prompt = extended_prompt[:-1]
          encoded_extended_prompt = tokenizer.encode(extended_prompt, add_special_tokens=False)
    return [orig_prompt, extended_prompt]

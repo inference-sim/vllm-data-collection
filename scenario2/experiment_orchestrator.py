@@ -112,7 +112,8 @@ def main():
     # models = ["ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501"]
     # models = ["Qwen/Qwen3-32B"]
     num_runs = 1
-    models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2.5-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2.5-7B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "Qwen/Qwen3-14B", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
+    # models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2.5-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2.5-7B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "Qwen/Qwen3-14B", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
+    models = ["mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B", "mistralai/Mistral-Small-24B-Instruct-2501"]
 
     for run in range(num_runs):
         for idx, model in enumerate(models):
@@ -120,9 +121,9 @@ def main():
             remote_exp_folder = f"{time.strftime('%Y%m%d-%H%M%S')}_{benchmark_name}"
             for mode in modes:
                 run_experiment(model, mode, remote_exp_folder)
-            if idx < 4:
-                time.sleep(360)
-            elif idx >=4 and idx <=7:
+            # if idx < 4:
+            #     time.sleep(360)
+            if idx <= 2:
                 time.sleep(600)
             else:
                 time.sleep(1200)
