@@ -12,7 +12,7 @@ def get_variables(data):
     block_size = data["block_size"][0]
     prompt_lens_sq_by_b2 = [((x + block_size - 1) // block_size) * ((x + block_size - 1) // block_size) for x in prompt_lens]
     x = np.array([list(pair) for pair in zip(prompt_lens, prompt_lens_sq_by_b2)])
-    y = np.array(data["e2e - network_latency"])
+    y = np.array(data["e2es"])
     return x, y
 
 def remove_outliers(X_train, y_train):
@@ -28,14 +28,14 @@ def remove_outliers(X_train, y_train):
     return X_train, y_train
 
 def train_lr(model_name, run_folder_name):
-    local_folder_name = f'results_new/{model_name}'
+    local_folder_name = f'../results_new/{model_name}'
     items = os.listdir(local_folder_name)
     run_folder_name = sorted([item for item in items if os.path.isdir(os.path.join(local_folder_name, item))], reverse=True)[0]
     
-    with open(f'results_new/{model_name}/{run_folder_name}/results/scenario1_output_train.json', 'r') as f:
+    with open(f'{local_folder_name}/{run_folder_name}/results/scenario1_output_train.json', 'r') as f:
         train_data = json.load(f)
 
-    with open(f'results_new/{model_name}/{run_folder_name}/results/scenario1_output_test.json', 'r') as file:
+    with open(f'{local_folder_name}/{run_folder_name}/results/scenario1_output_test.json', 'r') as file:
         test_data = json.load(file)
 
     x_scaler = MinMaxScaler()
@@ -118,7 +118,7 @@ if __name__ == "__main__":
     models = ["facebook/opt-125m", "Qwen/Qwen2.5-0.5B", "Qwen/Qwen2-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2-7B", "Qwen/Qwen3-14B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
     for model in models:
         model_name = model.split("/")[-1].replace(".", "_")
-        os.makedirs(f"plots_new/{model_name}", exist_ok=True)
+        os.makedirs(f"../plots_new/{model_name}", exist_ok=True)
         train_lr(model_name, args.run_folder_name)
 
 

@@ -91,7 +91,6 @@ ipython_config.py
 # generated files
 **/generated/**
 outputs_vllm/
-*.txt
 
 # pyenv
 #   For a library or package, you might want to ignore these files since the code is
@@ -214,10 +213,16 @@ qwen2-5-14b/
 qwen2-7b/
 opt-125m/
 llama-3-1-8b/
+scenario2/test.py
+scenario2/slides_plots.py
 
 results/
 results_small/
 results_new/
 plots_new/
+plots_vstack/
+plots_hstack/
 
 pvc_debugger_2.yaml
+benchmarks/
+scenario2/results_processed
