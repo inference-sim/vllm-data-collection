@@ -8,6 +8,7 @@ import yaml
 from transformers import AutoTokenizer
 
 def generate_request(prompt, client_config, model):
+   # generate request payload with prompt, model and config params
    payload = {
         "model": model,
         "prompt": prompt, # 1 prompt per request
@@ -19,6 +20,9 @@ def generate_request(prompt, client_config, model):
    return payload
 
 def generate_unique_prefix_prompt_pairs(idx, prompt_len, model, extended_len):
+   # Generates a unique prefix prompt pair, each of format:
+   # prompt_len-idx 0 0 0 0 0 ...
+   # first request in the pair is of length = prompt_len, and the other is of length = extended_len
    special_models = ["mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B", "mistralai/Mistral-Small-24B-Instruct-2501"]
    tokenizer = AutoTokenizer.from_pretrained(model, trust_remote_code=True)
    unique_prefix = f"{prompt_len}-{idx}"
@@ -44,6 +48,7 @@ def generate_unique_prefix_prompt_pairs(idx, prompt_len, model, extended_len):
    return [orig_prompt, extended_prompt]
 
 def post_request(endpoint, model, prompt, client_config, e2e_logging = False):
+    # Posts a single request to the vllm server endpoint
     headers = {
         "Content-Type": "application/json"
         }

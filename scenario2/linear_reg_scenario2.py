@@ -10,6 +10,14 @@ import pandas as pd
 BLOCK_SIZE = 16
 
 def process_results_joint(data, chunk_size, mode = "vstack"):
+    """
+    Processes json results into necessary training format with features as per model
+    Args:
+         data: JSON file
+         chunk_size: int
+         mode: hstack for stacking entries of a request pair into columns
+               vstack for stacking entries of a request pair into rows
+    """
     processed_X = []
     processed_Y = []
     processed_chunk_sizes = []
@@ -59,6 +67,14 @@ def remove_outliers(X_train, y_train):
     return X_train, y_train
 
 def aggregate_results_joint(model_name, scenario, mode = "vstack"):
+    """
+    Aggregates results across multiple runs of the same LLM into X_train, y_train, X_test, y_test
+    Args:
+         model_name: str
+         scenario: str
+         mode: hstack for stacking entries of a request pair into columns
+               vstack for stacking entries of a request pair into rows
+    """
     chunk_sizes = [256, 512, 1024, 2048, 4096]
     X_train = []
     y_train = []
@@ -88,6 +104,9 @@ def aggregate_results_joint(model_name, scenario, mode = "vstack"):
     return X_train, y_train, X_test, y_test, chunk_sizes_train, chunk_sizes_test
 
 def plot_model_results(LLM, plots_path, X_train, y_train, X_test, y_test, chunk_sizes_train, chunk_size_test, model, model_type: str, mode: str):
+    """
+    Print LR scores (R2, MAE, MAPE) and plot results
+    """
     training_score = round(model.score(X_train, y_train), 3)
     test_score = round(model.score(X_test, y_test), 3)
     training_preds = model.predict(X_train)
@@ -139,7 +158,9 @@ def plot_model_results(LLM, plots_path, X_train, y_train, X_test, y_test, chunk_
     plt.savefig(f"{plots_path}/{LLM}_{model_type}.png")
 
 def train_lr(model_name, scenario, plots_path, mode = "vstack"):
-    # for joint
+    """
+    Train linear regression model from aggregated results
+    """
     X_train, y_train, X_test, y_test, chunk_sizes_train, chunk_sizes_test = aggregate_results_joint(model_name, scenario, mode)
     X_train, y_train, X_test, y_test = np.array(X_train), np.array(y_train), np.array(X_test), np.array(y_test)
     if mode == "hstack":
@@ -149,6 +170,7 @@ def train_lr(model_name, scenario, plots_path, mode = "vstack"):
         vstack_cols = ["theta_1", "theta_2", "beta_4", "beta_5", "beta_6", "y"]
         data = np.column_stack([X_train, y_train])
         df = pd.DataFrame(data = data, columns=vstack_cols)
+        # save X_train + y_train into a csv for validation
         df.to_csv(f"results_processed/train_{model_name}_scenario2.csv", index = False)
     model_lr = LinearRegression(positive=True)
     model_lr.fit(X_train, y_train)
@@ -156,7 +178,6 @@ def train_lr(model_name, scenario, plots_path, mode = "vstack"):
     # ransac = RANSACRegressor(random_state=0, estimator=model_lr).fit(X_train, y_train)
 
     plot_model_results(model_name, plots_path, X_train, y_train, X_test, y_test, chunk_sizes_train, chunk_sizes_test, model_lr, "LR", mode)
-    # plot_model_results(model_name, plots_path, X_train, y_train, X_test, y_test, chunk_sizes_train, chunk_sizes_test, ransac, "RANSAC", mode)
 
     # print (f"LR coefficients: {model_lr.coef_}")
     # print (f"LR intercept: {model_lr.intercept_}")
