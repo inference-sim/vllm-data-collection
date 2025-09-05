@@ -32,14 +32,13 @@ def process_results_joint(data, chunk_size, mode = "vstack"):
                 processed_Y.append(y)
                 processed_chunk_sizes.append(chunk_size)
             else:
-                req2_features = [m + 1, m * chunk_size + delta, (m * chunk_size)/BLOCK_SIZE, delta/BLOCK_SIZE, (delta * (m * chunk_size + delta))/(BLOCK_SIZE*BLOCK_SIZE)]
+                req2_features = [1, m * chunk_size + delta, (m * chunk_size)/BLOCK_SIZE, delta/BLOCK_SIZE, (delta * (m * chunk_size + delta))/(BLOCK_SIZE*BLOCK_SIZE)]
                 if m > 0:
                     req1_features = [m, m * chunk_size, 0, (m * chunk_size)/BLOCK_SIZE, (chunk_size*chunk_size*m*(m+1))/(2*BLOCK_SIZE*BLOCK_SIZE)]
                     X_features = [req1_features, req2_features]
                     y = [workload["e2e_pairs"][idx][0], workload["e2e_pairs"][idx][1]]
                     processed_chunk_sizes.extend([chunk_size, chunk_size])
                 else:
-                    print (req2_features)
                     y = [workload["e2e_pairs"][idx][1]]
                     X_features = [req2_features]
                     processed_chunk_sizes.append(chunk_size)
