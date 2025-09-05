@@ -214,6 +214,7 @@ qwen2-7b/
 opt-125m/
 llama-3-1-8b/
 scenario2/test.py
+scenario2/slides_plots.py
 
 results/
 results_small/
