@@ -6,7 +6,7 @@ from kubernetes.client import Configuration
 from jinja2 import Environment, FileSystemLoader
 from kr8s.objects import Job
 
-NAMESPACE = "blis"
+from experiment_configs_constants import *
 
 def start_vllm_server_client(benchmark_config, exp_folder, mode, model, chunk_size):
     """Start vLLM server with config parameters"""
@@ -33,6 +33,8 @@ def start_vllm_server_client(benchmark_config, exp_folder, mode, model, chunk_si
                 pip install -r vllm-data-collection/requirements.txt
                 cd vllm-data-collection/scenario3
                 touch {client_log_path}
+                python generate_client_config.py --model {model}
+                sleep 15
                 python scenario3_client.py --model {model} --mode {mode} --chunk_size {chunk_size} --results_folder {exp_folder} > {client_log_path}
                 sleep 30000000
 """
@@ -78,10 +80,10 @@ def wait_for_server(model: str):
     return False
 
 def run_experiment(model, mode, remote_exp_folder: str):
-    config_file = f"scenario3_config_{mode}.yaml"
+    server_config_file = f"scenario3_server_config_{mode}.yaml"
 
-    with open(config_file, "r") as f:
-       full_config = yaml.safe_load(f) # read necessary configs and seed files
+    with open(server_config_file, "r") as f:
+       server_config = yaml.safe_load(f) # read necessary configs and seed files
 
     # Set up K8s client
     config.load_kube_config()
@@ -100,30 +102,28 @@ def run_experiment(model, mode, remote_exp_folder: str):
     print(f"STARTING SCENARIO 3 benchmark in mode = {mode}")
     print(f"{'='*50}")
 
-    experiment_configs = full_config["experiments"]
-    for experiment in experiment_configs:
+    for experiment in server_config["experiments"]:
         chunk_size = experiment["chunk_size"]
         job_name = start_vllm_server_client(experiment, remote_exp_folder, mode, model, chunk_size)
         print(f"Created pod '{job_name}'")
 
 def main():
-    modes = ["train", "test"]
     num_runs = 1
-    models = ["Qwen/Qwen2.5-3B"]
-    # models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2.5-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2.5-7B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "Qwen/Qwen3-14B", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
+    # models = ["Qwen/Qwen3-14B"]
+    models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2.5-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2.5-7B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "Qwen/Qwen3-14B", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
 
     for run in range(num_runs):
         for idx, model in enumerate(models):
             benchmark_name = "scenario3"
             remote_exp_folder = f"{time.strftime('%Y%m%d-%H%M%S')}_{benchmark_name}"
-            for mode in modes:
+            for mode in MODES:
                 run_experiment(model, mode, remote_exp_folder)
-            # if idx < 4:
-            #     time.sleep(360)
-            # elif idx >=4 and idx <=7:
-            #     time.sleep(600)
-            # else:
-            #     time.sleep(1200)
+            if idx < 4:
+                time.sleep(360)
+            elif idx >=4 and idx <=7:
+                time.sleep(600)
+            else:
+                time.sleep(1200)
         
 
 if __name__=="__main__":

@@ -70,7 +70,7 @@ def main():
     parser.add_argument('--chunk_size', help='Chunk size',  default="256")
     parser.add_argument('--results_folder', help='Result folder in PVC',  default="scenario3")
     args = parser.parse_args()
-    config_file = f"scenario3_config_{args.mode}.yaml"
+    config_file = f"scenario3_client_config_{args.mode}.yaml"
 
     with open(config_file, "r") as f:
        config = yaml.safe_load(f) # read necessary configs
@@ -139,7 +139,7 @@ def main():
     with open(f"{full_spec_path}/requirements.txt", 'w') as f:
         f.write(result.stdout)
 
-    with open(f"{full_spec_path}/scenario3_config_{args.mode}.yaml", 'w') as f:
+    with open(f"{full_spec_path}/scenario3_client_config_{args.mode}.yaml", 'w') as f:
        yaml.dump(config, f, sort_keys=False)
 
     print ("Finished workload experiment")
