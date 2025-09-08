@@ -8,21 +8,13 @@ experiments:
   data:
     workloads:
     - deltas:
-      - 188
-      - 953
-      - 4831
+      - 218
+      - 2658
+      - 3728
     - deltas:
-      - 3714
-      - 96
-      - 1228
-    - deltas:
-      - 6609
-      - 408
-      - 717
-    - deltas:
-      - 81
-      - 1429
-      - 5155
+      - 4864
+      - 401
+      - 1054
   name: benchmark-1
   vllm:
     block_size: 16
@@ -38,21 +30,13 @@ experiments:
   data:
     workloads:
     - deltas:
-      - 4286
-      - 239
-      - 817
+      - 639
+      - 2328
+      - 3979
     - deltas:
-      - 939
-      - 3875
-      - 1482
-    - deltas:
-      - 801
-      - 1438
-      - 2256
-    - deltas:
-      - 2615
-      - 2417
-      - 3072
+      - 1365
+      - 2540
+      - 798
   name: benchmark-2
   vllm:
     block_size: 16
@@ -68,21 +52,13 @@ experiments:
   data:
     workloads:
     - deltas:
-      - 338
-      - 5139
-      - 286
+      - 431
+      - 1518
+      - 3061
     - deltas:
-      - 12
-      - 2330
-      - 2687
-    - deltas:
-      - 1781
-      - 3126
-      - 603
-    - deltas:
-      - 1844
-      - 2290
-      - 459
+      - 1053
+      - 1792
+      - 1508
   name: benchmark-3
   vllm:
     block_size: 16
@@ -98,21 +74,13 @@ experiments:
   data:
     workloads:
     - deltas:
-      - 3844
-      - 2536
-      - 1405
+      - 4252
+      - 1792
+      - 1268
     - deltas:
-      - 408
-      - 3577
-      - 1217
-    - deltas:
-      - 747
-      - 602
-      - 3006
-    - deltas:
-      - 3689
-      - 204
-      - 3218
+      - 2380
+      - 1675
+      - 1453
   name: benchmark-4
   vllm:
     block_size: 16
@@ -128,21 +96,13 @@ experiments:
   data:
     workloads:
     - deltas:
-      - 116
-      - 3168
-      - 1539
+      - 873
+      - 2639
+      - 3699
     - deltas:
-      - 698
-      - 4364
-      - 2018
-    - deltas:
-      - 3114
-      - 162
-      - 2087
-    - deltas:
-      - 1966
-      - 1697
-      - 962
+      - 2783
+      - 184
+      - 2049
   name: benchmark-5
   vllm:
     block_size: 16
