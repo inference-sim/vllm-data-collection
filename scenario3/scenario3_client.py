@@ -27,11 +27,13 @@ def generate_prompt_segment(prompt_len, model, seed_unique):
    prompt_segment = ""
    
    num_tokens_in_seed = len(tokenizer.encode(seed_unique, add_special_tokens=False))
+   print (num_tokens_in_seed)
    prompt_segment += seed_unique * (prompt_len//num_tokens_in_seed + 1)
    encoded_prompt = tokenizer.encode(prompt_segment, add_special_tokens=False)
    while len(encoded_prompt) > prompt_len:
          prompt_segment = prompt_segment[:-1]
          encoded_prompt = tokenizer.encode(prompt_segment, add_special_tokens=False)
+   print (len(encoded_prompt))
    return prompt_segment
 
 def post_request(endpoint, model, prompt, client_config, e2e_logging = False):
@@ -95,6 +97,7 @@ def main():
         results_for_quad["e2e_quads"] = []
         results_for_quad["request_id_quads"] = []
         results_for_quad["prompt_len_quads"] = []
+        results_for_quad["output_len_quads"] = []
         deltas = workload["deltas"]
         prefix = generate_prompt_segment(4, args.model, f"{idx}-")
         segment1 = generate_prompt_segment(deltas[0], args.model, " 1")
@@ -114,6 +117,7 @@ def main():
             results_for_quad["e2e_quads"].append(e2e)
             results_for_quad["request_id_quads"].append(res["id"])
             results_for_quad["prompt_len_quads"].append(res["usage"]["prompt_tokens"])
+            results_for_quad["output_len_quads"].append(res["usage"]["completion_tokens"])
         results["workloads"].append(results_for_quad)
       
     model_alias = args.model.split("/")[-1].replace(".", "_")
@@ -138,13 +142,12 @@ def main():
     print ("Finished workload experiment")
 
 if __name__=="__main__":
-   main()
-    # for model in special_models:
-    #     print ("#############",model,"###############")
-    #     # for idx in [1, 5, 10, 50, 100, 200, 500]:
-    #     #     prefix = generate_prompt_segment(4, model, f"{idx}-")
-    #     #     segment1 = generate_prompt_segment(25, model, " 1")
-    #     #     segment2 = generate_prompt_segment(1 + 20,  model, " 2")
-    #     #     segment3 = generate_prompt_segment(1 + 20,  model, " 3")
-    #     #     warmstart_prompt = generate_prompt_segment(128, model, "*w")
-    #     cleanup_bos_for_special_models("Hi", model)
+#    main()
+    for model in ["Qwen/Qwen2.5-0.5B"]:
+        print ("#############",model,"###############")
+        for idx in range(512):
+            prefix = generate_prompt_segment(4, model, f"{idx}-")
+            segment1 = generate_prompt_segment(25, model, " 1")
+            segment2 = generate_prompt_segment(1 + 20,  model, " 2")
+            segment3 = generate_prompt_segment(1 + 20,  model, " 3")
+            warmstart_prompt = generate_prompt_segment(128, model, "*w")
