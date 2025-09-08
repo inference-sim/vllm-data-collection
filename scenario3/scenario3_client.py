@@ -28,13 +28,11 @@ def generate_prompt_segment(prompt_len, model, seed_unique):
    prompt_segment = ""
    
    num_tokens_in_seed = len(tokenizer.encode(seed_unique, add_special_tokens=False))
-#    print (num_tokens_in_seed)
    prompt_segment += seed_unique * (prompt_len//num_tokens_in_seed + 1)
    encoded_prompt = tokenizer.encode(prompt_segment, add_special_tokens=False)
    while len(encoded_prompt) > prompt_len:
          prompt_segment = prompt_segment[:-1]
          encoded_prompt = tokenizer.encode(prompt_segment, add_special_tokens=False)
-#    print (len(encoded_prompt))
    return prompt_segment
 
 def post_request(endpoint, model, prompt, client_config, e2e_logging = False):
@@ -97,7 +95,11 @@ def main():
         results_for_quad["input_prompt_quads"] = []
         results_for_quad["e2e_quads"] = []
         results_for_quad["request_id_quads"] = []
+<<<<<<< HEAD
         results_for_quad["input_len_quads"] = []
+=======
+        results_for_quad["prompt_len_quads"] = []
+>>>>>>> db1384f18 (Dummy experiment)
         results_for_quad["output_len_quads"] = []
         deltas = workload["deltas"]
         results_for_quad["deltas"] = deltas
@@ -123,7 +125,11 @@ def main():
             results_for_quad["e2e_quads"].append(e2e)
             results_for_quad["input_prompt_quads"].append(prompt)
             results_for_quad["request_id_quads"].append(res["id"])
+<<<<<<< HEAD
             results_for_quad["input_len_quads"].append(res["usage"]["prompt_tokens"])
+=======
+            results_for_quad["prompt_len_quads"].append(res["usage"]["prompt_tokens"])
+>>>>>>> db1384f18 (Dummy experiment)
             results_for_quad["output_len_quads"].append(res["usage"]["completion_tokens"])
         results["workloads"].append(results_for_quad)
         # checkpoint through logs
@@ -152,6 +158,7 @@ def main():
     print ("Finished workload experiment")
 
 if __name__=="__main__":
+<<<<<<< HEAD
    main()
     # for model in ["Qwen/Qwen2.5-0.5B"]:
     #     print ("#############",model,"###############")
@@ -161,3 +168,14 @@ if __name__=="__main__":
     #         segment2 = generate_prompt_segment(1 + 20,  model, " 2")
     #         segment3 = generate_prompt_segment(1 + 20,  model, " 3")
     #         warmstart_prompt = generate_prompt_segment(128, model, "*w")
+=======
+#    main()
+    for model in ["Qwen/Qwen2.5-0.5B"]:
+        print ("#############",model,"###############")
+        for idx in range(512):
+            prefix = generate_prompt_segment(4, model, f"{idx}-")
+            segment1 = generate_prompt_segment(25, model, " 1")
+            segment2 = generate_prompt_segment(1 + 20,  model, " 2")
+            segment3 = generate_prompt_segment(1 + 20,  model, " 3")
+            warmstart_prompt = generate_prompt_segment(128, model, "*w")
+>>>>>>> db1384f18 (Dummy experiment)
