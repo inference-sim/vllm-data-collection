@@ -65,9 +65,9 @@ def main():
     parser.add_argument('--mode', help='train/test',  default="train")
     parser.add_argument('--model', help='LLM name',  default="facebook/opt-125m")
     parser.add_argument('--chunk_size', help='Chunk size',  default="256")
-    parser.add_argument('--results_folder', help='Result folder in PVC',  default="scenario2")
+    parser.add_argument('--results_folder', help='Result folder in PVC',  default="scenario3")
     args = parser.parse_args()
-    config_file = f"scenario2_config_{args.mode}.yaml"
+    config_file = f"scenario3_config_{args.mode}.yaml"
 
     with open(config_file, "r") as f:
        config = yaml.safe_load(f) # read necessary configs
