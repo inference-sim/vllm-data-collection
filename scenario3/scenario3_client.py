@@ -97,7 +97,7 @@ def main():
         results_for_quad["input_prompt_quads"] = []
         results_for_quad["e2e_quads"] = []
         results_for_quad["request_id_quads"] = []
-        results_for_quad["prompt_len_quads"] = []
+        results_for_quad["input_len_quads"] = []
         results_for_quad["output_len_quads"] = []
         deltas = workload["deltas"]
         results_for_quad["deltas"] = deltas
@@ -117,8 +117,9 @@ def main():
                 client_config["output_len"] = 1 + deltas[2] # prefill + decode for the last two requests
             e2e, res = post_request(endpoint, args.model, prompt, client_config, e2e_logging = True)
             results_for_quad["e2e_quads"].append(e2e)
+            results_for_quad["input_prompt_quads"].append(prompt)
             results_for_quad["request_id_quads"].append(res["id"])
-            results_for_quad["prompt_len_quads"].append(res["usage"]["prompt_tokens"])
+            results_for_quad["input_len_quads"].append(res["usage"]["prompt_tokens"])
             results_for_quad["output_len_quads"].append(res["usage"]["completion_tokens"])
         results["workloads"].append(results_for_quad)
       
