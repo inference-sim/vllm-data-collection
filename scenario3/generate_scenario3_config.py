@@ -7,7 +7,6 @@ max_num_batched_tokens = 2048
 block_size = 16
 gpu_mem_util = 0.9
 modes = ["train", "test"]
-deltas = {"train": 20, "test": 25}
 num_quads = 2
 concentration_params = [1, 1, 1]
 max_budget = context_length - 10

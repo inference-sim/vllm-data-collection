@@ -8,13 +8,13 @@ experiments:
   data:
     workloads:
     - deltas:
-      - 1007
-      - 2645
-      - 3732
+      - 2278
+      - 2647
+      - 1801
     - deltas:
-      - 633
-      - 6
-      - 5921
+      - 643
+      - 6772
+      - 609
   name: benchmark-1
   vllm:
     block_size: 16
@@ -30,13 +30,13 @@ experiments:
   data:
     workloads:
     - deltas:
-      - 110
-      - 1073
-      - 6329
+      - 439
+      - 3931
+      - 544
     - deltas:
-      - 806
-      - 4360
-      - 689
+      - 171
+      - 1755
+      - 2173
   name: benchmark-2
   vllm:
     block_size: 16
@@ -52,13 +52,13 @@ experiments:
   data:
     workloads:
     - deltas:
-      - 208
-      - 3469
-      - 825
+      - 770
+      - 4149
+      - 2151
     - deltas:
-      - 3330
-      - 38
-      - 864
+      - 1210
+      - 4789
+      - 361
   name: benchmark-3
   vllm:
     block_size: 16
@@ -74,13 +74,13 @@ experiments:
   data:
     workloads:
     - deltas:
-      - 1761
-      - 1519
-      - 1714
+      - 2347
+      - 939
+      - 2300
     - deltas:
-      - 19
-      - 1043
-      - 4824
+      - 4644
+      - 754
+      - 16
   name: benchmark-4
   vllm:
     block_size: 16
@@ -96,13 +96,13 @@ experiments:
   data:
     workloads:
     - deltas:
-      - 4605
-      - 1957
-      - 582
+      - 728
+      - 3784
+      - 815
     - deltas:
-      - 70
-      - 2595
-      - 2050
+      - 4961
+      - 28
+      - 205
   name: benchmark-5
   vllm:
     block_size: 16
