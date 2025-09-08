@@ -10,20 +10,21 @@ modes = ["train", "test"]
 deltas = {"train": 20, "test": 25}
 num_quads = 512
 concentration_params = [1, 1, 1]
-budget = context_length - 6
+max_budget = context_length - 10
 
-def sample_dirichlet_multinomial(alpha, n):
+def sample_dirichlet_multinomial(concentration_params):
   """
   Generates one sample from a Dirichlet-multinomial distribution.
 
   Args:
-    alpha: 3 concentration parameters
     n: Budget
+    concentration_params: etas
 
   Returns:
     3 integers representing the counts
   """
-  p = np.random.dirichlet(alpha)
+  n = np.random.uniform(low=context_length//2, high=max_budget)
+  p = np.random.dirichlet(concentration_params)
   x = np.random.multinomial(n, p)
   x = x.tolist()
   return x
@@ -62,10 +63,10 @@ for mode in modes:
 
         experiment_specs["data"] = {"workloads": []}
         for idx in range(num_quads):
-            delta_1, delta_2, delta_3 = sample_dirichlet_multinomial(concentration_params, budget)
+            deltas = sample_dirichlet_multinomial(concentration_params)
 
             quad_info = {
-                "deltas": [delta_1, delta_2, delta_3]
+                "deltas": deltas
             }
             
             experiment_specs["data"]["workloads"].append(quad_info)

@@ -8,6 +8,8 @@ import time
 import yaml
 from transformers import AutoTokenizer
 
+special_models = ["mistralai/Mistral-7B-Instruct-v0.1", "mistralai/Mistral-Small-24B-Instruct-2501"]
+
 def generate_request(prompt, client_config, model):
    # generate request payload with prompt, model and config params
    payload = {
@@ -30,11 +32,29 @@ def generate_prompt_segment(prompt_len, model, seed_unique):
    while len(encoded_prompt) > prompt_len:
          prompt_segment = prompt_segment[:-1]
          encoded_prompt = tokenizer.encode(prompt_segment, add_special_tokens=False)
-   print (len(encoded_prompt))
    return prompt_segment
 
+def cleanup_bos_for_special_models(prompt, model):
+    tokenizer = AutoTokenizer.from_pretrained(model, trust_remote_code=True)
+
+    bos_token = tokenizer.bos_token
+
+    if prompt.startswith(bos_token):
+        prompt = prompt.replace(bos_token, "", 1)
+
+    print ("Final prompt: ", prompt)
+    return prompt
+
 def post_request(endpoint, model, prompt, client_config, e2e_logging = False):
-    # Posts a single request to the vllm server endpoint
+    """
+    Posts a single request to the vllm server endpoint
+    """
+
+    # first remove bos from template for special models
+    if model in special_models:
+        prompt = cleanup_bos_for_special_models(prompt, model)
+
+    # now construct the actual request payload
     headers = {
         "Content-Type": "application/json"
         }
@@ -96,16 +116,15 @@ def main():
         segment2 = generate_prompt_segment(1 + deltas[1],  args.model, " 2")
         segment3 = generate_prompt_segment(1 + deltas[1],  args.model, " 3")
         prompt1 = prefix + segment1
-        special_models = ["mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B", "mistralai/Mistral-Small-24B-Instruct-2501"]
         if args.model in special_models:
             prompt1 = prompt1[:-1]
         prompts = [prompt1, prompt1 + segment2, prompt1, prompt1 + segment3]
         for idx, prompt in enumerate(prompts):
             client_config = copy.deepcopy(client_config_template)
             if idx <= 1:
-                client_config["output_len"] = 1
+                client_config["output_len"] = 1 # prefill-only for the first two requests in quad
             else:
-                client_config["output_len"] = 1 + deltas[2]
+                client_config["output_len"] = 1 + deltas[2] # prefill + decode for the last two requests
             e2e, res = post_request(endpoint, args.model, prompt, client_config, e2e_logging = True)
             results_for_quad["e2e_quads"].append(e2e)
             results_for_quad["request_id_quads"].append(res["id"])
@@ -135,13 +154,12 @@ def main():
 
 if __name__=="__main__":
 #    main()
-    special_models = ["ibm-granite/granite-3.3-8b-instruct", "Qwen/Qwen3-14B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B", "mistralai/Mistral-Small-24B-Instruct-2501"]
     for model in special_models:
         print ("#############",model,"###############")
-        for idx in [1, 5, 10, 50, 100, 200, 500]:
-            prefix = generate_prompt_segment(4, model, f"{idx}-")
-            print (prefix)
-            segment1 = generate_prompt_segment(25, model, " 1")
-            segment2 = generate_prompt_segment(1 + 20,  model, " 2")
-            segment3 = generate_prompt_segment(1 + 20,  model, " 3")
-            warmstart_prompt = generate_prompt_segment(128, model, "*w")
+        # for idx in [1, 5, 10, 50, 100, 200, 500]:
+        #     prefix = generate_prompt_segment(4, model, f"{idx}-")
+        #     segment1 = generate_prompt_segment(25, model, " 1")
+        #     segment2 = generate_prompt_segment(1 + 20,  model, " 2")
+        #     segment3 = generate_prompt_segment(1 + 20,  model, " 3")
+        #     warmstart_prompt = generate_prompt_segment(128, model, "*w")
+        cleanup_bos_for_special_models("Hi", model)
