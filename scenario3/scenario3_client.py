@@ -122,6 +122,9 @@ def main():
             results_for_quad["input_len_quads"].append(res["usage"]["prompt_tokens"])
             results_for_quad["output_len_quads"].append(res["usage"]["completion_tokens"])
         results["workloads"].append(results_for_quad)
+        # checkpoint through logs
+        if idx % 50 == 0:
+            print (f"Processed {idx} requests in client...")
       
     model_alias = args.model.split("/")[-1].replace(".", "_")
     full_results_path = f"/mnt/scenario3/results/{model_alias}/{args.results_folder}/chunk_size_{args.chunk_size}/results"

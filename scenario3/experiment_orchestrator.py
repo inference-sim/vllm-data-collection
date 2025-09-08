@@ -118,12 +118,7 @@ def main():
             remote_exp_folder = f"{time.strftime('%Y%m%d-%H%M%S')}_{benchmark_name}"
             for mode in MODES:
                 run_experiment(model, mode, remote_exp_folder)
-            if idx < 4:
-                time.sleep(360)
-            elif idx >=4 and idx <=7:
-                time.sleep(600)
-            else:
-                time.sleep(1200)
+            time.sleep(3600*3)
         
 
 if __name__=="__main__":
