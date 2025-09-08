@@ -34,27 +34,12 @@ def generate_prompt_segment(prompt_len, model, seed_unique):
          encoded_prompt = tokenizer.encode(prompt_segment, add_special_tokens=False)
    return prompt_segment
 
-def cleanup_bos_for_special_models(prompt, model):
-    tokenizer = AutoTokenizer.from_pretrained(model, trust_remote_code=True)
-
-    bos_token = tokenizer.bos_token
-
-    if prompt.startswith(bos_token):
-        prompt = prompt.replace(bos_token, "", 1)
-
-    print ("Final prompt: ", prompt)
-    return prompt
-
 def post_request(endpoint, model, prompt, client_config, e2e_logging = False):
     """
     Posts a single request to the vllm server endpoint
     """
 
-    # first remove bos from template for special models
-    if model in special_models:
-        prompt = cleanup_bos_for_special_models(prompt, model)
-
-    # now construct the actual request payload
+    # construct the actual request payload
     headers = {
         "Content-Type": "application/json"
         }
@@ -153,13 +138,13 @@ def main():
     print ("Finished workload experiment")
 
 if __name__=="__main__":
-#    main()
-    for model in special_models:
-        print ("#############",model,"###############")
-        # for idx in [1, 5, 10, 50, 100, 200, 500]:
-        #     prefix = generate_prompt_segment(4, model, f"{idx}-")
-        #     segment1 = generate_prompt_segment(25, model, " 1")
-        #     segment2 = generate_prompt_segment(1 + 20,  model, " 2")
-        #     segment3 = generate_prompt_segment(1 + 20,  model, " 3")
-        #     warmstart_prompt = generate_prompt_segment(128, model, "*w")
-        cleanup_bos_for_special_models("Hi", model)
+   main()
+    # for model in special_models:
+    #     print ("#############",model,"###############")
+    #     # for idx in [1, 5, 10, 50, 100, 200, 500]:
+    #     #     prefix = generate_prompt_segment(4, model, f"{idx}-")
+    #     #     segment1 = generate_prompt_segment(25, model, " 1")
+    #     #     segment2 = generate_prompt_segment(1 + 20,  model, " 2")
+    #     #     segment3 = generate_prompt_segment(1 + 20,  model, " 3")
+    #     #     warmstart_prompt = generate_prompt_segment(128, model, "*w")
+    #     cleanup_bos_for_special_models("Hi", model)
