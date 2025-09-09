@@ -9,7 +9,7 @@ experiments:
     gpu_type: NVIDIA-H100-80GB-HBM3
     long_prefill_token_threshold: 1024
     max_model_len: 8192
-    max_num_batched_tokens: 2048
+    max_num_batched_tokens: 4096
     max_num_seqs: 1
     seed: 42
 - chunk_size: 2048
@@ -21,7 +21,7 @@ experiments:
     gpu_type: NVIDIA-H100-80GB-HBM3
     long_prefill_token_threshold: 2048
     max_model_len: 8192
-    max_num_batched_tokens: 2048
+    max_num_batched_tokens: 4096
     max_num_seqs: 1
     seed: 42
 - chunk_size: 4096
@@ -33,7 +33,7 @@ experiments:
     gpu_type: NVIDIA-H100-80GB-HBM3
     long_prefill_token_threshold: 4096
     max_model_len: 8192
-    max_num_batched_tokens: 2048
+    max_num_batched_tokens: 4096
     max_num_seqs: 1
     seed: 42
 name: test_server_config_for_scenario_3
