@@ -16,7 +16,7 @@ def sample_dirichlet_multinomial(context_length_cap, concentration_params):
     3 integers representing the counts
   """
   max_budget = context_length_cap - 10
-  n = np.random.uniform(low=context_length_cap//2, high=max_budget)
+  n = np.random.uniform(low=context_length_cap//10, high=max_budget)
   p = np.random.dirichlet(concentration_params)
   x = np.random.multinomial(n, p)
   x = x.tolist()
