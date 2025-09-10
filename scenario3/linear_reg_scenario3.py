@@ -298,4 +298,3 @@ if __name__ == "__main__":
         plots_path = f"../plots_vstack_new/{args.scenario}/{model_name}"
         os.makedirs(plots_path, exist_ok=True)
         train_lr(model_name, args.scenario, plots_path)
-
