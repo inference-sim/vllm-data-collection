@@ -110,8 +110,8 @@ def plot_model_results(LLM, plots_path, X_train, y_train, X_test, y_test, model,
     """
     Print LR scores (R2, MAE, MAPE) and plot results
     """
-    training_score = round(model.score(X_train, y_train), 3)
-    test_score = round(model.score(X_test, y_test), 3)
+    training_score = model.score(X_train, y_train)
+    test_score = model.score(X_test, y_test)
     training_preds = model.predict(X_train)
     test_preds = model.predict(X_test)
     training_mae = round(mean_absolute_error(training_preds, y_train), 3)
@@ -130,19 +130,21 @@ def plot_model_results(LLM, plots_path, X_train, y_train, X_test, y_test, model,
 
     fig, axs = plt.subplots(1, 2, figsize=(20, 10))
     
-    axs[0].plot(abs(y_train - training_preds))
-    axs[1].plot(abs(y_test - test_preds))
+    axs[0].plot(y_train, 'o')
+    axs[0].plot(training_preds, 'o')
+    axs[1].plot(y_test, 'o')
+    axs[1].plot(test_preds, 'o')
 
     axs[0].set_title(f'Train R2 {model_type}: {training_score}, \nTrain MAE: {training_mae}, \nTrain MAPE: {training_mape}')
     axs[0].set_xlabel("req index")
     axs[0].set_ylabel('e2e latency')
-    axs[0].legend(["Abs error prediction"])
+    axs[0].legend(["Train gt", "Train pred"])
     axs[0].grid(True)
     
     axs[1].set_title(f'Test R2 {model_type}: {test_score}, \nTest MAE: {test_mae}, \nTest MAPE: {test_mape}')
     axs[1].set_xlabel("req index")
     axs[1].set_ylabel('e2e latency')
-    axs[1].legend(["Abs error prediction"])
+    axs[1].legend(["Test gt", "Test pred"])
     axs[1].grid(True)
 
     fig.suptitle(f'Results for {LLM}')
@@ -175,7 +177,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Simple vLLM Benchmark Runner')
     parser.add_argument('--scenario', help='scenario X',  default="scenario3")
     args = parser.parse_args()
-    models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2.5-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2.5-7B", "ibm-granite/granite-3.3-8b-instruct", "Qwen/Qwen3-14B", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
+    models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2.5-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2.5-7B", "google/gemma-7b", "ibm-granite/granite-3.3-8b-instruct", "Qwen/Qwen3-14B", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
     for model in models:
         model_name = model.split("/")[-1].replace(".", "_")
         plots_path = f"../plots_vstack/{args.scenario}/{model_name}"
