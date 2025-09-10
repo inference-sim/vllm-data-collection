@@ -9,7 +9,7 @@ from tqdm import tqdm
 import yaml
 from transformers import AutoTokenizer
 
-special_models = ["mistralai/Mistral-7B-Instruct-v0.1", "mistralai/Mistral-Small-24B-Instruct-2501"]
+special_models = ["mistralai/Mistral-7B-Instruct-v0.1", "mistralai/Mistral-Small-24B-Instruct-2501", "google/gemma-7b",  "meta-llama/Llama-3.1-8B"]
 
 def generate_request(prompt, client_config, model):
    # generate request payload with prompt, model and config params
@@ -106,9 +106,13 @@ def main():
         segment2 = generate_prompt_segment(1 + deltas[1],  args.model, " 2")
         segment3 = generate_prompt_segment(1 + deltas[1],  args.model, " 3")
         prompt1 = prefix + segment1
+        prompt2 = prompt1 + segment2
+        prompt4 = prompt1 + segment3
         if args.model in special_models:
             prompt1 = prompt1[:-1]
-        prompts = [prompt1, prompt1 + segment2, prompt1, prompt1 + segment3]
+            prompt2 = prompt2[:-1]
+            prompt4 = prompt4[:-1]
+        prompts = [prompt1, prompt2, prompt1, prompt4]
         for idx, prompt in enumerate(prompts):
             client_config = copy.deepcopy(client_config_template)
             if idx <= 1:
