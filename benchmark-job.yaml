@@ -5,7 +5,7 @@ metadata:
   namespace: blis
 spec:
   ttlSecondsAfterFinished: 60
-  activeDeadlineSeconds: 36000
+  activeDeadlineSeconds: 360000
   template:
     spec:
       restartPolicy: Never

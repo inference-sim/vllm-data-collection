@@ -83,24 +83,27 @@ def aggregate_results_joint(model_name, scenario):
     chunk_sizes_train = []
     chunk_sizes_test = []
     for chunk_size in CHUNK_SIZES:
-        local_folder_name = f'../results_new/{scenario}/{model_name}'
+        local_folder_name = f'../results_new/{scenario}_data/{model_name}'
         items = os.listdir(local_folder_name)
         run_folders = [item for item in items if os.path.isdir(os.path.join(local_folder_name, item))]
 
         for run_folder in run_folders:
-            with open(f'{local_folder_name}/{run_folder}/chunk_size_{chunk_size}/results/{scenario}_output_train.json', 'r') as f:
-                train_data_json = json.load(f)
-                X_train_curr, y_train_curr, chunk_sizes_train_curr = process_results_joint(train_data_json, chunk_size)
-                X_train.extend(X_train_curr)
-                y_train.extend(y_train_curr)
-                chunk_sizes_train.extend(chunk_sizes_train_curr)
+            try:
+                with open(f'{local_folder_name}/{run_folder}/chunk_size_{chunk_size}/results/{scenario}_output_train.json', 'r') as f:
+                    train_data_json = json.load(f)
+                    X_train_curr, y_train_curr, chunk_sizes_train_curr = process_results_joint(train_data_json, chunk_size)
+                    X_train.extend(X_train_curr)
+                    y_train.extend(y_train_curr)
+                    chunk_sizes_train.extend(chunk_sizes_train_curr)
 
-            with open(f'{local_folder_name}/{run_folder}/chunk_size_{chunk_size}/results/{scenario}_output_test.json', 'r') as file:
-                test_data_json = json.load(file)
-                X_test_curr, y_test_curr, chunk_sizes_test_curr = process_results_joint(test_data_json, chunk_size)
-                X_test.extend(X_test_curr)
-                y_test.extend(y_test_curr)
-                chunk_sizes_test.extend(chunk_sizes_test_curr)
+                with open(f'{local_folder_name}/{run_folder}/chunk_size_{chunk_size}/results/{scenario}_output_test.json', 'r') as file:
+                    test_data_json = json.load(file)
+                    X_test_curr, y_test_curr, chunk_sizes_test_curr = process_results_joint(test_data_json, chunk_size)
+                    X_test.extend(X_test_curr)
+                    y_test.extend(y_test_curr)
+                    chunk_sizes_test.extend(chunk_sizes_test_curr)
+            except:
+                print (f"Data not found for {model_name}, chunk_size = {chunk_size}. Skipping...")
     return X_train, y_train, X_test, y_test, chunk_sizes_train, chunk_sizes_test
 
 def plot_model_results(LLM, plots_path, X_train, y_train, X_test, y_test, model, model_type: str):
@@ -125,28 +128,26 @@ def plot_model_results(LLM, plots_path, X_train, y_train, X_test, y_test, model,
     print(f"{model_type} Model Test MAE: {test_mae}")
     print(f"{model_type} Model Test MAPE: {test_mape}")
 
-    # fig, axs = plt.subplots(1, 2, figsize=(20, 10))
+    fig, axs = plt.subplots(1, 2, figsize=(20, 10))
     
-    # axs[0].scatter(y_train)
-    # axs[0].plot(training_preds)
-    # axs[1].plot(y_test)
-    # axs[1].plot(test_preds)
+    axs[0].plot(abs(y_train - training_preds))
+    axs[1].plot(abs(y_test - test_preds))
 
-    # axs[0].set_title(f'Train R2 {model_type}: {training_score}, \nTrain MAE: {training_mae}, \nTrain MAPE: {training_mape}')
-    # axs[0].set_xlabel("req index")
-    # axs[0].set_ylabel('e2e latency')
-    # axs[0].legend(["Orig", "Pred"])
-    # axs[0].grid(True)
+    axs[0].set_title(f'Train R2 {model_type}: {training_score}, \nTrain MAE: {training_mae}, \nTrain MAPE: {training_mape}')
+    axs[0].set_xlabel("req index")
+    axs[0].set_ylabel('e2e latency')
+    axs[0].legend(["Abs error prediction"])
+    axs[0].grid(True)
     
-    # axs[1].set_title(f'Test R2 {model_type}: {test_score}, \nTest MAE: {test_mae}, \nTest MAPE: {test_mape}')
-    # axs[1].set_xlabel("req index")
-    # axs[1].set_ylabel('e2e latency')
-    # axs[1].legend(["Orig", "Pred"])
-    # axs[1].grid(True)
+    axs[1].set_title(f'Test R2 {model_type}: {test_score}, \nTest MAE: {test_mae}, \nTest MAPE: {test_mape}')
+    axs[1].set_xlabel("req index")
+    axs[1].set_ylabel('e2e latency')
+    axs[1].legend(["Abs error prediction"])
+    axs[1].grid(True)
 
-    # fig.suptitle(f'Results for {LLM}')
+    fig.suptitle(f'Results for {LLM}')
 
-    # plt.savefig(f"{plots_path}/{LLM}_{model_type}.png")
+    plt.savefig(f"{plots_path}/{LLM}_{model_type}.png")
 
 def train_lr(model_name, scenario, plots_path):
     """
@@ -174,7 +175,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Simple vLLM Benchmark Runner')
     parser.add_argument('--scenario', help='scenario X',  default="scenario3")
     args = parser.parse_args()
-    models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2.5-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2.5-7B", "mistralai/Mistral-7B-Instruct-v0.1"]
+    models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2.5-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2.5-7B", "ibm-granite/granite-3.3-8b-instruct", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
     for model in models:
         model_name = model.split("/")[-1].replace(".", "_")
         plots_path = f"../plots_vstack/{args.scenario}/{model_name}"
