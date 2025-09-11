@@ -24,7 +24,7 @@ spec:
                       - '50000'
       initContainers:
       - name: vllm-server
-        image: vllm/vllm-openai:v0.10.0
+        image: vllm/vllm-openai:v0.10.1.1
         command: ["bash", "-c"]
         args:
         - |

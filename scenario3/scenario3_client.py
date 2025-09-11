@@ -53,15 +53,15 @@ def post_request(endpoint, model, prompt, client_config, e2e_logging = False):
     try:
         response = requests.post(endpoint, headers=headers, json=payload, stream = False)
         response.raise_for_status()
-        output = json.loads(response.content)
         if e2e_logging:
             e2e = time.time() - start_time
+            output = json.loads(response.content)
             return e2e, output
     except requests.exceptions.HTTPError as err:
         print(f"HTTP Error: {err}, {prompt}")
     except requests.exceptions.RequestException as err:
         print(f"An error occurred: {err}, {prompt}")
-    return None, output
+    return None, None
 
 def main():
     parser = argparse.ArgumentParser(description='Simple vLLM Benchmark Runner')
@@ -82,7 +82,7 @@ def main():
     # warm start - discard some requests
     for it in range(warmstart_config["prompt_count"]):
       warmstart_prompt = generate_prompt_segment(warmstart_config["prompt_len"], args.model, "*w")
-      _, res = post_request(endpoint, args.model, warmstart_prompt, client_config_template)
+      _, _ = post_request(endpoint, args.model, warmstart_prompt, client_config_template)
 
 
     # real requests

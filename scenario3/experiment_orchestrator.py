@@ -109,8 +109,8 @@ def run_experiment(model, mode, remote_exp_folder: str):
 
 def main():
     num_runs = 1
-    models = ["meta-llama/Llama-3.1-8B"]
-    # models = ["Qwen/Qwen2.5-7B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "Qwen/Qwen3-14B", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
+    # models = ["meta-llama/Llama-3.1-8B"]
+    models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2.5-7B", "mistralai/Mistral-7B-Instruct-v0.1", "google/gemma-7b", "meta-llama/Llama-3.1-8B","ibm-granite/granite-3.3-8b-instruct", "Qwen/Qwen3-14B", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
 
     for run in range(num_runs):
         for idx, model in enumerate(models):
@@ -118,8 +118,8 @@ def main():
             remote_exp_folder = f"{time.strftime('%Y%m%d-%H%M%S')}_{benchmark_name}"
             for mode in MODES:
                 run_experiment(model, mode, remote_exp_folder)
-            if idx % 2 == 1:
-                time.sleep(2400)
+            # if idx % 2 == 1:
+            #     time.sleep(2400)
         
 
 if __name__=="__main__":
