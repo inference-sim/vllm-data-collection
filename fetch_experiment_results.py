@@ -31,7 +31,7 @@ def copy_file_from_pod_using_kubectl_cp(pod_name, namespace, remote_dir_path, lo
 
 def main():
     parser = argparse.ArgumentParser(description='Simple vLLM Benchmark Runner')
-    parser.add_argument('--scenario', help='scenario X',  default="scenario2")
+    parser.add_argument('--scenario', help='scenario X',  default="scenario3")
     args = parser.parse_args()
     pod_name = "pvc-debugger"
     namespace = "blis"

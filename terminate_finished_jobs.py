@@ -2,6 +2,7 @@ import re
 from kubernetes import client, config
 from kubernetes.client import Configuration
 from kubernetes.stream import stream
+import time
 
 import urllib3
 from urllib3.exceptions import InsecureRequestWarning
@@ -60,6 +61,7 @@ try:
                                     print(f"\n--- Match found in logs for Job: {job.metadata.name}, Pod: {pod_name} ---")
                                     delete_options = client.V1DeleteOptions(propagation_policy='Foreground')
                                     try:
+                                        time.sleep(60)
                                         v1_batch.delete_namespaced_job(name=job.metadata.name, namespace=NAMESPACE, body=delete_options)
                                         print(f"Job '{job.metadata.name}' in namespace '{NAMESPACE}' deleted.")
                                     except client.ApiException as e:

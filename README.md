@@ -149,3 +149,10 @@ To add a new parameter to the sweep, you need to modify `benchmarks/config_gener
 1. Create new ns
 2. `oc adm policy add-scc-to-user anyuid -z default` to allow containers to run as root, required for vLLM images
 3. Delete all jobs: `oc delete job --all`
+
+## Things to setup pvc-debugger pod for model download:
+
+1. `pip install torch`
+2. `pip install transformers`
+3. `python -c "from transformers import AutoModelForCausalLM, AutoTokenizer; m='MODEL_NAME'; AutoTokenizer.from_pretrained(m, trust_remote_code=True); AutoModelForCausalLM.from_pretrained(m, trust_remote_code=True)"`
+
