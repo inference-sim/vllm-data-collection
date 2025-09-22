@@ -24,7 +24,7 @@ spec:
                       - '50000'
       initContainers:
       - name: vllm-server
-        image: vllm/vllm-openai:v0.10.1.1
+        image: vllm/vllm-openai:v0.10.2
         command: ["bash", "-c"]
         args:
         - |
@@ -37,6 +37,8 @@ spec:
               key: HF_TOKEN
         - name: HF_HUB_CACHE
           value: /mnt/.cache/huggingface/hub
+        - name: EXP_RESULTS_PATH
+          value: {{ exp_results_path }}
         resources:
           requests:
             cpu: "1"
@@ -50,15 +52,26 @@ spec:
           httpGet:
             path: /v1/models
             port: 8000
-          failureThreshold: 50
+          failureThreshold: 1800
           periodSeconds: 10
         restartPolicy: Always
         volumeMounts:
         - name: model-storage
           mountPath: /mnt
+        - name: memory-backed-volume
+          mountPath: /mnt2/tmp
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - "bash"
+              - "-c"
+              - |
+                sleep 10; cp -r /mnt2/tmp/* $EXP_RESULTS_PATH
+        terminationGracePeriodSeconds: 30
       containers:
       - name: vllm-client
-        image: python:3.11-slim
+        image: vllm/vllm-openai:v0.10.2
         command: ["bash", "-c"]
         args:
         - |
@@ -78,3 +91,6 @@ spec:
       - name: model-storage
         persistentVolumeClaim:
           claimName: blis-pvc
+      - name: memory-backed-volume
+        emptyDir:
+          medium: Memory

@@ -221,9 +221,11 @@ results_small/
 results_new/
 plots_new/
 plots_vstack/
+plots_vstack_new/
 plots_hstack/
 
 pvc_debugger_2.yaml
+debug-pod.yaml
 benchmarks/
 scenario2/results_processed
 scenario3/results_processed
