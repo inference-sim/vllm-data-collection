@@ -3,12 +3,56 @@ import json
 import argparse
 import numpy as np
 
+import re
+
+def extract_total_kv_blocks(model_name):
+    """
+    Finds the avg value of "Total KV blocks" for input to the simulator during testing. 
+    Extracts the number following 'num_gpu_blocks is:' from vllm's server log file,
+    and averages it over all experiments for a given model.
+    
+    Assumption: Given a model, the total KV blocks is nearly constant across experiments.
+    Usage: ONLY use this function only for BLIS's "test" mode.
+
+    Parameters:
+        log_file_path (str): Path to the log file.
+
+    Returns:
+        int: Total KV Blocks for input to simulator (testing phase)
+    """
+    total_kv_blocks = 0
+    count_exp = 0
+    for spec in SPECS:
+        spec_small = spec.lower()
+        for mbnt in MAX_NUM_BATCHED_TOKENS:
+            for rr in REQUEST_RATES:
+                results_folder = f"../results_new/scenario4/{model_name}/test/{spec_small}/mbnt_{mbnt}/rr_{rr}"
+                if os.path.isdir(results_folder):
+                    for dirpath, _, filenames in os.walk(results_folder):
+                        for filename in filenames:
+                            if filename == f"scenario4_server_test.log":
+                                log_file_path = os.path.join(dirpath, filename)
+                                try:
+                                    with open(log_file_path, 'r') as file:
+                                        for line in file:
+                                            match = re.search(r'num_gpu_blocks is:\s*(\d+)', line)
+                                            if match:
+                                                total_kv_blocks += int(match.group(1))
+                                                count_exp += 1
+                                except FileNotFoundError:
+                                    print(f"File not found: {log_file_path}")
+    return total_kv_blocks//count_exp
+
 def get_server_side_metrics(model_name, mode, rr, spec, mbnt):
+    """
+    Return server side metrics ONLY for non-saturated regimes. 
+    Saturation is currently defined as throughput < 90% of request rate
+    """
     e2e_server = []
     experiment_metrics = {}
     spec_small = spec.lower()
     total_active_steps = 0
-    results_folder = f"../results_new/scenario4/{model_name}/{spec_small}/mbnt_{mbnt}/rr_{rr}/"
+    results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec_small}/mbnt_{mbnt}/rr_{rr}/"
     if os.path.isdir(results_folder):
         for dirpath, _, filenames in os.walk(results_folder):
             for filename in filenames:
@@ -80,24 +124,27 @@ def get_server_side_metrics(model_name, mode, rr, spec, mbnt):
     with open(full_results_filename, 'w+') as f:
         json.dump(full_results, f, indent=4)
 
-parser = argparse.ArgumentParser(description="Postprocess vllm results to get aggregate metrics/saturation filtering")
-parser.add_argument('-m', '--mode', type=str, required=True,
-                    help="Specify the mode of operation (e.g., 'train', 'val', 'test').")
+if __name__=="__main__":
+    parser = argparse.ArgumentParser(description="Postprocess vllm results to get aggregate metrics/saturation filtering")
+    parser.add_argument('-m', '--mode', type=str, required=True,
+                        help="Specify the mode of operation (e.g., 'train', 'val', 'test').")
 
-args = parser.parse_args()
-if args.mode == "train":
-    from experiment_configs_constants_train import *
-# elif args.mode == "val":
-#     from experiment_configs_constants_val import *
-elif args.mode == "test":
-    from experiment_configs_constants_test import *
+    args = parser.parse_args()
+    if args.mode == "train":
+        from experiment_configs_constants_train import *
+    # elif args.mode == "val":
+    #     from experiment_configs_constants_val import *
+    elif args.mode == "test":
+        from experiment_configs_constants_test import *
 
-for model in MODELS:
-    model_name = model.split("/")[-1].replace(".", "_")
+    model_name = MODEL.split("/")[-1].replace(".", "_")
 
     # get server side final metrics for comparison against sim
     for spec in SPECS:
         for rr in REQUEST_RATES:
             for mbnt in MAX_NUM_BATCHED_TOKENS:
                     get_server_side_metrics(model_name, args.mode, rr, spec, mbnt)
+    # get Total KV Blocks from logs as input to simulator for test mode
+    if args.mode == "test":
+        print(f"Total KV Blocks: {extract_total_kv_blocks(model_name)}")
 

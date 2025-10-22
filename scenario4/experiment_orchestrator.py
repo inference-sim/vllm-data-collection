@@ -131,10 +131,9 @@ def run_experiment(model, mode, spec, remote_exp_folder: str):
             print(f"Created pod '{job_name}'")
 
 def run(mode, spec):
-    for idx, model in enumerate(MODELS):
-        benchmark_name = "scenario4"
-        remote_exp_folder = f"{time.strftime('%Y%m%d-%H%M%S')}_{mode}_{benchmark_name}"
-        run_experiment(model, mode, spec, remote_exp_folder)
+    benchmark_name = "scenario4"
+    remote_exp_folder = f"{time.strftime('%Y%m%d-%H%M%S')}_{mode}_{benchmark_name}"
+    run_experiment(MODEL, mode, spec, remote_exp_folder)
         
 
 if __name__=="__main__":

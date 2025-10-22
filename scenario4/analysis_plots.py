@@ -209,10 +209,10 @@ def processed_data_by_step(model_name, mode, rr):
     step_df = step_df.dropna()
     return step_df
 
-for model in MODELS:
-    for rr in REQUEST_RATES:
-        print(f"EDA for model={model}, rr={rr}")
-        model_name = model.split("/")[-1].replace(".", "_")
+if __name__=="__main__":
+    for rr in REQUEST_RATES: # saturation doesn't matter for EDA
+        print(f"EDA for model={MODEL}, rr={rr}")
+        model_name = MODEL.split("/")[-1].replace(".", "_")
 
         # this is how you would plot stepwise graphs (total cache miss tokens/num decode reqs)
         X_train = processed_data_by_step(model_name, "train", rr)

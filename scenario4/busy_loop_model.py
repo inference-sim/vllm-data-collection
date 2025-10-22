@@ -274,81 +274,80 @@ def populate_steps_with_req_level_hits(model_name, mode, rr, spec):
 
 
 def train_requestwise_test_requestwise(train_configs, val_configs, include_val = False):
-    for model in MODELS:
-        model_name = model.split("/")[-1].replace(".", "_")
-        group_train_dfs = []
-        for config in train_configs:
-            train_df = processed_data_by_req(model_name, "train", config["rr"], config["spec"])
-            train_df = train_df.drop(columns=["exp_path", "scheduled_step", "finished_step", "steps", "spec", "mbnt", "input_len", "output_len"])
-            group_train_dfs.append(train_df)
-        group_train_df = pd.concat(group_train_dfs, ignore_index=True)
-        group_train_df = group_train_df.dropna()
-        group_train_df = group_train_df[group_train_df['busy_loop_time_with_req'] > 0]
-        X_train = group_train_df.loc[:, ~group_train_df.columns.isin(["busy_loop_time_with_req"])]
-        y_train = group_train_df["busy_loop_time_with_req"]
-        model_lr = LinearRegression(positive=True, fit_intercept=False)
-        model_lr.fit(X_train, y_train)
-        if not include_val:
-            calculate_metrics(X_train, y_train, [], [], model_lr, model_name, spec, include_val)
-        else:
-            # validation is grouped by spec for easier interpretability
-            val_specs = list(set(x['spec'] for x in val_configs))
-            for config in val_configs:
-                val_df = processed_data_by_req(model_name, "val", config["rr"], config["spec"])
-                val_df = val_df[val_df['busy_loop_time_with_req'] > 0]
-                for spec in val_specs:
-                    val_df_spec = val_df[val_df["spec"] == spec]
-                    val_df_spec = val_df_spec.drop(columns=["exp_path", "scheduled_step", "finished_step", "steps", "spec", "mbnt", "input_len", "output_len"])
-                    X_test = val_df_spec.loc[:, ~val_df_spec.columns.isin(["busy_loop_time_with_req"])]
-                    y_test = val_df_spec["busy_loop_time_with_req"]
-                    if X_test.shape[0] > 0:
-                        calculate_metrics(X_train, y_train, X_test, y_test, model_lr, model_name, spec, include_val)
-
-def train_groupwise_test_groupwise(train_configs, val_configs):
-    for model in MODELS:
-        model_name = model.split("/")[-1].replace(".", "_")
-        group_train_dfs = []
-        for config in train_configs:
-            train_df = processed_data_by_step(model_name, "train", config["rr"], config["spec"])
-            train_df = train_df.drop(columns=["spec", "chunk_size", "prefix_ratio"]) # do not drop input and output len
-            group_train_dfs.append(create_step_groups(train_df, config["rr"]))
-        group_train_df = pd.concat(group_train_dfs, ignore_index=True)
-        group_train_df = group_train_df.dropna()
-        group_train_df = group_train_df[group_train_df['loop_latency'] > 0]
-        X_train = group_train_df.loc[:, ~group_train_df.columns.isin(["loop_latency"])]
-        y_train = group_train_df["loop_latency"]
-        model_lr = LinearRegression(positive=True, fit_intercept=False)
-        model_lr.fit(X_train, y_train)
+    model_name = MODEL.split("/")[-1].replace(".", "_")
+    group_train_dfs = []
+    for config in train_configs:
+        train_df = processed_data_by_req(model_name, "train", config["rr"], config["spec"])
+        train_df = train_df.drop(columns=["exp_path", "scheduled_step", "finished_step", "steps", "spec", "mbnt", "input_len", "output_len"])
+        group_train_dfs.append(train_df)
+    group_train_df = pd.concat(group_train_dfs, ignore_index=True)
+    group_train_df = group_train_df.dropna()
+    group_train_df = group_train_df[group_train_df['busy_loop_time_with_req'] > 0]
+    X_train = group_train_df.loc[:, ~group_train_df.columns.isin(["busy_loop_time_with_req"])]
+    y_train = group_train_df["busy_loop_time_with_req"]
+    model_lr = LinearRegression(positive=True, fit_intercept=False)
+    model_lr.fit(X_train, y_train)
+    if not include_val:
+        calculate_metrics(X_train, y_train, [], [], model_lr, model_name, spec, include_val)
+    else:
         # validation is grouped by spec for easier interpretability
         val_specs = list(set(x['spec'] for x in val_configs))
         for config in val_configs:
-            test_df = create_step_groups(processed_data_by_step(model_name, "test", config["rr"], config["spec"]), config["rr"])
-            # test_df = test_df.drop(columns=["exp_path", "scheduled_step", "finished_step", "steps", "spec", "chunk_size", "prefix_ratio", "input_len", "output_len"])
-            test_df = test_df[test_df['loop_latency'] > 0]
+            val_df = processed_data_by_req(model_name, "val", config["rr"], config["spec"])
+            val_df = val_df[val_df['busy_loop_time_with_req'] > 0]
             for spec in val_specs:
-                test_df_spec = test_df[test_df["spec"] == spec]
-                test_df_spec = test_df_spec.drop(columns=["spec", "chunk_size", "prefix_ratio"]) # dropped input and output len
-                X_test = test_df_spec.loc[:, ~test_df_spec.columns.isin(["loop_latency"])]
-                y_test = test_df_spec["loop_latency"]
+                val_df_spec = val_df[val_df["spec"] == spec]
+                val_df_spec = val_df_spec.drop(columns=["exp_path", "scheduled_step", "finished_step", "steps", "spec", "mbnt", "input_len", "output_len"])
+                X_test = val_df_spec.loc[:, ~val_df_spec.columns.isin(["busy_loop_time_with_req"])]
+                y_test = val_df_spec["busy_loop_time_with_req"]
                 if X_test.shape[0] > 0:
-                    calculate_metrics(X_train, y_train, X_test, y_test, model_lr, model_name, spec)
-                else:
-                    print("Empty test group")
-            
-np.random.seed(42)
+                    calculate_metrics(X_train, y_train, X_test, y_test, model_lr, model_name, spec, include_val)
 
-# put non-saturated training/val regimes here
-train_configs = [{"rr": 2, "spec": "LL"}, {"rr": 4, "spec": "LL"}, {"rr": 6, "spec": "LL"},
-                 {"rr": 2, "spec": "LH"}, {"rr": 4, "spec": "LH"}, {"rr": 6, "spec": "LH"},
-                 {"rr": 2, "spec": "HL"}]
-val_configs = [{"rr": 2, "spec": "LL"}, {"rr": 4, "spec": "LL"}, {"rr": 6, "spec": "LL"},
-                 {"rr": 2, "spec": "LH"}, {"rr": 4, "spec": "LH"}, {"rr": 6, "spec": "LH"},
-                 {"rr": 2, "spec": "HL"}]
+def train_groupwise_test_groupwise(train_configs, val_configs):
+    model_name = MODEL.split("/")[-1].replace(".", "_")
+    group_train_dfs = []
+    for config in train_configs:
+        train_df = processed_data_by_step(model_name, "train", config["rr"], config["spec"])
+        train_df = train_df.drop(columns=["spec", "chunk_size", "prefix_ratio"]) # do not drop input and output len
+        group_train_dfs.append(create_step_groups(train_df, config["rr"]))
+    group_train_df = pd.concat(group_train_dfs, ignore_index=True)
+    group_train_df = group_train_df.dropna()
+    group_train_df = group_train_df[group_train_df['loop_latency'] > 0]
+    X_train = group_train_df.loc[:, ~group_train_df.columns.isin(["loop_latency"])]
+    y_train = group_train_df["loop_latency"]
+    model_lr = LinearRegression(positive=True, fit_intercept=False)
+    model_lr.fit(X_train, y_train)
+    # validation is grouped by spec for easier interpretability
+    val_specs = list(set(x['spec'] for x in val_configs))
+    for config in val_configs:
+        test_df = create_step_groups(processed_data_by_step(model_name, "test", config["rr"], config["spec"]), config["rr"])
+        # test_df = test_df.drop(columns=["exp_path", "scheduled_step", "finished_step", "steps", "spec", "chunk_size", "prefix_ratio", "input_len", "output_len"])
+        test_df = test_df[test_df['loop_latency'] > 0]
+        for spec in val_specs:
+            test_df_spec = test_df[test_df["spec"] == spec]
+            test_df_spec = test_df_spec.drop(columns=["spec", "chunk_size", "prefix_ratio"]) # dropped input and output len
+            X_test = test_df_spec.loc[:, ~test_df_spec.columns.isin(["loop_latency"])]
+            y_test = test_df_spec["loop_latency"]
+            if X_test.shape[0] > 0:
+                calculate_metrics(X_train, y_train, X_test, y_test, model_lr, model_name, spec)
+            else:
+                print("Empty test group")
 
-# use for quadratic features only
-# modes = ["train", "test"]
-# for model in models:
-#     model_name = model.split("/")[-1].replace(".", "_")
-#     for mode in modes:
-#         populate_steps_with_req_level_hits(model_name, mode)
-train_requestwise_test_requestwise(train_configs, val_configs, include_val=False)
+if __name__=="__main__": 
+    np.random.seed(42)
+
+    # put non-saturated training/val regimes here
+    train_configs = [{"rr": 2, "spec": "LL"}, {"rr": 4, "spec": "LL"}, {"rr": 6, "spec": "LL"},
+                    {"rr": 2, "spec": "LH"}, {"rr": 4, "spec": "LH"}, {"rr": 6, "spec": "LH"},
+                    {"rr": 2, "spec": "HL"}]
+    val_configs = [{"rr": 2, "spec": "LL"}, {"rr": 4, "spec": "LL"}, {"rr": 6, "spec": "LL"},
+                    {"rr": 2, "spec": "LH"}, {"rr": 4, "spec": "LH"}, {"rr": 6, "spec": "LH"},
+                    {"rr": 2, "spec": "HL"}]
+
+    # use for quadratic features only
+    # modes = ["train", "test"]
+    # for model in models:
+    #     model_name = model.split("/")[-1].replace(".", "_")
+    #     for mode in modes:
+    #         populate_steps_with_req_level_hits(model_name, mode)
+    train_requestwise_test_requestwise(train_configs, val_configs, include_val=False)

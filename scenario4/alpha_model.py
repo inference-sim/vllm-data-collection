@@ -44,7 +44,7 @@ def plot_delays(model_name, mode, rr):
         output_lens = []
         for mbnt in MAX_NUM_BATCHED_TOKENS:
             spec_small = spec.lower()
-            results_folder = f"../results_new/scenario4/{model_name}/{spec_small}/mbnt_{mbnt}/rr_{rr}"
+            results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec_small}/mbnt_{mbnt}/rr_{rr}"
             if os.path.isdir(results_folder):
                 for dirpath, _, filenames in os.walk(results_folder):
                     for filename in filenames:
@@ -120,7 +120,7 @@ def get_delays(model_name, mode):
         for rr in REQUEST_RATES[spec]:
             for mbnt in MAX_NUM_BATCHED_TOKENS:
                 spec_small = spec.lower()
-                results_folder = f"../results_new/scenario4/{model_name}/{spec_small}/mbnt_{mbnt}/rr_{rr}"
+                results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec_small}/mbnt_{mbnt}/rr_{rr}"
                 if os.path.isdir(results_folder):
                     for dirpath, _, filenames in os.walk(results_folder):
                         for filename in filenames:
@@ -162,9 +162,10 @@ def get_delays(model_name, mode):
     print(f"Avg. finished to Server left delay: {model_level_finished_delay/model_level_finished_num}")
     return queuing_delays, finished_delays, input_lens, output_lens
 
-for model in MODELS:
-    model_name = model.split("/")[-1].replace(".", "_")
+if __name__=="__main__":
+    model_name = MODEL.split("/")[-1].replace(".", "_")
 
+    # saturation doesn't matter for EDA
     y_queue_train, y_finished_train, X_queue_train, X_finished_train = get_delays(model_name, "train")
     # y_queue_test, y_finished_test, X_queue_test, X_finished_test = get_delays(model_name, "val")
 
