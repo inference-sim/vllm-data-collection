@@ -87,8 +87,8 @@ parser.add_argument('-m', '--mode', type=str, required=True,
 args = parser.parse_args()
 if args.mode == "train":
     from experiment_configs_constants_train import *
-elif args.mode == "val":
-    from experiment_configs_constants_val import *
+# elif args.mode == "val":
+#     from experiment_configs_constants_val import *
 elif args.mode == "test":
     from experiment_configs_constants_test import *
 

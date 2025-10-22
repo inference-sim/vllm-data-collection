@@ -147,8 +147,8 @@ if __name__=="__main__":
     args = parser.parse_args()
     if args.mode == "train":
         from experiment_configs_constants_train import *
-    elif args.mode == "val":
-        from experiment_configs_constants_val import *
+    # elif args.mode == "val":
+    #     from experiment_configs_constants_val import *
     elif args.mode == "test":
         from experiment_configs_constants_test import *
     run(args.mode, args.spec)
