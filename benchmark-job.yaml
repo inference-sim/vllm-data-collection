@@ -67,7 +67,26 @@ spec:
               - "bash"
               - "-c"
               - |
-                sleep 10; cp -r /mnt2/tmp/* $EXP_RESULTS_PATH
+                echo "=== PreStop Hook Triggered ===" >> "$EXP_RESULTS_PATH/prestop.log" 2>&1
+                echo "Listing contents of /mnt2/tmp:" >> "$EXP_RESULTS_PATH/prestop.log" 2>&1
+                ls /mnt2/tmp/ >> "$EXP_RESULTS_PATH/prestop.log" 2>&1
+  
+                # send SIGTERM to a known PID 
+                VLLM_PID=$(cat /mnt2/tmp/vllm.pid)
+                echo "Killing vllm server with PID $VLLM_PID" >> "$EXP_RESULTS_PATH/prestop.log" 2>&1
+                kill -15 "$VLLM_PID"
+
+                sleep 2
+
+                echo "Listing again contents of /mnt2/tmp:" >> "$EXP_RESULTS_PATH/prestop.log" 2>&1
+                ls /mnt2/tmp/ >> "$EXP_RESULTS_PATH/prestop.log" 2>&1
+
+                echo "Copying flushed files from /mnt2/tmp to $EXP_RESULTS_PATH..." >> "$EXP_RESULTS_PATH/prestop.log" 2>&1
+                cp -r /mnt2/tmp/* "$EXP_RESULTS_PATH"
+
+                echo "PreStop hook completed sleeping 10 sec." >> "$EXP_RESULTS_PATH/prestop.log" 2>&1
+                sleep 5
+                echo "Wake up and die" >> "$EXP_RESULTS_PATH/prestop.log" 2>&1
         terminationGracePeriodSeconds: 30
       containers:
       - name: vllm-client

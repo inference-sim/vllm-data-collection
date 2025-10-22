@@ -229,3 +229,6 @@ debug-pod.yaml
 benchmarks/
 scenario2/results_processed
 scenario3/results_processed
+scenario4/*_plots
+scenario4/results_*
+scenario4/*.png
