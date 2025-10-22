@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 import numpy as np
 import pandas as pd
+from sklearn.inspection import permutation_importance
 
 from experiment_configs_constants import *
 
@@ -83,7 +84,7 @@ def aggregate_results_joint(model_name, scenario):
     chunk_sizes_train = []
     chunk_sizes_test = []
     for chunk_size in CHUNK_SIZES:
-        local_folder_name = f'../results_new/{scenario}_data/{model_name}'
+        local_folder_name = f'../results_new/{scenario}/{model_name}'
         items = os.listdir(local_folder_name)
         run_folders = [item for item in items if os.path.isdir(os.path.join(local_folder_name, item))]
 
@@ -130,6 +131,15 @@ def calculate_metrics(X_train, y_train, X_test, y_test, model, mode = "overall")
     print(f"LR Model Test Score: {test_score}")
     print(f"LR Model Test MAE: {test_mae}")
     print(f"LR Model Test MAPE: {test_mape}")
+
+    print("Coefficients: ", model.coef_)
+    feature_imp = permutation_importance(model, X_test, y_test, n_repeats=10, random_state=42)
+    print("Feature Importances (Mean):")
+    for i, importance in enumerate(feature_imp.importances_mean):
+        print(f"Feature {i}: {importance:.4f}")
+    print("\nFeature Importances (Standard Deviation):")
+    for i, std_dev in enumerate(feature_imp.importances_std):
+        print(f"Feature {i}: {std_dev:.4f}")
 
 def plot_model_results(LLM, plots_path, X_train, y_train, X_test, y_test, model, model_type: str, chunk_sizes_train, chunk_sizes_test):
     """
@@ -260,7 +270,7 @@ def train_lr(model_name, scenario, plots_path):
     model_lr.fit(X_train, y_train)
     prev_error = float("Inf")
     curr_error = mean_absolute_percentage_error(model_lr.predict(X_train), y_train)
-    max_iters = 0
+    max_iters = 30
     it = 1
     while curr_error < prev_error and it < max_iters:
         prev_error = curr_error
@@ -285,9 +295,7 @@ if __name__ == "__main__":
     models = ["Qwen/Qwen2.5-0.5B", "Qwen/Qwen2.5-1.5B", "Qwen/Qwen2.5-3B", "Qwen/Qwen2.5-7B", "google/gemma-7b", "mistralai/Mistral-7B-Instruct-v0.1", "meta-llama/Llama-3.1-8B", "ibm-granite/granite-3.3-8b-instruct", "Qwen/Qwen3-14B", "mistralai/Mistral-Small-24B-Instruct-2501", "Qwen/Qwen3-32B"]
     for model in models:
         model_name = model.split("/")[-1].replace(".", "_")
-        plots_path = f"../plots_vstack/{args.scenario}/{model_name}"
+        plots_path = f"../plots_vstack_new/{args.scenario}/{model_name}"
         os.makedirs(plots_path, exist_ok=True)
         train_lr(model_name, args.scenario, plots_path)
-
-
 
