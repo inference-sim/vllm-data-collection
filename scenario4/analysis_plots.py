@@ -13,7 +13,6 @@ def get_fixed_cost_prediction(per_step_data, y_column):
     features = {}
     features["gamma_1"] = 1 if per_step_data["num_cache_miss_tokens"] > 0 else 0
     features["gamma_2"] = 1 if per_step_data["num_decode_reqs"] > 0 else 0
-    # features[y_column] = 0.05258597*features["gamma_1"] + 0.0030444*features["gamma_2"]
     features[y_column] = per_step_data["loop_time"]
     return features
 
@@ -79,8 +78,6 @@ def get_model_mode_latencies_by_req(model_name, mode, rr):
                                         if event["event_type"] == "SCHEDULED":
                                             scheduled_time = event["timestamp"]
                                             prompt_data["scheduled_step"] = event["step"]
-                                    # prompt_data["busy_loop_time_with_req"] = finished_time - scheduled_time
-                                    # prompt_data["busy_loop_time_waiting"] = scheduled_time - queued_time
                                     prompt_data["exp_path"] = dirpath
                                     prompt_data["spec"] = spec
                                     prompt_data["mbnt"] = mbnt
@@ -92,7 +89,6 @@ def combine_metrics_jsons(mode, exp_path, filenames):
     for filename in filenames:
         if filename.startswith(f"metrics_{mode}"):
             full_path = os.path.join(exp_path, filename)
-            # print(f"Preprocessing {full_path}...")
             try:
                 with open(full_path, "r") as f:
                     metrics_data = json.load(f)
@@ -115,7 +111,6 @@ def processed_data_by_req(model_name, mode, rr, prefill_or_decode):
                     request_df_curr = request_df[(request_df["exp_path"]==dirpath) & (request_df["spec"]==spec) & (request_df["mbnt"]==mbnt)]
                     request_df_curr = request_df_curr[["exp_path", "scheduled_step", "finished_step", "spec", "mbnt", "input_len", "output_len"]]
                     request_df_curr[f"{prefill_or_decode}_steps"] = request_df_curr.apply(lambda x: get_step_compositions(all_steps, x["scheduled_step"], x["finished_step"], x["output_len"], prefill_or_decode), axis = 1)
-                    # request_df_curr["decode_steps"] = request_df_curr.apply(lambda x: get_step_compositions(all_steps, x["scheduled_step"], x["finished_step"], x["output_len"], "decode"), axis = 1)
                     expanded_cols = request_df_curr[f"{prefill_or_decode}_steps"].apply(pd.Series)
                     request_df_curr = request_df_curr.join(expanded_cols)
                     all_step_request_merged_dfs.append(request_df_curr)
@@ -142,7 +137,6 @@ def plot_requestlevel_loop_times(df, model_name, rr, prefill_or_decode):
             ax.set_title(f'Decode Busy Loop Ground-Truth Time for rr={rr}, mbnt={mbnt}, spec={spec}', fontsize=16)
             ax.set_xlabel('Output len', fontsize=12)
             ax.set_ylabel('Sum of decode loop times (s)', fontsize=12)
-        # ax.legend(title='Variants', bbox_to_anchor=(1.05, 1), loc='upper left')
         plt.tight_layout()
         dir_name = f"{model_name}_rr={rr}_{prefill_or_decode}_requestlevel"
         os.makedirs(dir_name, exist_ok=True)
@@ -168,7 +162,6 @@ def plot_steplevel_loop_times(df, model_name, rr):
             for j in range(0, 2):
                 ax[i,j].set_title(f'Busy Loop Time for rr={rr}, mbnt={mbnt}, spec={spec}', fontsize=16)
                 ax[i,j].set_ylabel('Loop time', fontsize=12)
-                # ax[i,j].legend(title='Variants', bbox_to_anchor=(1.05, 1), loc='upper left')
         ax[0,0].set_xlabel('Total cache miss tokens', fontsize=12)
         ax[0,1].set_xlabel('Num decode reqs', fontsize=12)
         ax[1,0].set_xlabel('Num finished tokens', fontsize=12)
