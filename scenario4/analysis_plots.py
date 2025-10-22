@@ -5,9 +5,9 @@ import json
 from scipy.stats import norm
 import seaborn as sns
 import numpy as np
-from experiment_configs_constants_train import *
 
-# TODO: Refector this script
+# Currently EDA is done only over training data
+from experiment_configs_constants_train import *
 
 def get_fixed_cost_prediction(per_step_data, y_column):
     features = {}
@@ -25,7 +25,7 @@ def get_linear_cost_features_from_step(per_step_data, y_column):
     features[y_column] = per_step_data["loop_time"]
     return features
 
-def get_steplevel_features(per_step_data, y_column, spec, chunk_size):
+def get_steplevel_features(per_step_data, y_column, spec, mbnt):
     features = {}
     features["total_cache_miss_tokens"] = per_step_data["num_cache_miss_tokens"]
     features["num_decode_reqs"] = per_step_data["num_decode_reqs"]
@@ -33,7 +33,7 @@ def get_steplevel_features(per_step_data, y_column, spec, chunk_size):
     features["num_finished_reqs"] = per_step_data["num_finished_reqs"]
     features[y_column] = per_step_data["loop_time"]
     features["spec"] = spec
-    features["chunk_size"] = chunk_size
+    features["mbnt"] = mbnt
     return features
 
 def get_step_compositions(all_steps, start_step, end_step, output_len, mode):
@@ -53,10 +53,10 @@ def get_step_compositions(all_steps, start_step, end_step, output_len, mode):
 
 def get_model_mode_latencies_by_req(model_name, mode, rr):
     model_mode_data = []
-    for spec in specs:
-        for chunk_size in CHUNK_SIZES:
+    for spec in SPECS:
+        for mbnt in MAX_NUM_BATCHED_TOKENS:
             spec_small = spec.lower()
-            results_folder = f"../results_new/scenario4/{model_name}/{spec_small}/chunk_size_{chunk_size}/rr_{rr}"
+            results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec_small}/mbnt_{mbnt}/rr_{rr}"
             if os.path.isdir(results_folder):
                 for dirpath, _, filenames in os.walk(results_folder):
                     for filename in filenames:
@@ -83,7 +83,7 @@ def get_model_mode_latencies_by_req(model_name, mode, rr):
                                     # prompt_data["busy_loop_time_waiting"] = scheduled_time - queued_time
                                     prompt_data["exp_path"] = dirpath
                                     prompt_data["spec"] = spec
-                                    prompt_data["chunk_size"] = chunk_size
+                                    prompt_data["mbnt"] = mbnt
                                     model_mode_data.append(prompt_data) #only append if no error
     return model_mode_data
 
@@ -105,15 +105,15 @@ def processed_data_by_req(model_name, mode, rr, prefill_or_decode):
     model_mode_latencies = get_model_mode_latencies_by_req(model_name, mode, rr)
     request_df = pd.DataFrame(model_mode_latencies)
     all_step_request_merged_dfs = []
-    for spec in specs:
-        for chunk_size in CHUNK_SIZES:
+    for spec in SPECS:
+        for mbnt in MAX_NUM_BATCHED_TOKENS:
             spec_small = spec.lower()
-            results_folder = f"../results_new/scenario4/{model_name}/{spec_small}/chunk_size_{chunk_size}/rr_{rr}"
+            results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec_small}/mbnt_{mbnt}/rr_{rr}"
             for dirpath, dirnames, filenames in os.walk(results_folder):
                 if dirpath.endswith("scenario4"):
                     all_steps = combine_metrics_jsons(mode, dirpath, filenames)
-                    request_df_curr = request_df[(request_df["exp_path"]==dirpath) & (request_df["spec"]==spec) & (request_df["chunk_size"]==chunk_size) & (request_df["prefix_ratio"]==prefix_hit_ratio)]
-                    request_df_curr = request_df_curr[["exp_path", "scheduled_step", "finished_step", "spec", "chunk_size", "prefix_ratio", "input_len", "output_len"]]
+                    request_df_curr = request_df[(request_df["exp_path"]==dirpath) & (request_df["spec"]==spec) & (request_df["mbnt"]==mbnt)]
+                    request_df_curr = request_df_curr[["exp_path", "scheduled_step", "finished_step", "spec", "mbnt", "input_len", "output_len"]]
                     request_df_curr[f"{prefill_or_decode}_steps"] = request_df_curr.apply(lambda x: get_step_compositions(all_steps, x["scheduled_step"], x["finished_step"], x["output_len"], prefill_or_decode), axis = 1)
                     # request_df_curr["decode_steps"] = request_df_curr.apply(lambda x: get_step_compositions(all_steps, x["scheduled_step"], x["finished_step"], x["output_len"], "decode"), axis = 1)
                     expanded_cols = request_df_curr[f"{prefill_or_decode}_steps"].apply(pd.Series)
@@ -124,40 +124,40 @@ def processed_data_by_req(model_name, mode, rr, prefill_or_decode):
 def plot_requestlevel_loop_times(df, model_name, rr, prefill_or_decode):
     df = df.drop(columns = ["exp_path", f"{prefill_or_decode}_steps"])
 
-    grouped = df.groupby(['spec', 'chunk_size', 'prefix_ratio'])
+    grouped = df.groupby(['spec', 'mbnt'])
     grouped.count().to_csv(f"rr_{rr}_df.csv")
 
-    for (spec, chunk_size, prefix_ratio), group_df in grouped:
+    for (spec, mbnt), group_df in grouped:
         plt.style.use('seaborn-v0_8-whitegrid')
         fig, ax = plt.subplots(figsize=(12, 8))
-        label = f'Spec={spec}, Chunk Size={chunk_size}, Prefix Ratio={prefix_ratio}'
+        label = f'Spec={spec}, mbnt={mbnt}'
         
         if prefill_or_decode == "prefill":
             ax.scatter(group_df['input_len'], group_df['busy_loop_time_with_req'], marker='o', linestyle='-', label=label)
-            ax.set_title(f'Prefill Busy Loop Ground-Truth Time for rr={rr}, chunk={chunk_size}, spec={spec}, pf={prefix_ratio}', fontsize=16)
+            ax.set_title(f'Prefill Busy Loop Ground-Truth Time for rr={rr}, mbnt={mbnt}, spec={spec}', fontsize=16)
             ax.set_xlabel('Input len', fontsize=12)
             ax.set_ylabel('Sum of prefill loop times (s)', fontsize=12)
         else:
             ax.scatter(group_df['output_len'], group_df['busy_loop_time_with_req'], marker='o', linestyle='-', label=label)
-            ax.set_title(f'Decode Busy Loop Ground-Truth Time for rr={rr}, chunk={chunk_size}, spec={spec}, pf={prefix_ratio}', fontsize=16)
+            ax.set_title(f'Decode Busy Loop Ground-Truth Time for rr={rr}, mbnt={mbnt}, spec={spec}', fontsize=16)
             ax.set_xlabel('Output len', fontsize=12)
             ax.set_ylabel('Sum of decode loop times (s)', fontsize=12)
         # ax.legend(title='Variants', bbox_to_anchor=(1.05, 1), loc='upper left')
         plt.tight_layout()
         dir_name = f"{model_name}_rr={rr}_{prefill_or_decode}_requestlevel"
         os.makedirs(dir_name, exist_ok=True)
-        plt.savefig(f"{dir_name}/{model_name}_chunk={chunk_size}_spec={spec}_pf={prefix_ratio}_{prefill_or_decode}_vs_input_test.png")
+        plt.savefig(f"{dir_name}/{model_name}_mbnt={mbnt}_spec={spec}_{prefill_or_decode}_vs_input_test.png")
 
     plt.close()
 
 def plot_steplevel_loop_times(df, model_name, rr):
-    grouped = df.groupby(['spec', 'chunk_size', 'prefix_ratio'])
+    grouped = df.groupby(['spec', 'mbnt'])
     grouped.count().to_csv(f"rr_{rr}_df.csv")
 
-    for (spec, chunk_size, prefix_ratio), group_df in grouped:
+    for (spec, mbnt), group_df in grouped:
         plt.style.use('seaborn-v0_8-whitegrid')
         fig, ax = plt.subplots(2, 2, figsize=(30, 20))
-        label = f'Spec={spec}, Chunk Size={chunk_size}, Prefix Ratio={prefix_ratio}'
+        label = f'Spec={spec}, mbnt={mbnt}'
         
         ax[0,0].scatter(group_df["total_cache_miss_tokens"], group_df['loop_latency'], marker='o', linestyle='-', label=label)
         ax[0,1].scatter(group_df["num_decode_reqs"], group_df['loop_latency'], marker='o', linestyle='-', label=label)
@@ -166,7 +166,7 @@ def plot_steplevel_loop_times(df, model_name, rr):
 
         for i in range(0, 2):
             for j in range(0, 2):
-                ax[i,j].set_title(f'Busy Loop Time for rr={rr}, chunk={chunk_size}, spec={spec}, pf={prefix_ratio}', fontsize=16)
+                ax[i,j].set_title(f'Busy Loop Time for rr={rr}, mbnt={mbnt}, spec={spec}', fontsize=16)
                 ax[i,j].set_ylabel('Loop time', fontsize=12)
                 # ax[i,j].legend(title='Variants', bbox_to_anchor=(1.05, 1), loc='upper left')
         ax[0,0].set_xlabel('Total cache miss tokens', fontsize=12)
@@ -177,48 +177,55 @@ def plot_steplevel_loop_times(df, model_name, rr):
         plt.tight_layout()
         dir_name = f"{model_name}_rr={rr}_steplevel"
         os.makedirs(dir_name, exist_ok=True)
-        plt.savefig(f"{dir_name}/{model_name}_chunk={chunk_size}_spec={spec}_loop_times_test.png")
+        plt.savefig(f"{dir_name}/{model_name}_mbnt={mbnt}_spec={spec}_loop_times_test.png")
 
         plt.close()
 
-        # df1 = group_df.loc[:,["total_cache_miss_tokens", "num_decode_reqs"]]
-        # axs = sns.jointplot(x="total_cache_miss_tokens", y="num_decode_reqs", data=df1)
-        # sns.distplot(df1.total_cache_miss_tokens, ax=axs.ax_marg_x, fit=norm)
-        # sns.distplot(df1.num_decode_reqs, ax=axs.ax_marg_y, vertical=True, fit=norm)
     g = sns.JointGrid(data=df, y="total_cache_miss_tokens", x="num_decode_reqs")
     g.plot_joint(sns.scatterplot, s=100, alpha=.5)
     g.plot_marginals(sns.histplot, kde=True)
     g.fig.suptitle(f"Jointplot for rr={rr}")
-        # axs.ax_joint.scatter("total_cache_miss_tokens", "num_decode_reqs", data=df1, c='r', marker='x')
 
     plt.savefig(f"{dir_name}/{model_name}_rr={rr}_jointplot.png")
 
-def read_metrics_file(file_path, y_column, spec, chunk_size):
+def read_metrics_file(file_path, y_column, spec, mbnt):
     step_data = []
     try:
         with open(file_path, "r") as f:
             metrics_data = json.load(f)
             for step in metrics_data:
                 if int(step) > 2700:
-                    step_data.append(get_steplevel_features(metrics_data[step], y_column, spec, chunk_size))
+                    step_data.append(get_steplevel_features(metrics_data[step], y_column, spec, mbnt))
     except:
         print(f"Cannot open {file_path}.")
     return step_data
 
-def processed_data_by_step(model_name, mode, request_rate):
+def processed_data_by_step(model_name, mode, rr):
     step_data = []
-    for spec in specs:
-        for chunk_size in CHUNK_SIZES:
+    for spec in SPECS:
+        for mbnt in MAX_NUM_BATCHED_TOKENS:
             spec_small = spec.lower()
-            results_folder = f"../results_new/scenario4/{model_name}/{spec_small}/chunk_size_{chunk_size}/rr_{request_rate}"
-            if os.path.isdir(results_folder):
-                for dirpath, _, filenames in os.walk(results_folder):
-                    for filename in filenames:
-                        if filename.startswith(f"metrics_{mode}"):
-                            full_path = os.path.join(dirpath, filename)
-                            step_data.extend(read_metrics_file(full_path, "loop_latency", spec, chunk_size))
+            results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec_small}/mbnt_{mbnt}/rr_{rr}"
+            for dirpath, _, filenames in os.walk(results_folder):
+                for filename in filenames:
+                    if filename.startswith(f"metrics_{mode}"):
+                        full_path = os.path.join(dirpath, filename)
+                        step_data.extend(read_metrics_file(full_path, "loop_latency", spec, mbnt))
 
     step_df = pd.DataFrame(step_data)
     step_df = step_df.dropna()
     return step_df
 
+for model in MODELS:
+    for rr in REQUEST_RATES:
+        print(f"EDA for model={model}, rr={rr}")
+        model_name = model.split("/")[-1].replace(".", "_")
+
+        # this is how you would plot stepwise graphs (total cache miss tokens/num decode reqs)
+        X_train = processed_data_by_step(model_name, "train", rr)
+        plot_steplevel_loop_times(X_train, model_name, rr)
+
+        # this is how you would plot requestwise graphs (input/output length)
+        mode = "prefill" # or "decode"
+        X_train_prefill = processed_data_by_req(model_name, "train", rr, mode)
+        plot_requestlevel_loop_times(X_train_prefill, model_name, rr, mode)

@@ -10,28 +10,31 @@ import matplotlib.pyplot as plt
 
 from experiment_configs_constants_train import *
 
-def calculate_metrics(X_train, y_train, X_test, y_test, busy_loop_model, model_name, mode):
+def calculate_metrics(X_train, y_train, X_test, y_test, busy_loop_model, model_name, mode, include_val = False):
     """
     Get R2-score, MAE and MAPE
     """
     training_score = busy_loop_model.score(X_train, y_train)
-    test_score = busy_loop_model.score(X_test, y_test)
     training_preds = busy_loop_model.predict(X_train)
-    test_preds = busy_loop_model.predict(X_test)
     training_mae = round(mean_absolute_error(training_preds, y_train), 3)
     training_mape = round(mean_absolute_percentage_error(training_preds, y_train), 3)
-    test_mae = round(mean_absolute_error(test_preds, y_test), 3)
-    test_mape = round(mean_absolute_percentage_error(test_preds, y_test), 3)
+
     caption = f"##################### {model_name}-alphas-{mode} ############################"
     print(caption)
     print(f"LR Model Train Score: {training_score}")
     print(f"LR Model Train MAE: {training_mae}")
     print(f"LR Model Train MAPE: {training_mape}")
-
-    print(f"LR Model Test Score: {test_score}")
-    print(f"LR Model Test MAE: {test_mae}")
-    print(f"LR Model Test MAPE: {test_mape}")
     print(f"Coeffs: {busy_loop_model.coef_}")
+
+    if include_val:
+        test_score = busy_loop_model.score(X_test, y_test)
+        test_preds = busy_loop_model.predict(X_test)
+        test_mae = round(mean_absolute_error(test_preds, y_test), 3)
+        test_mape = round(mean_absolute_percentage_error(test_preds, y_test), 3)
+
+        print(f"LR Model Test Score: {test_score}")
+        print(f"LR Model Test MAE: {test_mae}")
+        print(f"LR Model Test MAPE: {test_mape}")
 
 def plot_delays(model_name, mode, rr):
     for spec in SPECS:
@@ -163,12 +166,12 @@ for model in MODELS:
     model_name = model.split("/")[-1].replace(".", "_")
 
     y_queue_train, y_finished_train, X_queue_train, X_finished_train = get_delays(model_name, "train")
-    y_queue_test, y_finished_test, X_queue_test, X_finished_test = get_delays(model_name, "val")
+    # y_queue_test, y_finished_test, X_queue_test, X_finished_test = get_delays(model_name, "val")
 
     model_queue = LinearRegression(positive=True, fit_intercept=False)
     model_queue.fit(X_queue_train, y_queue_train)
     model_finished = LinearRegression(positive=True, fit_intercept=False)
     model_finished.fit(X_finished_train, y_finished_train)
 
-    calculate_metrics(X_queue_train, y_queue_train, X_queue_test, y_queue_test, model_queue, model_name, "queueing_delay")
-    calculate_metrics(X_finished_train, y_finished_train, X_finished_test, y_finished_test, model_finished, model_name, "finished_delay")
+    calculate_metrics(X_queue_train, y_queue_train, [], [], model_queue, model_name, "queueing_delay")
+    calculate_metrics(X_finished_train, y_finished_train, [], [], model_finished, model_name, "finished_delay")
