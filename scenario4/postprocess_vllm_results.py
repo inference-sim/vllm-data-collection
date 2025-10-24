@@ -2,6 +2,7 @@ import os
 import json
 import argparse
 import numpy as np
+import pandas as pd
 
 import re
 
@@ -57,7 +58,7 @@ def saturation_RPS(request_throughput, request_arrival_rate):
         return True
     return False
 
-def saturation_latency(e2e_latency_list):
+def saturation_latency(e2e_latency_list, moving_avg_window = 100, threshold=0.02):
     """
     Determines if the request-level e2e latency values have an inflection point,
     after which latencies grow bigger.
@@ -68,13 +69,13 @@ def saturation_latency(e2e_latency_list):
     Returns:
         bool: Whether the experiment under consideration is saturated or not
     """
-    deltas = np.diff(e2e_latency_list)
-    inflection_idx = np.argmax(deltas)
-    before_inflection, after_inflection = e2e_latency_list[:inflection_idx + 1], e2e_latency_list[inflection_idx + 1:]
-    # graph should be flat before inflection point, and should keep growing after it
-    was_flat_before_inflection = np.std(before_inflection) < 0.5
-    grows_after_inflection = np.min(after_inflection) > np.max(before_inflection) if len(after_inflection) > 0 else True
-    return was_flat_before_inflection and grows_after_inflection
+    moving_avg = pd.Series(e2e_latency_list).rolling(window=moving_avg_window).mean()
+    grad = np.gradient(moving_avg)
+    sat_idx = np.where(pd.Series(grad).rolling(window=moving_avg_window).mean() > threshold)
+    if sat_idx and len(sat_idx[0]) > 0:
+        sat_idx = sat_idx[0][0]
+        return True
+    return False
 
 def process_server_side_metrics(model_name, mode, rr, spec, mbnt):
     """
