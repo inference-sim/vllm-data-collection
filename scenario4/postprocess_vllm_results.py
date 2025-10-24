@@ -10,7 +10,7 @@ def extract_total_kv_blocks(model_name):
     Finds the avg value of "Total KV blocks" for input to the simulator during testing. 
     Extracts the number following 'num_gpu_blocks is:' from vllm's server log file,
     and averages it over all experiments for a given model.
-    
+
     Assumption: Given a model, the total KV blocks is nearly constant across experiments.
     Usage: ONLY use this function only for BLIS's "test" mode.
 
@@ -43,10 +43,43 @@ def extract_total_kv_blocks(model_name):
                                     print(f"File not found: {log_file_path}")
     return total_kv_blocks//count_exp
 
-def get_server_side_metrics(model_name, mode, rr, spec, mbnt):
+def saturation_RPS(request_throughput, request_arrival_rate):
+    """
+    Determines if avg request throughput (req/s) is less than 90% of request arrival rate.
+    Parameters:
+        request_throughput (float): Avg request output throughput (req/s)
+        request_arrival_rate (float): Poisson distribution mean request arrival rate (req/s)
+
+    Returns:
+        bool: Whether the experiment under consideration is saturated or not
+    """
+    if request_throughput < SATURATION_PERCENTAGE * request_arrival_rate:
+        return True
+    return False
+
+def saturation_latency(e2e_latency_list):
+    """
+    Determines if the request-level e2e latency values have an inflection point,
+    after which latencies grow bigger.
+
+    Parameters:
+        e2e_latency_list (list[float]): List of request-level e2e latencies
+
+    Returns:
+        bool: Whether the experiment under consideration is saturated or not
+    """
+    deltas = np.diff(e2e_latency_list)
+    inflection_idx = np.argmax(deltas)
+    before_inflection, after_inflection = e2e_latency_list[:inflection_idx + 1], e2e_latency_list[inflection_idx + 1:]
+    # graph should be flat before inflection point, and should keep growing after it
+    was_flat_before_inflection = np.std(before_inflection) < 0.5
+    grows_after_inflection = np.min(after_inflection) > np.max(before_inflection) if len(after_inflection) > 0 else True
+    return was_flat_before_inflection and grows_after_inflection
+
+def process_server_side_metrics(model_name, mode, rr, spec, mbnt):
     """
     Return server side metrics ONLY for non-saturated regimes. 
-    Saturation is currently defined as throughput < 90% of request rate
+    Write non-saturated processed data into files that can be compared against the simulator.
     """
     e2e_server = []
     experiment_metrics = {}
@@ -64,11 +97,6 @@ def get_server_side_metrics(model_name, mode, rr, spec, mbnt):
                     experiment_metrics["total_input_tokens"] = json_data["total_input_tokens"]
                     experiment_metrics["total_output_tokens"] = json_data["total_output_tokens"]
                     experiment_metrics["throughput"] = json_data["request_throughput"]
-                    # check for saturation
-                    if experiment_metrics["throughput"] < SATURATION_PERCENTAGE * rr:
-                        print(f"Saturated scenario, rr={rr}, spec={spec}, mbnt={mbnt}, skipping...")
-                        return
-                    
                     experiment_metrics["completed_requests"] = json_data["completed"]
                     prompts = json_data["prompts"]
                     total_input_tokens = 0
@@ -101,10 +129,6 @@ def get_server_side_metrics(model_name, mode, rr, spec, mbnt):
     median_value = np.median(e2e_server)
     p99_value = np.percentile(e2e_server, 99)
     mean_active_steps = total_active_steps/len(e2e_server)
-    results_folder = f"results_server_side/{mode}/{model_name}"
-    os.makedirs(results_folder, exist_ok=True)
-    results_filename = f"vllm_{rr}r_{spec}_{mbnt}.json"
-    full_results_filename = os.path.join(results_folder, results_filename)
     full_results = {}
     full_results["model"] = model_name
     full_results["request_rate"] = rr
@@ -117,10 +141,30 @@ def get_server_side_metrics(model_name, mode, rr, spec, mbnt):
     full_results["Total Output Tokens"] = experiment_metrics["total_output_tokens"] 
     full_results["vLLM duration(s)"] = experiment_metrics["duration"]
     full_results["Request throughput (req/s)"] = experiment_metrics["throughput"]
+    full_results["e2e latency list"] = e2e_server
     full_results["Mean E2E(ms)"] = mean_value*1e3
     full_results["Median E2E(ms)"] = median_value*1e3
     full_results["P99 E2E(ms)"] = p99_value*1e3
     full_results["Mean Active Steps"] = mean_active_steps
+
+    return full_results
+
+def save_unsaturated_results(model_name, mode, full_results):
+    # determine if saturated or not
+
+    # Option A: Saturation in terms of overall RPS
+    saturated = saturation_RPS(full_results["Request throughput (req/s)"], full_results["Request Rate(req/s)"])
+    # Option B: Saturation in terms of e2e latency evolution
+    saturated = saturation_latency(full_results["e2e latency list"])
+
+    if saturated:
+        print(f"Saturated scenario, rr={rr}, spec={spec}, mbnt={mbnt}, skipping...")
+        return
+    # if not saturated, save processed results
+    results_folder = f"results_server_side/{mode}/{model_name}"
+    os.makedirs(results_folder, exist_ok=True)
+    results_filename = f"vllm_{rr}r_{spec}_{mbnt}.json"
+    full_results_filename = os.path.join(results_folder, results_filename)
     with open(full_results_filename, 'w+') as f:
         json.dump(full_results, f, indent=4)
 
@@ -132,8 +176,6 @@ if __name__=="__main__":
     args = parser.parse_args()
     if args.mode == "train":
         from experiment_configs_constants_train import *
-    # elif args.mode == "val":
-    #     from experiment_configs_constants_val import *
     elif args.mode == "test":
         from experiment_configs_constants_test import *
 
@@ -143,7 +185,8 @@ if __name__=="__main__":
     for spec in SPECS:
         for rr in REQUEST_RATES:
             for mbnt in MAX_NUM_BATCHED_TOKENS:
-                    get_server_side_metrics(model_name, args.mode, rr, spec, mbnt)
+                    processed_results = process_server_side_metrics(model_name, args.mode, rr, spec, mbnt)
+                    save_unsaturated_results(model_name, args.mode, processed_results)
     # get Total KV Blocks from logs as input to simulator for test mode
     if args.mode == "test":
         print(f"Total KV Blocks: {extract_total_kv_blocks(model_name)}")
