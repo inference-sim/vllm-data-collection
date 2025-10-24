@@ -149,7 +149,7 @@ def process_server_side_metrics(model_name, mode, rr, spec, mbnt):
 
     return full_results
 
-def save_unsaturated_results(model_name, mode, full_results):
+def save_unsaturated_results(model_name, mode, rr, spec, mbnt, full_results):
     # determine if saturated or not
 
     # Option A: Saturation in terms of overall RPS
@@ -186,7 +186,7 @@ if __name__=="__main__":
         for rr in REQUEST_RATES:
             for mbnt in MAX_NUM_BATCHED_TOKENS:
                     processed_results = process_server_side_metrics(model_name, args.mode, rr, spec, mbnt)
-                    save_unsaturated_results(model_name, args.mode, processed_results)
+                    save_unsaturated_results(model_name, args.mode, rr, spec, mbnt, processed_results)
     # get Total KV Blocks from logs as input to simulator for test mode
     if args.mode == "test":
         print(f"Total KV Blocks: {extract_total_kv_blocks(model_name)}")
