@@ -161,7 +161,7 @@ def save_unsaturated_results(model_name, mode, full_results):
         print(f"Saturated scenario, rr={rr}, spec={spec}, mbnt={mbnt}, skipping...")
         return
     # if not saturated, save processed results
-    results_folder = f"results_server_side/{mode}/{model_name}"
+    results_folder = f"results_server_side/{model_name}/{mode}"
     os.makedirs(results_folder, exist_ok=True)
     results_filename = f"vllm_{rr}r_{spec}_{mbnt}.json"
     full_results_filename = os.path.join(results_folder, results_filename)
