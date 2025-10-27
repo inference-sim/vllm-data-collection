@@ -124,9 +124,10 @@ def run_experiment(model, mode, spec, remote_exp_folder: str):
     print(f"STARTING SCENARIO 4 benchmark in mode = {mode}")
     print(f"{'='*50}")
     spec_constants_mapping = {"LL": LL_SPECS, "LH": LH_SPECS, "HL": HL_SPECS, "HH": HH_SPECS}
+    request_rates_sweep = REQUEST_RATES[spec] if isinstance(REQUEST_RATES, dict) else REQUEST_RATES
 
     for mbnt in MAX_NUM_BATCHED_TOKENS:
-        for request_rate in REQUEST_RATES[spec]:
+        for request_rate in request_rates_sweep:
             job_name = start_vllm_server_client(remote_exp_folder, mode, model, request_rate, spec_constants_mapping[spec], mbnt)
             print(f"Created pod '{job_name}'")
 
