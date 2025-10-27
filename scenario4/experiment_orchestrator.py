@@ -123,8 +123,11 @@ def run_experiment(model, mode, spec, remote_exp_folder: str):
     print(f"\n{'='*50}")
     print(f"STARTING SCENARIO 4 benchmark in mode = {mode}")
     print(f"{'='*50}")
-    spec_constants_mapping = {"LL": LL_SPECS, "LH": LH_SPECS, "HL": HL_SPECS, "HH": HH_SPECS}
-    request_rates_sweep = REQUEST_RATES[spec] if isinstance(REQUEST_RATES, dict) else REQUEST_RATES
+    if mode == "train":
+        spec_constants_mapping = {"LL": LL_SPECS, "LH": LH_SPECS, "HL": HL_SPECS, "HH": HH_SPECS}
+    else:
+        spec_constants_mapping = {"Summarization": SUMMARIZATION_SPECS, "Chatbot": CHATBOT_SPECS, "Classification": CLASSIFICATION_SPECS}
+    request_rates_sweep = REQUEST_RATES[spec]
 
     for mbnt in MAX_NUM_BATCHED_TOKENS:
         for request_rate in request_rates_sweep:

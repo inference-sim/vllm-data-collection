@@ -11,10 +11,10 @@ NAMESPACE = "blis"
 # workload config
 NUM_PROMPTS = 2000
 REQUEST_RATES = {
-    "LL": [8, 16, 24, 32],
-    "LH": [8, 16, 24, 32],
-    "HL": [1.0, 1.5, 2.0, 2.5, 3.0],
-    "HH": [0.5, 1.0, 1.5, 2.0]
+    "LL": [2, 4, 8, 12, 15], # max throughput is 21
+    "LH": [1.0, 1.5, 2.0, 2.5, 3.0], # max throughput is 5.71
+    "HL": [1.0, 1.5, 2.0, 2.5, 3.0], # max throughput is 5.99
+    "HH": [0.25, 0.5, 0.75, 1.0] # max throughput is 2.49
 }
 DATASET_NAME = "random" # random/sharegpt
 MODE = "train"

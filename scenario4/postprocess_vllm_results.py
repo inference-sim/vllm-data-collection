@@ -26,7 +26,7 @@ def extract_total_kv_blocks(model_name):
     for spec in SPECS:
         spec_small = spec.lower()
         for mbnt in MAX_NUM_BATCHED_TOKENS:
-            for rr in REQUEST_RATES:
+            for rr in REQUEST_RATES[spec]:
                 results_folder = f"../results_new/scenario4/{model_name}/test/{spec_small}/mbnt_{mbnt}/rr_{rr}"
                 if os.path.isdir(results_folder):
                     for dirpath, _, filenames in os.walk(results_folder):
@@ -184,7 +184,7 @@ if __name__=="__main__":
 
     # get server side final metrics for comparison against sim
     for spec in SPECS:
-        for rr in REQUEST_RATES:
+        for rr in REQUEST_RATES[spec]:
             for mbnt in MAX_NUM_BATCHED_TOKENS:
                     processed_results = process_server_side_metrics(model_name, args.mode, rr, spec, mbnt)
                     save_unsaturated_results(model_name, args.mode, rr, spec, mbnt, processed_results)
