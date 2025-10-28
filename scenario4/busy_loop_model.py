@@ -169,7 +169,7 @@ def processed_data_by_req(model_name, mode, rr, spec):
     for mbnt in MAX_NUM_BATCHED_TOKENS:
         spec_small = spec.lower()
         results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec_small}/mbnt_{mbnt}/rr_{rr}"
-        for dirpath, dirnames, filenames in os.walk(results_folder):
+        for dirpath, _, filenames in os.walk(results_folder):
             if dirpath.endswith(f"{mode}_scenario4"):
                 all_steps = combine_metrics_jsons(mode, dirpath, filenames)
                 request_df_curr = request_df[(request_df["exp_path"]==dirpath) & (request_df["spec"]==spec) & (request_df["mbnt"]==mbnt)]
@@ -210,7 +210,7 @@ def create_step_groups(step_df, rr):
         all_groups.append(group_df.sum())
     return pd.DataFrame(all_groups)
 
-def calculate_metrics(X_train, y_train, X_test, y_test, busy_loop_model, model_name, spec, include_val = False):
+def calculate_metrics(X_train, y_train, X_test, y_test, busy_loop_model, model_name, include_val = False):
     """
     Get R2-score, MAE and MAPE
     """
@@ -225,14 +225,16 @@ def calculate_metrics(X_train, y_train, X_test, y_test, busy_loop_model, model_n
         test_mae = round(mean_absolute_error(test_preds, y_test), 3)
         test_mape = round(mean_absolute_percentage_error(test_preds, y_test), 3)
         test_smape = round(calculate_smape(test_preds, y_test), 3)
-    caption = f"##################### {model_name}-busy_loop-{spec} ############################"
+    caption = f"##################### {model_name}-busy_loop ############################"
     print(caption)
     print(f"LR Model Train Score: {training_score}")
     print(f"LR Model Train MAE: {training_mae}")
     print(f"LR Model Train MAPE: {training_mape}")
     print(f"LR Model Train SMAPE: {training_smape}")
-    print(f'Features: {' '.join(X_train.columns)}')
-    print(f"Coeffs: {busy_loop_model.coef_}")
+    coeffs = {}
+    for idx, feature in enumerate(X_train.columns):
+        coeffs[feature] = busy_loop_model.coef_[idx]
+    print(f"Coeffs: {float(coeffs["intercept"]), float(coeffs["gamma_1"]), float(coeffs["gamma_2"])}")
 
     if include_val:
         print(f"LR Model Test Score: {test_score}")
@@ -288,7 +290,7 @@ def train_requestwise_test_requestwise(train_configs, val_configs, include_val =
     model_lr = LinearRegression(positive=True, fit_intercept=False)
     model_lr.fit(X_train, y_train)
     if not include_val:
-        calculate_metrics(X_train, y_train, [], [], model_lr, model_name, spec, include_val)
+        calculate_metrics(X_train, y_train, [], [], model_lr, model_name, include_val)
     else:
         # validation is grouped by spec for easier interpretability
         val_specs = list(set(x['spec'] for x in val_configs))
@@ -301,9 +303,9 @@ def train_requestwise_test_requestwise(train_configs, val_configs, include_val =
                 X_test = val_df_spec.loc[:, ~val_df_spec.columns.isin(["busy_loop_time_with_req"])]
                 y_test = val_df_spec["busy_loop_time_with_req"]
                 if X_test.shape[0] > 0:
-                    calculate_metrics(X_train, y_train, X_test, y_test, model_lr, model_name, spec, include_val)
+                    calculate_metrics(X_train, y_train, X_test, y_test, model_lr, model_name, include_val)
 
-def train_groupwise_test_groupwise(train_configs, val_configs):
+def train_groupwise_test_groupwise(train_configs, val_configs, include_val = False):
     model_name = MODEL.split("/")[-1].replace(".", "_")
     group_train_dfs = []
     for config in train_configs:
@@ -329,20 +331,24 @@ def train_groupwise_test_groupwise(train_configs, val_configs):
             X_test = test_df_spec.loc[:, ~test_df_spec.columns.isin(["loop_latency"])]
             y_test = test_df_spec["loop_latency"]
             if X_test.shape[0] > 0:
-                calculate_metrics(X_train, y_train, X_test, y_test, model_lr, model_name, spec)
+                calculate_metrics(X_train, y_train, X_test, y_test, model_lr, model_name, include_val)
             else:
                 print("Empty test group")
 
 if __name__=="__main__": 
     np.random.seed(42)
 
-    # put non-saturated training/val regimes here
-    train_configs = [{"rr": 2, "spec": "LL"}, {"rr": 4, "spec": "LL"}, {"rr": 6, "spec": "LL"},
-                    {"rr": 2, "spec": "LH"}, {"rr": 4, "spec": "LH"}, {"rr": 6, "spec": "LH"},
-                    {"rr": 2, "spec": "HL"}]
-    val_configs = [{"rr": 2, "spec": "LL"}, {"rr": 4, "spec": "LL"}, {"rr": 6, "spec": "LL"},
-                    {"rr": 2, "spec": "LH"}, {"rr": 4, "spec": "LH"}, {"rr": 6, "spec": "LH"},
-                    {"rr": 2, "spec": "HL"}]
+    # find non-saturated training regimes from postprocess_vllm's outputs
+    train_configs = []
+    model_name = MODEL.split("/")[-1].replace(".", "_")
+    results_folder = f"results_server_side/{model_name}/train"
+    if os.path.isdir(results_folder):
+        for dirpath, _, filenames in os.walk(results_folder):
+            for filename in filenames:
+                rr = filename.split("_")[1][:-1]
+                spec = filename.split("_")[2]
+                train_configs.append({"rr": rr, "spec": spec})
+    val_configs = []
 
     # use for quadratic features only
     # modes = ["train", "test"]

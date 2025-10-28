@@ -156,7 +156,7 @@ def save_unsaturated_results(model_name, mode, rr, spec, mbnt, full_results):
     # Option A: Saturation in terms of overall RPS
     saturated = saturation_RPS(full_results["Request throughput (req/s)"], full_results["Request Rate(req/s)"])
     # Option B: Saturation in terms of e2e latency evolution
-    saturated = saturation_latency(full_results["e2e latency list"])
+    # saturated = saturation_latency(full_results["e2e latency list"])
 
     if saturated:
         print(f"Saturated scenario, rr={rr}, spec={spec}, mbnt={mbnt}, skipping...")
@@ -164,6 +164,7 @@ def save_unsaturated_results(model_name, mode, rr, spec, mbnt, full_results):
     # if not saturated, save processed results
     results_folder = f"results_server_side/{model_name}/{mode}"
     os.makedirs(results_folder, exist_ok=True)
+    rr = round(float(rr), 2)
     results_filename = f"vllm_{rr}r_{spec}_{mbnt}.json"
     full_results_filename = os.path.join(results_folder, results_filename)
     with open(full_results_filename, 'w+') as f:
@@ -172,7 +173,7 @@ def save_unsaturated_results(model_name, mode, rr, spec, mbnt, full_results):
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description="Postprocess vllm results to get aggregate metrics/saturation filtering")
     parser.add_argument('-m', '--mode', type=str, required=True,
-                        help="Specify the mode of operation (e.g., 'train', 'val', 'test').")
+                        help="Specify the mode of operation (e.g., 'train', 'test').")
 
     args = parser.parse_args()
     if args.mode == "train":

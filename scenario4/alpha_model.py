@@ -144,8 +144,8 @@ def get_delays(model_name, mode):
                                         finished_to_server_left_delay = server_left_time - finished_time
                                         model_spec_level_queuing_delay += server_hit_to_queue_delay * 1e6
                                         model_level_queuing_delay += server_hit_to_queue_delay * 1e6
-                                        queuing_delays.append(server_hit_to_queue_delay)
-                                        finished_delays.append(finished_to_server_left_delay)
+                                        queuing_delays.append(server_hit_to_queue_delay * 1e6)
+                                        finished_delays.append(finished_to_server_left_delay * 1e6)
                                         input_lens.append([prompt["input_len"], 1])
                                         output_lens.append([prompt["output_len"], 1])
                                         model_spec_level_queuing_num += 1
