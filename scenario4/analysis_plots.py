@@ -97,23 +97,22 @@ def combine_metrics_jsons(mode, exp_path, filenames):
                 print(f"Cannot read {full_path}")
     return all_steps
 
-def processed_data_by_req(model_name, mode, rr, prefill_or_decode):
+def processed_data_by_req(model_name, mode, rr, prefill_or_decode, spec):
     model_mode_latencies = get_model_mode_latencies_by_req(model_name, mode, rr)
     request_df = pd.DataFrame(model_mode_latencies)
     all_step_request_merged_dfs = []
-    for spec in SPECS:
-        for mbnt in MAX_NUM_BATCHED_TOKENS:
-            spec_small = spec.lower()
-            results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec_small}/mbnt_{mbnt}/rr_{rr}"
-            for dirpath, dirnames, filenames in os.walk(results_folder):
-                if dirpath.endswith("scenario4"):
-                    all_steps = combine_metrics_jsons(mode, dirpath, filenames)
-                    request_df_curr = request_df[(request_df["exp_path"]==dirpath) & (request_df["spec"]==spec) & (request_df["mbnt"]==mbnt)]
-                    request_df_curr = request_df_curr[["exp_path", "scheduled_step", "finished_step", "spec", "mbnt", "input_len", "output_len"]]
-                    request_df_curr[f"{prefill_or_decode}_steps"] = request_df_curr.apply(lambda x: get_step_compositions(all_steps, x["scheduled_step"], x["finished_step"], x["output_len"], prefill_or_decode), axis = 1)
-                    expanded_cols = request_df_curr[f"{prefill_or_decode}_steps"].apply(pd.Series)
-                    request_df_curr = request_df_curr.join(expanded_cols)
-                    all_step_request_merged_dfs.append(request_df_curr)
+    for mbnt in MAX_NUM_BATCHED_TOKENS:
+        spec_small = spec.lower()
+        results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec_small}/mbnt_{mbnt}/rr_{rr}"
+        for dirpath, dirnames, filenames in os.walk(results_folder):
+            if dirpath.endswith("scenario4"):
+                all_steps = combine_metrics_jsons(mode, dirpath, filenames)
+                request_df_curr = request_df[(request_df["exp_path"]==dirpath) & (request_df["spec"]==spec) & (request_df["mbnt"]==mbnt)]
+                request_df_curr = request_df_curr[["exp_path", "scheduled_step", "finished_step", "spec", "mbnt", "input_len", "output_len"]]
+                request_df_curr[f"{prefill_or_decode}_steps"] = request_df_curr.apply(lambda x: get_step_compositions(all_steps, x["scheduled_step"], x["finished_step"], x["output_len"], prefill_or_decode), axis = 1)
+                expanded_cols = request_df_curr[f"{prefill_or_decode}_steps"].apply(pd.Series)
+                request_df_curr = request_df_curr.join(expanded_cols)
+                all_step_request_merged_dfs.append(request_df_curr)
     return pd.concat(all_step_request_merged_dfs, ignore_index=True)
 
 def plot_requestlevel_loop_times(df, model_name, rr, prefill_or_decode):
@@ -193,32 +192,32 @@ def read_metrics_file(file_path, y_column, spec, mbnt):
         print(f"Cannot open {file_path}.")
     return step_data
 
-def processed_data_by_step(model_name, mode, rr):
+def processed_data_by_step(model_name, mode, rr, spec):
     step_data = []
-    for spec in SPECS:
-        for mbnt in MAX_NUM_BATCHED_TOKENS:
-            spec_small = spec.lower()
-            results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec_small}/mbnt_{mbnt}/rr_{rr}"
-            for dirpath, _, filenames in os.walk(results_folder):
-                for filename in filenames:
-                    if filename.startswith(f"metrics_{mode}"):
-                        full_path = os.path.join(dirpath, filename)
-                        step_data.extend(read_metrics_file(full_path, "loop_latency", spec, mbnt))
+    for mbnt in MAX_NUM_BATCHED_TOKENS:
+        spec_small = spec.lower()
+        results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec_small}/mbnt_{mbnt}/rr_{rr}"
+        for dirpath, _, filenames in os.walk(results_folder):
+            for filename in filenames:
+                if filename.startswith(f"metrics_{mode}"):
+                    full_path = os.path.join(dirpath, filename)
+                    step_data.extend(read_metrics_file(full_path, "loop_latency", spec, mbnt))
 
     step_df = pd.DataFrame(step_data)
     step_df = step_df.dropna()
     return step_df
 
 if __name__=="__main__":
-    for rr in REQUEST_RATES: # saturation doesn't matter for EDA
-        print(f"EDA for model={MODEL}, rr={rr}")
-        model_name = MODEL.split("/")[-1].replace(".", "_")
+    for spec in SPECS:
+        for rr in REQUEST_RATES[spec]: # saturation doesn't matter for EDA
+            print(f"EDA for model={MODEL}, rr={rr}")
+            model_name = MODEL.split("/")[-1].replace(".", "_")
 
-        # this is how you would plot stepwise graphs (total cache miss tokens/num decode reqs)
-        X_train = processed_data_by_step(model_name, "train", rr)
-        plot_steplevel_loop_times(X_train, model_name, rr)
+            # this is how you would plot stepwise graphs (total cache miss tokens/num decode reqs)
+            X_train = processed_data_by_step(model_name, "train", rr, spec)
+            plot_steplevel_loop_times(X_train, model_name, rr)
 
-        # this is how you would plot requestwise graphs (input/output length)
-        mode = "prefill" # or "decode"
-        X_train_prefill = processed_data_by_req(model_name, "train", rr, mode)
-        plot_requestlevel_loop_times(X_train_prefill, model_name, rr, mode)
+            # this is how you would plot requestwise graphs (input/output length)
+            mode = "prefill" # or "decode"
+            X_train_prefill = processed_data_by_req(model_name, "train", rr, mode)
+            plot_requestlevel_loop_times(X_train_prefill, model_name, rr, mode)
