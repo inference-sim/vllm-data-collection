@@ -44,6 +44,7 @@ def plot_delays(model_name, mode, rr):
         output_lens = []
         for mbnt in MAX_NUM_BATCHED_TOKENS:
             spec_small = spec.lower()
+            rr = f"{float(rr):.2f}"
             results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec_small}/mbnt_{mbnt}/rr_{rr}"
             if os.path.isdir(results_folder):
                 for dirpath, _, filenames in os.walk(results_folder):
@@ -120,6 +121,7 @@ def get_delays(model_name, mode):
         for rr in REQUEST_RATES[spec]:
             for mbnt in MAX_NUM_BATCHED_TOKENS:
                 spec_small = spec.lower()
+                rr = f"{float(rr):.2f}"
                 results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec_small}/mbnt_{mbnt}/rr_{rr}"
                 if os.path.isdir(results_folder):
                     for dirpath, _, filenames in os.walk(results_folder):

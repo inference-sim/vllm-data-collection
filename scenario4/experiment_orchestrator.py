@@ -12,7 +12,8 @@ def start_vllm_server_client(exp_folder, mode, model, request_rate, specs, max_n
     """Start vLLM server with config parameters"""
     model_alias = model.split("/")[-1].replace(".", "_")
     spec_type = specs["TYPE"].lower()
-    exp_results_path = f"/mnt/scenario4/results/{model_alias}/{mode}/{spec_type}/mbnt_{max_num_batched_tokens}/rr_{request_rate}/{exp_folder}/"
+    request_rate_format = f"{float(request_rate):.2f}"
+    exp_results_path = f"/mnt/scenario4/results/{model_alias}/{mode}/{spec_type}/mbnt_{max_num_batched_tokens}/rr_{request_rate_format}/{exp_folder}/"
     server_log_path = f"{exp_results_path}/scenario4_server_{mode}.log"
     client_log_path = f"{exp_results_path}/scenario4_client_{mode}.log"
     input_len_mean = specs["INPUT_LEN_MEAN"]

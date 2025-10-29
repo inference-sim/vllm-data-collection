@@ -219,5 +219,5 @@ if __name__=="__main__":
 
             # this is how you would plot requestwise graphs (input/output length)
             mode = "prefill" # or "decode"
-            X_train_prefill = processed_data_by_req(model_name, "train", rr, mode)
+            X_train_prefill = processed_data_by_req(model_name, "train", rr, mode, spec)
             plot_requestlevel_loop_times(X_train_prefill, model_name, rr, mode)

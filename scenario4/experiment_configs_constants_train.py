@@ -11,10 +11,10 @@ NAMESPACE = "blis"
 # workload config
 NUM_PROMPTS = 2000
 REQUEST_RATES = {
-    "LL": [2, 4, 8, 12, 15], # max throughput is 21
-    "LH": [1.0, 1.5, 2.0, 2.5, 3.0], # max throughput is 5.71
-    "HL": [1.0, 1.5, 2.0, 2.5, 3.0], # max throughput is 5.99
-    "HH": [0.25, 0.5, 0.75, 1.0] # max throughput is 2.49
+    "LL": [2.00, 4.00, 8.00, 12.00, 15.00], # max throughput is 21
+    "LH": [1.00, 1.50, 2.00, 2.50, 3.00], # max throughput is 5.71
+    "HL": [1.00, 1.50, 2.00, 2.50, 3.00], # max throughput is 5.99
+    "HH": [0.25, 0.50, 0.75, 1.00] # max throughput is 2.49
 }
 DATASET_NAME = "random" # random/sharegpt
 MODE = "train"
@@ -27,4 +27,4 @@ LH_SPECS = {'TYPE': 'LH', 'INPUT_LEN_MEAN': 512, 'OUTPUT_LEN_MEAN': 4000, "NUM_P
 LL_SPECS = {'TYPE': 'LL', 'INPUT_LEN_MEAN': 512, 'OUTPUT_LEN_MEAN': 512, "NUM_PREFIXES": 5, "PREFIX_HIT_RATIO_MEAN": 0.25}
 
 # Saturation config
-SATURATION_PERCENTAGE = 0.9
+SATURATION_PERCENTAGE = 0.98

@@ -114,39 +114,37 @@ def get_step_compositions(all_steps, start_step, end_step):
             pass # don't have the last chunk of steps
     return agg_step_features
 
-def get_model_mode_latencies_by_req(model_name, mode, rr, spec):
+def get_model_mode_latencies_by_req(model_name, mode, rr, spec, mbnt):
     model_mode_data = []
-    for mbnt in MAX_NUM_BATCHED_TOKENS:
-        spec_small = spec.lower()
-        results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec_small}/mbnt_{mbnt}/rr_{rr}"
-        if os.path.isdir(results_folder):
-            for dirpath, _, filenames in os.walk(results_folder):
-                for filename in filenames:
-                    if filename == f"detailed_results_{mode}.json":
-                        full_path = os.path.join(dirpath, filename)
-                        with open (full_path, "r") as f:
-                            json_data = json.load(f)
-                        prompts = json_data["prompts"]
-                        for prompt in prompts:
-                            prompt_data = {"input_len": prompt["input_len"], "output_len": prompt["output_len"], 
-                                        "e2e_latency": prompt["e2e_latency"]}
-                            if prompt["error"]=="": #check for errors
-                                for event in prompt["events"]:
-                                    if event["event_type"] == "FINISHED":
-                                        finished_time = event["timestamp"]
-                                        prompt_data["finished_step"] = event["step"]
-                                    if event["event_type"] == "QUEUED":
-                                        queued_time = event["timestamp"]
-                                        prompt_data["queued_step"] = event["step"]
-                                    if event["event_type"] == "SCHEDULED": # take the last scheduled event
-                                        scheduled_time = event["timestamp"]
-                                        prompt_data["scheduled_step"] = event["step"]
-                                    # if event["event_type"] == "PREFIX": # take the last prefix hit
-                                    #     prompt_data["prefix"] = event["step"]
-                                prompt_data["exp_path"] = dirpath
-                                prompt_data["spec"] = spec
-                                prompt_data["mbnt"] = mbnt
-                                model_mode_data.append(prompt_data) #only append if no error
+    results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec}/mbnt_{mbnt}/rr_{rr}"
+    if os.path.isdir(results_folder):
+        for dirpath, _, filenames in os.walk(results_folder):
+            for filename in filenames:
+                if filename == f"detailed_results_{mode}.json":
+                    full_path = os.path.join(dirpath, filename)
+                    with open (full_path, "r") as f:
+                        json_data = json.load(f)
+                    prompts = json_data["prompts"]
+                    for prompt in prompts:
+                        prompt_data = {"input_len": prompt["input_len"], "output_len": prompt["output_len"], 
+                                    "e2e_latency": prompt["e2e_latency"]}
+                        if prompt["error"]=="": #check for errors
+                            for event in prompt["events"]:
+                                if event["event_type"] == "FINISHED":
+                                    finished_time = event["timestamp"]
+                                    prompt_data["finished_step"] = event["step"]
+                                if event["event_type"] == "QUEUED":
+                                    queued_time = event["timestamp"]
+                                    prompt_data["queued_step"] = event["step"]
+                                if event["event_type"] == "SCHEDULED": # take the last scheduled event
+                                    scheduled_time = event["timestamp"]
+                                    prompt_data["scheduled_step"] = event["step"]
+                                # if event["event_type"] == "PREFIX": # take the last prefix hit
+                                #     prompt_data["prefix"] = event["step"]
+                            prompt_data["exp_path"] = dirpath
+                            prompt_data["spec"] = spec
+                            prompt_data["mbnt"] = mbnt
+                            model_mode_data.append(prompt_data) #only append if no error
     return model_mode_data
 
 def combine_metrics_jsons(mode, exp_path, filenames):
@@ -162,35 +160,35 @@ def combine_metrics_jsons(mode, exp_path, filenames):
                 print(f"Cannot read {full_path}")
     return all_steps
 
-def processed_data_by_req(model_name, mode, rr, spec):
-    model_mode_latencies = get_model_mode_latencies_by_req(model_name, mode, rr, spec)
+def processed_data_by_req(model_name, mode, rr, spec, mbnt):
+    spec_small = spec.lower()
+    rr = f"{float(rr):.2f}"
+    model_mode_latencies = get_model_mode_latencies_by_req(model_name, mode, rr, spec_small, mbnt)
     request_df = pd.DataFrame(model_mode_latencies)
     all_step_request_merged_dfs = []
-    for mbnt in MAX_NUM_BATCHED_TOKENS:
-        spec_small = spec.lower()
-        results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec_small}/mbnt_{mbnt}/rr_{rr}"
-        for dirpath, _, filenames in os.walk(results_folder):
-            if dirpath.endswith(f"{mode}_scenario4"):
-                all_steps = combine_metrics_jsons(mode, dirpath, filenames)
-                request_df_curr = request_df[(request_df["exp_path"]==dirpath) & (request_df["spec"]==spec) & (request_df["mbnt"]==mbnt)]
-                request_df_curr = request_df_curr[["exp_path", "scheduled_step", "finished_step", "spec", "mbnt", "input_len", "output_len"]]
-                request_df_curr["steps"] = request_df_curr.apply(lambda x: get_step_compositions(all_steps, x["scheduled_step"], x["finished_step"]), axis = 1)
-                expanded_cols = request_df_curr['steps'].apply(pd.Series)
-                request_df_curr = request_df_curr.join(expanded_cols)
-                all_step_request_merged_dfs.append(request_df_curr)
+    results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec_small}/mbnt_{mbnt}/rr_{rr}"
+    for dirpath, _, filenames in os.walk(results_folder):
+        if dirpath.endswith(f"{mode}_scenario4"):
+            all_steps = combine_metrics_jsons(mode, dirpath, filenames)
+            request_df_curr = request_df[(request_df["exp_path"]==dirpath) & (request_df["spec"]==spec_small) & (request_df["mbnt"]==mbnt)]
+            request_df_curr = request_df_curr[["exp_path", "scheduled_step", "finished_step", "spec", "mbnt", "input_len", "output_len"]]
+            request_df_curr["steps"] = request_df_curr.apply(lambda x: get_step_compositions(all_steps, x["scheduled_step"], x["finished_step"]), axis = 1)
+            expanded_cols = request_df_curr['steps'].apply(pd.Series)
+            request_df_curr = request_df_curr.join(expanded_cols)
+            all_step_request_merged_dfs.append(request_df_curr)
     return pd.concat(all_step_request_merged_dfs, ignore_index=True)
 
-def processed_data_by_step(model_name, mode, rr, spec):
+def processed_data_by_step(model_name, mode, rr, spec, mbnt):
     step_data = []
-    for mbnt in MAX_NUM_BATCHED_TOKENS:
-        spec_small = spec.lower()
-        results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec_small}/mbnt_{mbnt}/rr_{rr}"
-        if os.path.isdir(results_folder):
-            for dirpath, _, filenames in os.walk(results_folder):
-                for filename in filenames:
-                    if filename.startswith(f"metrics_{mode}"):
-                        full_path = os.path.join(dirpath, filename)
-                        step_data.extend(read_metrics_file(full_path, "loop_latency", spec, mbnt))
+    spec_small = spec.lower()
+    rr = f"{float(rr):.2f}"
+    results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec_small}/mbnt_{mbnt}/rr_{rr}"
+    if os.path.isdir(results_folder):
+        for dirpath, _, filenames in os.walk(results_folder):
+            for filename in filenames:
+                if filename.startswith(f"metrics_{mode}"):
+                    full_path = os.path.join(dirpath, filename)
+                    step_data.extend(read_metrics_file(full_path, "loop_latency", spec, mbnt))
 
     step_df = pd.DataFrame(step_data)    
     step_df = step_df.dropna()
@@ -250,36 +248,35 @@ def calculate_metrics(X_train, y_train, X_test, y_test, busy_loop_model, model_n
         for i, std_dev in enumerate(feature_imp.importances_std):
             print(f"{X_test.columns[i]}: {std_dev:.4f}")
 
-def populate_steps_with_req_level_hits(model_name, mode, rr, spec):
-    for mbnt in MAX_NUM_BATCHED_TOKENS:
-        spec_small = spec.lower()
-        request_level_step_info = get_request_info_per_step(model_name, mode, mbnt, rr, spec_small)
-        results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec_small}/mbnt_{mbnt}/rr_{rr}"
-        if os.path.isdir(results_folder):
-            for dirpath, _, filenames in os.walk(results_folder):
-                for filename in filenames:
-                    if filename.startswith(f"metrics_{mode}"):
-                        full_path = os.path.join(dirpath, filename)
-                        print(f"Preprocessing {full_path}...")
-                        try:
-                            with open(full_path, "r") as f:
-                                metrics_data = json.load(f)
-                                for step in metrics_data:
-                                    if len(request_level_step_info[step]) > 0:
-                                        metrics_data[step]['requests'] = request_level_step_info[step]
-                                    else:
-                                        metrics_data[step]['requests'] = []
-                            with open(full_path, 'w') as f:
-                                json.dump(metrics_data, f, indent=4)
-                        except:
-                            pass
+def populate_steps_with_req_level_hits(model_name, mode, rr, spec, mbnt):
+    spec_small = spec.lower()
+    request_level_step_info = get_request_info_per_step(model_name, mode, mbnt, rr, spec_small)
+    results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec_small}/mbnt_{mbnt}/rr_{rr}"
+    if os.path.isdir(results_folder):
+        for dirpath, _, filenames in os.walk(results_folder):
+            for filename in filenames:
+                if filename.startswith(f"metrics_{mode}"):
+                    full_path = os.path.join(dirpath, filename)
+                    print(f"Preprocessing {full_path}...")
+                    try:
+                        with open(full_path, "r") as f:
+                            metrics_data = json.load(f)
+                            for step in metrics_data:
+                                if len(request_level_step_info[step]) > 0:
+                                    metrics_data[step]['requests'] = request_level_step_info[step]
+                                else:
+                                    metrics_data[step]['requests'] = []
+                        with open(full_path, 'w') as f:
+                            json.dump(metrics_data, f, indent=4)
+                    except:
+                        pass
 
 
 def train_requestwise_test_requestwise(train_configs, val_configs, include_val = False):
     model_name = MODEL.split("/")[-1].replace(".", "_")
     group_train_dfs = []
     for config in train_configs:
-        train_df = processed_data_by_req(model_name, "train", config["rr"], config["spec"])
+        train_df = processed_data_by_req(model_name, "train", config["rr"], config["spec"], config["mbnt"])
         train_df = train_df.drop(columns=["exp_path", "scheduled_step", "finished_step", "steps", "spec", "mbnt", "input_len", "output_len"])
         group_train_dfs.append(train_df)
     group_train_df = pd.concat(group_train_dfs, ignore_index=True)
@@ -295,7 +292,7 @@ def train_requestwise_test_requestwise(train_configs, val_configs, include_val =
         # validation is grouped by spec for easier interpretability
         val_specs = list(set(x['spec'] for x in val_configs))
         for config in val_configs:
-            val_df = processed_data_by_req(model_name, "val", config["rr"], config["spec"])
+            val_df = processed_data_by_req(model_name, "val", config["rr"], config["spec"], config["mbnt"])
             val_df = val_df[val_df['busy_loop_time_with_req'] > 0]
             for spec in val_specs:
                 val_df_spec = val_df[val_df["spec"] == spec]
@@ -309,7 +306,7 @@ def train_groupwise_test_groupwise(train_configs, val_configs, include_val = Fal
     model_name = MODEL.split("/")[-1].replace(".", "_")
     group_train_dfs = []
     for config in train_configs:
-        train_df = processed_data_by_step(model_name, "train", config["rr"], config["spec"])
+        train_df = processed_data_by_step(model_name, "train", config["rr"], config["spec"], config["mbnt"])
         train_df = train_df.drop(columns=["spec", "chunk_size", "prefix_ratio"]) # do not drop input and output len
         group_train_dfs.append(create_step_groups(train_df, config["rr"]))
     group_train_df = pd.concat(group_train_dfs, ignore_index=True)
@@ -347,7 +344,9 @@ if __name__=="__main__":
             for filename in filenames:
                 rr = filename.split("_")[1][:-1]
                 spec = filename.split("_")[2]
-                train_configs.append({"rr": rr, "spec": spec})
+                mbnt = filename.split("_")[3].split(".")[0]
+                train_configs.append({"rr": rr, "spec": spec, "mbnt": mbnt})
+    print("Non saturated training scenarios:", train_configs)
     val_configs = []
 
     # use for quadratic features only
@@ -355,5 +354,6 @@ if __name__=="__main__":
     # for model in models:
     #     model_name = model.split("/")[-1].replace(".", "_")
     #     for mode in modes:
-    #         populate_steps_with_req_level_hits(model_name, mode)
+    #        iterate over rr, spec, mbnt
+    #             populate_steps_with_req_level_hits(model_name, mode, mbnt)
     train_requestwise_test_requestwise(train_configs, val_configs, include_val=False)

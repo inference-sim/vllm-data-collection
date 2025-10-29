@@ -27,6 +27,7 @@ def extract_total_kv_blocks(model_name):
         spec_small = spec.lower()
         for mbnt in MAX_NUM_BATCHED_TOKENS:
             for rr in REQUEST_RATES[spec]:
+                rr = f"{float(rr):.2f}"
                 results_folder = f"../results_new/scenario4/{model_name}/test/{spec_small}/mbnt_{mbnt}/rr_{rr}"
                 if os.path.isdir(results_folder):
                     for dirpath, _, filenames in os.walk(results_folder):
@@ -54,7 +55,7 @@ def saturation_RPS(request_throughput, request_arrival_rate):
     Returns:
         bool: Whether the experiment under consideration is saturated or not
     """
-    if request_throughput < SATURATION_PERCENTAGE * request_arrival_rate:
+    if request_throughput < SATURATION_PERCENTAGE * float(request_arrival_rate):
         return True
     return False
 
@@ -86,6 +87,7 @@ def process_server_side_metrics(model_name, mode, rr, spec, mbnt):
     experiment_metrics = {}
     spec_small = spec.lower()
     total_active_steps = 0
+    rr = f"{float(rr):.2f}"
     results_folder = f"../results_new/scenario4/{model_name}/{mode}/{spec_small}/mbnt_{mbnt}/rr_{rr}/"
     if os.path.isdir(results_folder):
         for dirpath, _, filenames in os.walk(results_folder):
@@ -164,7 +166,7 @@ def save_unsaturated_results(model_name, mode, rr, spec, mbnt, full_results):
     # if not saturated, save processed results
     results_folder = f"results_server_side/{model_name}/{mode}"
     os.makedirs(results_folder, exist_ok=True)
-    rr = round(float(rr), 2)
+    rr = f"{float(rr):.2f}"
     results_filename = f"vllm_{rr}r_{spec}_{mbnt}.json"
     full_results_filename = os.path.join(results_folder, results_filename)
     with open(full_results_filename, 'w+') as f:
@@ -187,6 +189,7 @@ if __name__=="__main__":
     for spec in SPECS:
         for rr in REQUEST_RATES[spec]:
             for mbnt in MAX_NUM_BATCHED_TOKENS:
+                    print(f"scenario, rr={rr}, spec={spec}, mbnt={mbnt}")
                     processed_results = process_server_side_metrics(model_name, args.mode, rr, spec, mbnt)
                     save_unsaturated_results(model_name, args.mode, rr, spec, mbnt, processed_results)
     # get Total KV Blocks from logs as input to simulator for test mode
