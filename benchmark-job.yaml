@@ -24,7 +24,7 @@ spec:
                       - '50000'
       initContainers:
       - name: vllm-server
-        image: vllm/vllm-openai:v0.10.1.1
+        image: vllm/vllm-openai:v0.10.2
         command: ["bash", "-c"]
         args:
         - |
@@ -37,6 +37,8 @@ spec:
               key: HF_TOKEN
         - name: HF_HUB_CACHE
           value: /mnt/.cache/huggingface/hub
+        - name: EXP_RESULTS_PATH
+          value: {{ exp_results_path }}
         resources:
           requests:
             cpu: "1"
@@ -50,15 +52,45 @@ spec:
           httpGet:
             path: /v1/models
             port: 8000
-          failureThreshold: 50
+          failureThreshold: 1800
           periodSeconds: 10
         restartPolicy: Always
         volumeMounts:
         - name: model-storage
           mountPath: /mnt
+        - name: memory-backed-volume
+          mountPath: /mnt2/tmp
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - "bash"
+              - "-c"
+              - |
+                echo "=== PreStop Hook Triggered ===" >> "$EXP_RESULTS_PATH/prestop.log" 2>&1
+                echo "Listing contents of /mnt2/tmp:" >> "$EXP_RESULTS_PATH/prestop.log" 2>&1
+                ls /mnt2/tmp/ >> "$EXP_RESULTS_PATH/prestop.log" 2>&1
+  
+                # send SIGTERM to a known PID 
+                VLLM_PID=$(cat /mnt2/tmp/vllm.pid)
+                echo "Killing vllm server with PID $VLLM_PID" >> "$EXP_RESULTS_PATH/prestop.log" 2>&1
+                kill -15 "$VLLM_PID"
+
+                sleep 2
+
+                echo "Listing again contents of /mnt2/tmp:" >> "$EXP_RESULTS_PATH/prestop.log" 2>&1
+                ls /mnt2/tmp/ >> "$EXP_RESULTS_PATH/prestop.log" 2>&1
+
+                echo "Copying flushed files from /mnt2/tmp to $EXP_RESULTS_PATH..." >> "$EXP_RESULTS_PATH/prestop.log" 2>&1
+                cp -r /mnt2/tmp/* "$EXP_RESULTS_PATH"
+
+                echo "PreStop hook completed sleeping 10 sec." >> "$EXP_RESULTS_PATH/prestop.log" 2>&1
+                sleep 5
+                echo "Wake up and die" >> "$EXP_RESULTS_PATH/prestop.log" 2>&1
+        terminationGracePeriodSeconds: 30
       containers:
       - name: vllm-client
-        image: python:3.11-slim
+        image: vllm/vllm-openai:v0.10.2
         command: ["bash", "-c"]
         args:
         - |
@@ -78,3 +110,6 @@ spec:
       - name: model-storage
         persistentVolumeClaim:
           claimName: blis-pvc
+      - name: memory-backed-volume
+        emptyDir:
+          medium: Memory

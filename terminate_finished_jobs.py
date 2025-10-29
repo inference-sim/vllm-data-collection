@@ -61,7 +61,7 @@ try:
                                     print(f"\n--- Match found in logs for Job: {job.metadata.name}, Pod: {pod_name} ---")
                                     delete_options = client.V1DeleteOptions(propagation_policy='Foreground')
                                     try:
-                                        time.sleep(60)
+                                        time.sleep(30)
                                         v1_batch.delete_namespaced_job(name=job.metadata.name, namespace=NAMESPACE, body=delete_options)
                                         print(f"Job '{job.metadata.name}' in namespace '{NAMESPACE}' deleted.")
                                     except client.ApiException as e:

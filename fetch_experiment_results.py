@@ -31,12 +31,16 @@ def copy_file_from_pod_using_kubectl_cp(pod_name, namespace, remote_dir_path, lo
 
 def main():
     parser = argparse.ArgumentParser(description='Simple vLLM Benchmark Runner')
-    parser.add_argument('--scenario', help='scenario X',  default="scenario3")
+    parser.add_argument('--scenario', help='scenario X',  default="scenario4")
+    parser.add_argument('--model-name', help='LLM name')
+    parser.add_argument('--mode', help='train/test')
+    parser.add_argument('--spec', help='training or test specs')
     args = parser.parse_args()
     pod_name = "pvc-debugger"
     namespace = "blis"
-    local_dir_path = f"results_new/{args.scenario}"
-    remote_dir_path = f"/mnt/{args.scenario}/results/"
+    spec_lower = args.spec.lower()
+    local_dir_path = f"results_new/{args.scenario}/{args.model_name}/{args.mode}/{spec_lower}"
+    remote_dir_path = f"/mnt/{args.scenario}/results/{args.model_name}/{args.mode}/{spec_lower}"
     os.makedirs(local_dir_path, exist_ok=True)
     copy_file_from_pod_using_kubectl_cp(pod_name, namespace, remote_dir_path, local_dir_path)
 
