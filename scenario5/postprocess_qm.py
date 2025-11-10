@@ -1,5 +1,10 @@
-import json
 import argparse
+import json
+import pandas as pd
+
+def get_benchmark_request_ids(benchmark_idx):
+    # TODO: Get benchmark-relevant request ids from GuideLLM output
+    return list(requests_df["request_id"])[benchmark_idx * 20: (benchmark_idx + 1) * 20]
 
 def get_delays(filepath):
     all_requests = []
@@ -31,21 +36,34 @@ def get_delays(filepath):
                     all_requests.append(request)
     return all_requests
 
-def train_alpha_model(all_requests):
-    processing_times = []
-    input_lengths = []
-    for request in all_requests:
-        processing_times.append(request["e2e_latency"] - (request["queued_time"] + request["prefill_time"] + request["decode_time"]))
-        input_lengths.append([request["input_tokens"], 1])
-    alpha_model = LinearRegression(positive=True, fit_intercept=False)
-    alpha_model.fit(input_lengths, processing_times)
-
-    calculate_metrics(input_lengths, processing_times, alpha_model)
+def get_average_metrics_per_benchmark(benchmark_df, request_rate):
+    benchmark_df['ITL'] = benchmark_df['decode_time'] / benchmark_df['output_tokens']
+    all_means = benchmark_df[['input_tokens', 'output_tokens', 'queued_time', 'prefill_time', 'ITL']].mean()
+    benchmark_averages = {
+        "requestRate":    request_rate,
+        "inputTokens":    all_means['input_tokens'],
+        "outputTokens":   all_means['output_tokens'],
+        "avgWaitTime":    all_means['queued_time'],
+        "avgPrefillTime": all_means['prefill_time'],
+        "avgITLTime":     all_means['ITL'],
+    }
+    return benchmark_averages
 
 parser = argparse.ArgumentParser(description="Read and parse traces JSON file.")
 parser.add_argument("--traces_filepath", help="Path to the vllm traces file to be read.")
 args = parser.parse_args()
 
 all_requests = get_delays(args.traces_filepath)
-print(len(all_requests))
-train_alpha_model(all_requests)
+requests_df = pd.DataFrame(all_requests)
+
+# TODO: Replace with real GuideLLM request rates
+request_rates = [i*0.1 for i in range(1, 10)]
+
+qm_training_data = []
+for idx in range(len(request_rates)):
+    # each request-rate forms a new benchmark
+    benchmark_request_ids = get_benchmark_request_ids(idx)
+    benchmark_df = requests_df[requests_df["request_id"].isin(benchmark_request_ids)].copy()
+    benchmark_averages = get_average_metrics_per_benchmark(benchmark_df, request_rates[idx])
+    qm_training_data.append(benchmark_averages)
+print(qm_training_data)
