@@ -1,23 +1,5 @@
 import json
 import argparse
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error
-
-def calculate_metrics(X_train, y_train, alpha_model):
-    """
-    Get R2-score, MAE and MAPE for alpha model
-    """
-    training_score = alpha_model.score(X_train, y_train)
-    training_preds = alpha_model.predict(X_train)
-    training_mae = round(mean_absolute_error(training_preds, y_train), 3)
-    training_mape = round(mean_absolute_percentage_error(training_preds, y_train), 3)
-
-    caption = f"##################### alpha-model ############################"
-    print(caption)
-    print(f"LR Model Train Score: {training_score}")
-    print(f"LR Model Train MAE: {training_mae}")
-    print(f"LR Model Train MAPE: {training_mape}")
-    print(f"Coeffs: {alpha_model.coef_}")
 
 def get_delays(filepath):
     all_requests = []
@@ -65,6 +47,5 @@ parser.add_argument("--traces_filepath", help="Path to the vllm traces file to b
 args = parser.parse_args()
 
 all_requests = get_delays(args.traces_filepath)
+print(len(all_requests))
 train_alpha_model(all_requests)
-
-
