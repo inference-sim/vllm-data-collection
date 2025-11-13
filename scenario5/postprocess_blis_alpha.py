@@ -1,5 +1,9 @@
-import json
+"""
+Script for training BLIS's alpha model in Scenario5 only on traces data
+"""
+
 import argparse
+import json
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error
 
@@ -20,6 +24,10 @@ def calculate_metrics(X_train, y_train, alpha_model):
     print(f"Coeffs: {alpha_model.coef_}")
 
 def get_delays(filepath):
+    """
+    Postprocess traces file to get server-side delay metrics,
+    like e2e_latency, prefill_time, decode_time, queued_time.
+    """
     all_requests = []
     traces_raw_data = []
     with open(filepath, 'r', encoding='utf-8') as f:
@@ -50,6 +58,10 @@ def get_delays(filepath):
     return all_requests
 
 def train_alpha_model(all_requests):
+    """
+    Linear Regression model:
+    alpha0 + alpha1 * input_len = e2e_time - (queued + prefill + decode)
+    """
     processing_times = []
     input_lengths = []
     for request in all_requests:

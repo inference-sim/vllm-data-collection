@@ -2,17 +2,21 @@ import argparse
 import json
 import pandas as pd
 
-def get_benchmark_request_ids(benchmark_idx):
-    # TODO: Get benchmark-relevant request ids from GuideLLM output
-    return list(requests_df["request_id"])[benchmark_idx * 20: (benchmark_idx + 1) * 20]
-
-def get_delays(filepath):
-    all_requests = []
+def read_traces_jsonl(filepath):
     traces_raw_data = []
     with open(filepath, 'r', encoding='utf-8') as f:
         for line in f:
             json_object = json.loads(line.strip())
             traces_raw_data.append(json_object)
+    return traces_raw_data
+
+def get_server_side_info(traces_raw_data):
+    """
+    Fetch server-side info from traces file per request.
+    We currently fetch vLLM requestID, input, output tokens, 
+    e2e latency, waiting, prefill and decode time per request.
+    """
+    all_requests = []
     for data in traces_raw_data:
         for resourceSpan in data["resourceSpans"]:
             for scopeSpan in resourceSpan["scopeSpans"]:
@@ -49,21 +53,29 @@ def get_average_metrics_per_benchmark(benchmark_df, request_rate):
     }
     return benchmark_averages
 
-parser = argparse.ArgumentParser(description="Read and parse traces JSON file.")
-parser.add_argument("--traces_filepath", help="Path to the vllm traces file to be read.")
-args = parser.parse_args()
+if __name__=="__main__":
+    parser = argparse.ArgumentParser(description="Read and parse traces JSON file.")
+    parser.add_argument("--traces_filepath", 
+                        help="Path to the vllm traces file to be read.")
+    parser.add_argument("--sweep_info_path",
+                        default="sweep_info.json",
+                        help="Path to GuideLLM's sweep trial info")
+    args = parser.parse_args()
 
-all_requests = get_delays(args.traces_filepath)
-requests_df = pd.DataFrame(all_requests)
+    traces_raw_data = read_traces_jsonl(args.traces_filepath)
+    all_requests = get_server_side_info(traces_raw_data)
+    requests_df = pd.DataFrame(all_requests)
 
-# TODO: Replace with real GuideLLM request rates
-request_rates = [i*0.1 for i in range(1, 10)]
+    # read GuideLLM sweep info
+    with open(args.sweep_info_path, 'r') as f:
+        sweep_info = json.load(f)
 
-qm_training_data = []
-for idx in range(len(request_rates)):
-    # each request-rate forms a new benchmark
-    benchmark_request_ids = get_benchmark_request_ids(idx)
-    benchmark_df = requests_df[requests_df["request_id"].isin(benchmark_request_ids)].copy()
-    benchmark_averages = get_average_metrics_per_benchmark(benchmark_df, request_rates[idx])
-    qm_training_data.append(benchmark_averages)
-print(qm_training_data)
+    qm_training_data = []
+    for sweep in sweep_info:
+        # each request-rate forms a new benchmark
+        rps = sweep["rps"]
+        benchmark_request_ids = sweep["requestIDs"]
+        benchmark_df = requests_df[requests_df["request_id"].isin(benchmark_request_ids)].copy()
+        benchmark_averages = get_average_metrics_per_benchmark(benchmark_df, rps)
+        qm_training_data.append(benchmark_averages)
+    print(qm_training_data)
