@@ -31,24 +31,26 @@ def get_metrics_per_benchmark(benchmark_df, rps, guidellm_profile, vllm_config):
     Get BLIS-style benchmark metrics in milliseconds.
     """
     benchmark_metrics = {"rps": rps}
-    benchmark_metrics["Mean E2E(ms)"] = benchmark_df['e2e_latency'].mean() * 1000
-    benchmark_metrics["Median E2E(ms)"] = benchmark_df['e2e_latency'].median() * 1000
-    benchmark_metrics["P99 E2E(ms)"] = benchmark_df['e2e_latency'].quantile(0.99) * 1000
+    benchmark_metrics["Mean E2E(ms)"] = benchmark_df["e2e_latency"].mean() * 1000
+    benchmark_metrics["Median E2E(ms)"] = benchmark_df["e2e_latency"].median() * 1000
+    benchmark_metrics["P99 E2E(ms)"] = benchmark_df["e2e_latency"].quantile(0.99) * 1000
+    benchmark_metrics["all_processing_times(s)"] = benchmark_df["e2e_latency"] - (benchmark_df["queued_time"] + benchmark_df["prefill_time"] + benchmark_df["decode_time"]).tolist()
+    benchmark_metrics["all_input_lens"] = benchmark_df["input_tokens"].tolist()
     # metrics needed for heuristic beta bounds
-    chunk_size = vllm_config["max-num-batched-tokens"]
-    benchmark_metrics["sum_prefill_time"] = benchmark_df["prefill_time"].sum()
-    benchmark_metrics["sum_decode_time"] = benchmark_df["decode_time"].sum()
-    benchmark_metrics["sum_inference_time"] = (benchmark_df["prefill_time"] + benchmark_df["decode_time"]).sum()
+    benchmark_metrics["sum_prefill_time(s)"] = benchmark_df["prefill_time"].sum()
+    benchmark_metrics["sum_decode_time(s)"] = benchmark_df["decode_time"].sum()
+    benchmark_metrics["sum_inference_time(s)"] = (benchmark_df["prefill_time"] + benchmark_df["decode_time"]).sum()
     # assume all requests have the exact same number of prefix tokens
     benchmark_metrics["sum_prefill_tokens"] = (benchmark_df["input_tokens"] - guidellm_profile["data"]["prefix_tokens"]).sum()
     benchmark_metrics["sum_output_tokens"] = benchmark_df["output_tokens"].sum()
+    chunk_size = vllm_config["max-num-batched-tokens"]
     benchmark_metrics["sum_steps"] = (benchmark_df["input_tokens"] - guidellm_profile["data"]["prefix_tokens"])/chunk_size + benchmark_df["output_tokens"]
     return benchmark_metrics
 
 def get_heuristic_bounds(heuristic_totals):
-    beta0_bound = heuristic_totals["sum_inference_time"] / heuristic_totals["sum_steps"]
-    beta1_bound = heuristic_totals["sum_prefill_time"] / heuristic_totals["sum_prefill_tokens"]
-    beta2_bound = heuristic_totals["sum_decode_time"] / heuristic_totals["sum_output_tokens"]
+    beta0_bound = heuristic_totals["sum_inference_time(s)"] / heuristic_totals["sum_steps"]
+    beta1_bound = heuristic_totals["sum_prefill_time(s)"] / heuristic_totals["sum_prefill_tokens"]
+    beta2_bound = heuristic_totals["sum_decode_time(s)"] / heuristic_totals["sum_output_tokens"]
     return beta0_bound, beta1_bound, beta2_bound
 
 if __name__=="__main__":
@@ -114,7 +116,7 @@ if __name__=="__main__":
 
     blis_training_data = {}
     all_benchmarks = [] # record metrics for each benchmark
-    heuristic_totals = {"sum_prefill_time": 0, "sum_decode_time": 0, "sum_inference_time": 0, "sum_output_tokens": 0,
+    heuristic_totals = {"sum_prefill_time(s)": 0, "sum_decode_time(s)": 0, "sum_inference_time(s)": 0, "sum_output_tokens": 0,
                         "sum_prefill_tokens": 0, "sum_steps": 0} # heuristic sums across benchmarks
     for sweep in sweep_info:
         rps = sweep["rps"]

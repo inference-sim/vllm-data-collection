@@ -250,7 +250,7 @@ if __name__ == "__main__":
         print("Could not load alpha metrics file. Could not fetch alpha coeffs.")
         sys.exit()
 
-    # read heuristic bounds for betas
+    # read heuristic bounds & benchmark metrics for betas
     training_data_filename = os.path.join(args.results_path, BLIS_TRAINING_FILEPATH)
     try:
         with open(training_data_filename, 'r') as f:

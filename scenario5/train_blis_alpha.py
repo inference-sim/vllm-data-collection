@@ -6,9 +6,10 @@ import argparse
 import json
 import os
 import pickle
+import sys
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error
-from postprocessing_utils import ALPHA_METRICS_FILENAME, ALPHA_WEIGHTS_FILENAME
+from postprocessing_utils import ALPHA_METRICS_FILENAME, ALPHA_WEIGHTS_FILENAME, BLIS_TRAINING_FILEPATH
 from postprocessing_utils import read_traces_jsonl, get_server_side_metrics_from_traces
 
 def get_metrics_and_coeffs(X_train, y_train, alpha_model):
@@ -27,33 +28,41 @@ def get_metrics_and_coeffs(X_train, y_train, alpha_model):
     results["coeffs"] = list(alpha_model.coef_)
     return results
 
-def train_alpha_model(all_requests):
+def train_alpha_model(training_data):
     """
     Linear Regression model:
     alpha0 + alpha1 * input_len = e2e_time - (queued + prefill + decode)
     """
     processing_times = []
     input_lengths = []
-    for request in all_requests:
-        processing_times.append(request["e2e_latency"] - (request["queued_time"] + request["prefill_time"] + request["decode_time"]))
-        input_lengths.append([request["input_tokens"], 1])
+    for benchmark in training_data["benchmarks"]:
+        processing_times.extend(benchmark["all_processing_times(s)"])
+        input_lengths.append(benchmark["all_input_lens"])
+
+    input_features = [[input_length, 1] for input_length in input_lengths]
     alpha_model = LinearRegression(positive=True, fit_intercept=False)
-    alpha_model.fit(input_lengths, processing_times)
+    alpha_model.fit(input_features, processing_times)
 
     metrics_coeffs = get_metrics_and_coeffs(input_lengths, processing_times, alpha_model)
     return alpha_model, metrics_coeffs
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description="Read and parse traces JSON file.")
-    parser.add_argument("--traces", help="Path to the vllm traces file to be read.")
     parser.add_argument("--results_path",
                             default=".", 
                             help="Location to save alpha model")
     args = parser.parse_args()
 
-    traces_raw_data = read_traces_jsonl(args.traces)
-    all_requests = get_server_side_metrics_from_traces(traces_raw_data)
-    alpha_model, metrics_coeffs = train_alpha_model(all_requests)
+    # get training data for alpha model
+    training_data_filename = os.path.join(args.results_path, BLIS_TRAINING_FILEPATH)
+    try:
+        with open(training_data_filename, 'r') as f:
+            training_data = json.load(f)
+    except:
+        print("Could not load BLIS training data.")
+        sys.exit()
+
+    alpha_model, metrics_coeffs = train_alpha_model(training_data)
     print("Alpha training complete.")
     print(metrics_coeffs)
 
