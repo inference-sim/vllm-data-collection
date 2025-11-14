@@ -4,26 +4,31 @@ Script for training BLIS's alpha model in Scenario5 only on traces data
 
 import argparse
 import json
+import os
+import pickle
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error
 
-def calculate_metrics(X_train, y_train, alpha_model):
+WEIGHTS_FILENAME = 'BLIS_alpha_weights.pkl'
+METRICS_FILENAME = 'BLIS_alpha_metrics.json'
+
+def get_metrics_and_coeffs(X_train, y_train, alpha_model):
     """
-    Get R2-score, MAE and MAPE for alpha model
+    Save coefficients with R2-score, MAE and MAPE for alpha model
     """
+    results = {"type": "BLIS_alpha_train"}
     training_score = alpha_model.score(X_train, y_train)
     training_preds = alpha_model.predict(X_train)
     training_mae = round(mean_absolute_error(training_preds, y_train), 3)
     training_mape = round(mean_absolute_percentage_error(training_preds, y_train), 3)
 
-    caption = f"##################### alpha-model ############################"
-    print(caption)
-    print(f"LR Model Train Score: {training_score}")
-    print(f"LR Model Train MAE: {training_mae}")
-    print(f"LR Model Train MAPE: {training_mape}")
-    print(f"Coeffs: {alpha_model.coef_}")
+    results["train_r2"] = training_score
+    results["train_mae"] = training_mae
+    results["train_mape"] = training_mape
+    results["coeffs"] = list(alpha_model.coef_)
+    return results
 
-def get_delays(filepath):
+def postprocess_delays(filepath):
     """
     Postprocess traces file to get server-side delay metrics,
     like e2e_latency, prefill_time, decode_time, queued_time.
@@ -70,13 +75,32 @@ def train_alpha_model(all_requests):
     alpha_model = LinearRegression(positive=True, fit_intercept=False)
     alpha_model.fit(input_lengths, processing_times)
 
-    calculate_metrics(input_lengths, processing_times, alpha_model)
+    metrics_coeffs = get_metrics_and_coeffs(input_lengths, processing_times, alpha_model)
+    return alpha_model, metrics_coeffs
 
-parser = argparse.ArgumentParser(description="Read and parse traces JSON file.")
-parser.add_argument("--traces_filepath", help="Path to the vllm traces file to be read.")
-args = parser.parse_args()
+if __name__=="__main__":
+    parser = argparse.ArgumentParser(description="Read and parse traces JSON file.")
+    parser.add_argument("--traces", help="Path to the vllm traces file to be read.")
+    parser.add_argument("--results_path",
+                            default=".", 
+                            help="Location to save alpha model")
+    args = parser.parse_args()
 
-all_requests = get_delays(args.traces_filepath)
-train_alpha_model(all_requests)
+    all_requests = postprocess_delays(args.traces)
+    alpha_model, metrics_coeffs = train_alpha_model(all_requests)
+    print("Alpha training completed.")
+    print(metrics_coeffs)
+
+    # save alpha model weights
+    alpha_model_weights_filename = os.path.join(args.results_path, WEIGHTS_FILENAME)
+    with open(alpha_model_weights_filename, 'wb') as file:
+        pickle.dump(alpha_model, file)
+    print(f"Model saved to {alpha_model_weights_filename}")
+
+    # save model metrics and coefficients
+    alpha_model_metrics_filename = os.path.join(args.results_path, METRICS_FILENAME)
+    with open(alpha_model_metrics_filename, 'w+') as file:
+        json.dump(metrics_coeffs, file, indent=4)
+    print(f"Model metrics and coefficients saved to {alpha_model_weights_filename}")
 
 

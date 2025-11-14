@@ -3,6 +3,8 @@ import json
 import os
 import sys
 
+from postprocessing_utils import SWEEP_INFO_FILENAME
+
 def get_GuideLLM_rps_list(guidellm_results):
     """
     Read GuideLLM results file and extract list of
@@ -38,15 +40,15 @@ def get_sweep_info(guidellm_results, rps_list):
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description="Read and parse traces JSON file.")
-    parser.add_argument("--guidellm_results_file", 
+    parser.add_argument("--guidellm_results", 
                         help="Path to the GuideLLM JSON output file to be read.")
-    parser.add_argument("--sweep_info_path",
+    parser.add_argument("--results_path",
                         default=".", 
-                        help="Location to save GuideLLM's sweep trial info")
+                        help="Location to save intermediate files")
     args = parser.parse_args()
 
-    guidellm_results_filepath = args.guidellm_results_file
-    sweep_info_filepath = os.path.join(args.sweep_info_path, "sweep_info.json")
+    guidellm_results_filepath = args.guidellm_results
+    sweep_info_filepath = os.path.join(args.results_path, SWEEP_INFO_FILENAME)
 
     # read GuideLLM results file
     try:
