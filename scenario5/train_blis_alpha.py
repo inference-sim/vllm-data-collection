@@ -9,8 +9,8 @@ import pickle
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error
 
-WEIGHTS_FILENAME = 'BLIS_alpha_weights.pkl'
-METRICS_FILENAME = 'BLIS_alpha_metrics.json'
+ALPHA_WEIGHTS_FILENAME = 'BLIS_alpha_weights.pkl'
+ALPHA_METRICS_FILENAME = 'BLIS_alpha_metrics.json'
 
 def get_metrics_and_coeffs(X_train, y_train, alpha_model):
     """
@@ -88,19 +88,19 @@ if __name__=="__main__":
 
     all_requests = postprocess_delays(args.traces)
     alpha_model, metrics_coeffs = train_alpha_model(all_requests)
-    print("Alpha training completed.")
+    print("Alpha training complete.")
     print(metrics_coeffs)
 
     # save alpha model weights
-    alpha_model_weights_filename = os.path.join(args.results_path, WEIGHTS_FILENAME)
+    alpha_model_weights_filename = os.path.join(args.results_path, ALPHA_WEIGHTS_FILENAME)
     with open(alpha_model_weights_filename, 'wb') as file:
         pickle.dump(alpha_model, file)
     print(f"Model saved to {alpha_model_weights_filename}")
 
     # save model metrics and coefficients
-    alpha_model_metrics_filename = os.path.join(args.results_path, METRICS_FILENAME)
+    alpha_model_metrics_filename = os.path.join(args.results_path, ALPHA_METRICS_FILENAME)
     with open(alpha_model_metrics_filename, 'w+') as file:
         json.dump(metrics_coeffs, file, indent=4)
-    print(f"Model metrics and coefficients saved to {alpha_model_weights_filename}")
+    print(f"Alpha model metrics and coefficients saved to {alpha_model_weights_filename}")
 
 

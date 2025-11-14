@@ -4,10 +4,13 @@ import os
 import sys
 import pandas as pd
 from postprocessing_utils import QM_TRAINING_FILEPATH, SWEEP_INFO_FILENAME
-from postprocessing_utils import read_traces_jsonl, get_server_side_info
+from postprocessing_utils import read_traces_jsonl, get_server_side_metrics_from_traces
 
 
-def get_average_metrics_per_benchmark(benchmark_df, request_rate):
+def get_metrics_per_benchmark(benchmark_df, request_rate):
+    """
+    Get QM-style benchmark metrics in seconds.
+    """
     benchmark_df['ITL'] = benchmark_df['decode_time'] / benchmark_df['output_tokens']
     all_means = benchmark_df[['input_tokens', 'output_tokens', 'queued_time', 'prefill_time', 'ITL']].mean()
     benchmark_averages = {
@@ -30,7 +33,7 @@ if __name__=="__main__":
     args = parser.parse_args()
 
     traces_raw_data = read_traces_jsonl(args.traces)
-    all_requests = get_server_side_info(traces_raw_data)
+    all_requests = get_server_side_metrics_from_traces(traces_raw_data)
     requests_df = pd.DataFrame(all_requests)
 
     # read GuideLLM sweep info
@@ -48,7 +51,7 @@ if __name__=="__main__":
         rps = sweep["rps"]
         benchmark_request_ids = sweep["requestIDs"]
         benchmark_df = requests_df[requests_df["request_id"].isin(benchmark_request_ids)].copy()
-        benchmark_averages = get_average_metrics_per_benchmark(benchmark_df, rps)
+        benchmark_averages = get_metrics_per_benchmark(benchmark_df, rps)
         qm_training_data.append(benchmark_averages)
     
     # save postprocessed JSON
