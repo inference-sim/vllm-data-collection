@@ -1,4 +1,3 @@
-from multiprocessing import Pool
 import argparse
 import json
 import os
@@ -10,8 +9,9 @@ from typing import Dict, Optional
 import optuna
 from optuna.storages import JournalStorage
 from optuna.storages.journal import JournalFileBackend
+# from multiprocessing import Pool
 
-from postprocessing_utils import BLIS_TRAINING_FILEPATH, BLIS_REQGEN_CONFIG_FOLDER
+from postprocessing_utils import BLIS_TRAINING_FILEPATH, BLIS_REQGEN_CONFIG_FOLDER, ALPHA_METRICS_FILENAME, BETA_METRICS_FILENAME
 from postprocessing_utils import run_go_binary
 
 GO_BINARY_NAME = "simulation_worker"
@@ -19,9 +19,6 @@ GO_BINARY_PATH = os.path.join(os.path.dirname(
     os.path.abspath(__file__)), GO_BINARY_NAME)
 
 NUM_TPE_ITERS = 250
-ALPHA_WEIGHTS_FILENAME = 'BLIS_alpha_weights.pkl'
-ALPHA_METRICS_FILENAME = 'BLIS_alpha_metrics.json'
-BETA_METRICS_FILENAME = 'BLIS_beta_metrics.json'
 MAX_NUM_PROCESSES = 20
     
 class InferenceSimOptimizer:
@@ -282,7 +279,7 @@ if __name__ == "__main__":
     optimizer.optimize_multiexp(n_trials=NUM_TPE_ITERS)
     best_params = optimizer.get_best_trial()
 
-    # Grid Search
+    # Parallel Grid sampling
     # optimizer.search_space = {
     #     'beta0': list(np.arange(0, heuristics_bounds["beta0"][1], heuristics_bounds["beta0"][1]/20)),
     #     'beta1': list(np.arange(0, heuristics_bounds["beta1"][1], heuristics_bounds["beta1"][1]/20)),

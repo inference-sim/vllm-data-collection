@@ -6,6 +6,9 @@ BLIS_REQGEN_CONFIG_FOLDER = "blis_reqgenconfigs"
 SWEEP_INFO_FILENAME = "sweep_info.json"
 QM_TRAINING_FILEPATH = "QM_train.json"
 BLIS_TRAINING_FILEPATH = "BLIS_train.json"
+ALPHA_WEIGHTS_FILENAME = 'BLIS_alpha_weights.pkl'
+ALPHA_METRICS_FILENAME = 'BLIS_alpha_metrics.json'
+BETA_METRICS_FILENAME = 'BLIS_beta_metrics.json'
 
 def read_traces_jsonl(filepath):
     """

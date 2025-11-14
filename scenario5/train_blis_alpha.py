@@ -8,9 +8,8 @@ import os
 import pickle
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error
-
-ALPHA_WEIGHTS_FILENAME = 'BLIS_alpha_weights.pkl'
-ALPHA_METRICS_FILENAME = 'BLIS_alpha_metrics.json'
+from postprocessing_utils import ALPHA_METRICS_FILENAME, ALPHA_WEIGHTS_FILENAME
+from postprocessing_utils import read_traces_jsonl, get_server_side_metrics_from_traces
 
 def get_metrics_and_coeffs(X_train, y_train, alpha_model):
     """
@@ -27,40 +26,6 @@ def get_metrics_and_coeffs(X_train, y_train, alpha_model):
     results["train_mape"] = training_mape
     results["coeffs"] = list(alpha_model.coef_)
     return results
-
-def postprocess_delays(filepath):
-    """
-    Postprocess traces file to get server-side delay metrics,
-    like e2e_latency, prefill_time, decode_time, queued_time.
-    """
-    all_requests = []
-    traces_raw_data = []
-    with open(filepath, 'r', encoding='utf-8') as f:
-        for line in f:
-            json_object = json.loads(line.strip())
-            traces_raw_data.append(json_object)
-    for data in traces_raw_data:
-        for resourceSpan in data["resourceSpans"]:
-            for scopeSpan in resourceSpan["scopeSpans"]:
-                for span in scopeSpan["spans"]:
-                    request = {}
-                    for attribute in span["attributes"]:
-                        if attribute["key"] == "gen_ai.request.id":
-                            request["request_id"] = attribute["value"]["stringValue"]
-                        if attribute["key"] == "gen_ai.usage.prompt_tokens":
-                            request["input_tokens"] = int(attribute["value"]["intValue"])
-                        if attribute["key"] == "gen_ai.usage.completion_tokens":
-                            request["output_tokens"] = int(attribute["value"]["intValue"])
-                        if attribute["key"] == "gen_ai.latency.e2e":
-                            request["e2e_latency"] = attribute["value"]["doubleValue"]
-                        if attribute["key"] == "gen_ai.latency.time_in_queue":
-                            request["queued_time"] = attribute["value"]["doubleValue"]
-                        if attribute["key"] == "gen_ai.latency.time_in_model_prefill":
-                            request["prefill_time"] = attribute["value"]["doubleValue"]
-                        if attribute["key"] == "gen_ai.latency.time_in_model_decode":
-                            request["decode_time"] = attribute["value"]["doubleValue"]
-                    all_requests.append(request)
-    return all_requests
 
 def train_alpha_model(all_requests):
     """
@@ -86,7 +51,8 @@ if __name__=="__main__":
                             help="Location to save alpha model")
     args = parser.parse_args()
 
-    all_requests = postprocess_delays(args.traces)
+    traces_raw_data = read_traces_jsonl(args.traces)
+    all_requests = get_server_side_metrics_from_traces(traces_raw_data)
     alpha_model, metrics_coeffs = train_alpha_model(all_requests)
     print("Alpha training complete.")
     print(metrics_coeffs)
