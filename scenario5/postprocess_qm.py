@@ -7,7 +7,7 @@ from postprocessing_utils import QM_TRAINING_FILEPATH, SWEEP_INFO_FILENAME
 from postprocessing_utils import read_traces_jsonl, get_server_side_metrics_from_traces
 
 
-def get_metrics_per_benchmark(benchmark_df, request_rate):
+def get_metrics_per_benchmark(benchmark_df, request_rate, vllm_config):
     """
     Get QM-style benchmark metrics in seconds.
     """
@@ -20,6 +20,7 @@ def get_metrics_per_benchmark(benchmark_df, request_rate):
         "avgWaitTime":    all_means['queued_time'],
         "avgPrefillTime": all_means['prefill_time'],
         "avgITLTime":     all_means['ITL'],
+        "maxBatchSize":   vllm_config['max-num-seqs']
     }
     return benchmark_averages
 
@@ -27,6 +28,8 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(description="Read and parse traces JSON file.")
     parser.add_argument("--traces", 
                         help="Path to the vllm traces file to be read.")
+    parser.add_argument("--vllm_config", 
+                        help="Path to vllm server config file.")
     parser.add_argument("--results_path",
                         default=".", 
                         help="Location to load intermediate files from")
@@ -45,13 +48,22 @@ if __name__=="__main__":
         print("Could not read sweep info file.")
         sys.exit()
 
+    # read vllm config file
+    vllm_config_filepath = args.vllm_config
+    try:
+        with open(vllm_config_filepath, 'r') as f:
+            vllm_config = json.load(f)
+    except:
+        print("Could not read vllm config file.")
+        sys.exit()
+
     qm_training_data = []
     for sweep in sweep_info:
         # each request-rate forms a new benchmark
         rps = sweep["rps"]
         benchmark_request_ids = sweep["requestIDs"]
         benchmark_df = requests_df[requests_df["request_id"].isin(benchmark_request_ids)].copy()
-        benchmark_averages = get_metrics_per_benchmark(benchmark_df, rps)
+        benchmark_averages = get_metrics_per_benchmark(benchmark_df, rps, vllm_config)
         qm_training_data.append(benchmark_averages)
     
     # save postprocessed JSON
