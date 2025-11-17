@@ -36,7 +36,7 @@ def get_server_side_metrics_from_traces(traces_raw_data):
                     request = {}
                     for attribute in span["attributes"]:
                         if attribute["key"] == "gen_ai.request.id":
-                            request["request_id"] = attribute["value"]["stringValue"]
+                            request["request_id"] = attribute["value"]["stringValue"].rsplit("-0", 1)[0]
                         if attribute["key"] == "gen_ai.usage.prompt_tokens":
                             request["input_tokens"] = int(attribute["value"]["intValue"])
                         if attribute["key"] == "gen_ai.usage.completion_tokens":

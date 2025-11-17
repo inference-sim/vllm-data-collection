@@ -34,17 +34,17 @@ def get_metrics_per_benchmark(benchmark_df, rps, guidellm_profile, vllm_config):
     benchmark_metrics["Mean E2E(ms)"] = benchmark_df["e2e_latency"].mean() * 1000
     benchmark_metrics["Median E2E(ms)"] = benchmark_df["e2e_latency"].median() * 1000
     benchmark_metrics["P99 E2E(ms)"] = benchmark_df["e2e_latency"].quantile(0.99) * 1000
-    benchmark_metrics["all_processing_times(s)"] = benchmark_df["e2e_latency"] - (benchmark_df["queued_time"] + benchmark_df["prefill_time"] + benchmark_df["decode_time"]).tolist()
+    benchmark_metrics["all_processing_times(s)"] = (benchmark_df["e2e_latency"] - (benchmark_df["queued_time"] + benchmark_df["prefill_time"] + benchmark_df["decode_time"])).tolist()
     benchmark_metrics["all_input_lens"] = benchmark_df["input_tokens"].tolist()
     # metrics needed for heuristic beta bounds
     benchmark_metrics["sum_prefill_time(s)"] = benchmark_df["prefill_time"].sum()
     benchmark_metrics["sum_decode_time(s)"] = benchmark_df["decode_time"].sum()
     benchmark_metrics["sum_inference_time(s)"] = (benchmark_df["prefill_time"] + benchmark_df["decode_time"]).sum()
     # assume all requests have the exact same number of prefix tokens
-    benchmark_metrics["sum_prefill_tokens"] = (benchmark_df["input_tokens"] - guidellm_profile["data"]["prefix_tokens"]).sum()
-    benchmark_metrics["sum_output_tokens"] = benchmark_df["output_tokens"].sum()
-    chunk_size = vllm_config["max-num-batched-tokens"]
-    benchmark_metrics["sum_steps"] = (benchmark_df["input_tokens"] - guidellm_profile["data"]["prefix_tokens"])/chunk_size + benchmark_df["output_tokens"]
+    benchmark_metrics["sum_prefill_tokens"] = int((benchmark_df["input_tokens"] - guidellm_profile["data"]["prefix_tokens"]).sum())
+    benchmark_metrics["sum_output_tokens"] = int(benchmark_df["output_tokens"].sum())
+    chunk_size = vllm_config["max_num_batched_tokens"]
+    benchmark_metrics["sum_steps"] = int(((benchmark_df["input_tokens"] - guidellm_profile["data"]["prefix_tokens"])/chunk_size + benchmark_df["output_tokens"]).sum())
     return benchmark_metrics
 
 def get_heuristic_bounds(heuristic_totals):
@@ -66,10 +66,11 @@ if __name__=="__main__":
                         help="Location to save intermediate files")
     
     args = parser.parse_args()
+    sweep_info_filepath = os.path.join(args.results_path, "sweep_info.json")
 
     # read GuideLLM sweep info
     try:
-        with open(args.sweep_info_path, 'r') as f:
+        with open(sweep_info_filepath, 'r') as f:
             sweep_info = json.load(f)
     except:
         print("Could not read sweep info file.")
@@ -86,11 +87,11 @@ if __name__=="__main__":
         print("Could not read GuideLLM profile file.")
         sys.exit()
 
-    # read vllm config file
+    # read vllm YAML config file
     vllm_config_filepath = args.vllm_config
     try:
         with open(vllm_config_filepath, 'r') as f:
-            vllm_config = json.load(f)
+            vllm_config = yaml.safe_load(f)
     except:
         print("Could not read vllm config file.")
         sys.exit()
@@ -99,7 +100,7 @@ if __name__=="__main__":
     # process traces to get server-side latencies
     traces_raw_data = read_traces_jsonl(args.traces)
     all_requests = get_server_side_metrics_from_traces(traces_raw_data)
-    requests_df = pd.Dataframe(all_requests)
+    requests_df = pd.DataFrame(all_requests)
 
     # read GuideLLM sweep info
     sweep_info_filepath = os.path.join(args.results_path, SWEEP_INFO_FILENAME)
@@ -124,18 +125,19 @@ if __name__=="__main__":
         # construct request gen-config for BLIS Golang sim,
         blis_reqgen_config = construct_BLIS_reqgenconfig(guidellm_profile, rps)
         blis_reqgen_config_filename = os.path.join(
-            args.blis_reqgen_config_folder, 
+            blis_reqgen_config_folder, 
             f"requestgenconfig_RPS={round(rps, 3)}.yaml"
         )
 
         # save to YAML file - one per RPS
         with open(blis_reqgen_config_filename, 'w+') as f:
             yaml.dump(blis_reqgen_config, f)
-            print(f"Request gen config saved to {blis_reqgen_config_filename}")
+            # print(f"Request gen config saved to {blis_reqgen_config_filename}")
 
         # benchmark-wise metrics and heuristic totals
         benchmark_request_ids = sweep["requestIDs"]
         benchmark_df = requests_df[requests_df["request_id"].isin(benchmark_request_ids)].copy()
+        print("rr=", rps, benchmark_df.shape)
         benchmark_metrics = get_metrics_per_benchmark(benchmark_df, rps, guidellm_profile, vllm_config)
         all_benchmarks.append(benchmark_metrics)
         for heuristic in heuristic_totals:
@@ -151,6 +153,6 @@ if __name__=="__main__":
 
     # save postprocessed JSON
     blis_training_filename = os.path.join(args.results_path, BLIS_TRAINING_FILEPATH)
-    with open(blis_training_filename, 'w+') as file:
-        json.dump(blis_training_data, file, indent=4)
+    with open(blis_training_filename, 'w+') as f:
+        json.dump(blis_training_data, f, indent=4)
     print(f"BLIS Postprocessing complete. Training data saved to {blis_training_filename}")

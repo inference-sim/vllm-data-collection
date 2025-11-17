@@ -78,16 +78,16 @@ class InferenceSimOptimizer:
         Compare against vllm ground truth metrics and return cost per experiment
         """
         # get vllm ground truth
-        vllm_metrics = training_data[request_rate]
+        vllm_metrics = [x for x in training_data["benchmarks"] if x["rps"] == request_rate][0]
         
         # get sim metrics
         reqgen_config_file = os.path.join(self.reqgen_config_folder, 
                                           f"requestgenconfig_RPS={round(request_rate, 3)}.yaml")
         args = {
-            "max-num-running-reqs": training_data["vllm_config"]["max-num-seqs"], 
-            "total-kv-blocks": training_data["vllm_config"]["total-kv-blocks"],
-            "max-num-scheduled-tokens": training_data["vllm_config"]["max-num-batched-tokens"], 
-            "block-size-in-tokens": training_data["vllm_config"]["block-size"],
+            "max-num-running-reqs": training_data["vllm_config"]["max_num_seqs"], 
+            "total-kv-blocks": training_data["vllm_config"]["total_kv_blocks"],
+            "max-num-scheduled-tokens": training_data["vllm_config"]["max_num_batched_tokens"], 
+            "block-size-in-tokens": 16,
             "horizon": "922337203685477580", # Golang int64 max value
             "regression-coeffs": ','.join(beta_coeffs),
             "reqgen-config-path": reqgen_config_file,

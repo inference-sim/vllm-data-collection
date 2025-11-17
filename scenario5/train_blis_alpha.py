@@ -10,7 +10,6 @@ import sys
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error
 from postprocessing_utils import ALPHA_METRICS_FILENAME, ALPHA_WEIGHTS_FILENAME, BLIS_TRAINING_FILEPATH
-from postprocessing_utils import read_traces_jsonl, get_server_side_metrics_from_traces
 
 def get_metrics_and_coeffs(X_train, y_train, alpha_model):
     """
@@ -36,14 +35,15 @@ def train_alpha_model(training_data):
     processing_times = []
     input_lengths = []
     for benchmark in training_data["benchmarks"]:
-        processing_times.extend(benchmark["all_processing_times(s)"])
-        input_lengths.append(benchmark["all_input_lens"])
+        all_processing_times_microsec = [x*1e6 for x in benchmark["all_processing_times(s)"]]
+        processing_times.extend(all_processing_times_microsec) # in microsecs for BLIS
+        input_lengths.extend(benchmark["all_input_lens"])
 
-    input_features = [[input_length, 1] for input_length in input_lengths]
+    input_features = [[1, input_length] for input_length in input_lengths]
     alpha_model = LinearRegression(positive=True, fit_intercept=False)
     alpha_model.fit(input_features, processing_times)
 
-    metrics_coeffs = get_metrics_and_coeffs(input_lengths, processing_times, alpha_model)
+    metrics_coeffs = get_metrics_and_coeffs(input_features, processing_times, alpha_model) # alpha0, alpha1
     return alpha_model, metrics_coeffs
 
 if __name__=="__main__":

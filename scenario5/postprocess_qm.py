@@ -1,5 +1,6 @@
 import argparse
 import json
+import yaml
 import os
 import sys
 import pandas as pd
@@ -20,7 +21,7 @@ def get_metrics_per_benchmark(benchmark_df, request_rate, vllm_config):
         "avgWaitTime":    all_means['queued_time'],
         "avgPrefillTime": all_means['prefill_time'],
         "avgITLTime":     all_means['ITL'],
-        "maxBatchSize":   vllm_config['max-num-seqs']
+        "maxBatchSize":   vllm_config['max_num_seqs']
     }
     return benchmark_averages
 
@@ -48,11 +49,11 @@ if __name__=="__main__":
         print("Could not read sweep info file.")
         sys.exit()
 
-    # read vllm config file
+    # read vllm YAML config file
     vllm_config_filepath = args.vllm_config
     try:
         with open(vllm_config_filepath, 'r') as f:
-            vllm_config = json.load(f)
+            vllm_config = yaml.safe_load(f)
     except:
         print("Could not read vllm config file.")
         sys.exit()
