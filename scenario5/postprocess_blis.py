@@ -53,20 +53,11 @@ def get_heuristic_bounds(heuristic_totals):
     beta2_bound = heuristic_totals["sum_decode_time(s)"] / heuristic_totals["sum_output_tokens"]
     return beta0_bound, beta1_bound, beta2_bound
 
-if __name__=="__main__":
-    parser = argparse.ArgumentParser(description="Read and parse traces JSON file.")
-    parser.add_argument("--guidellm_profile", 
-                        help="Path to the GuideLLM YAML profile file to be read.")
-    parser.add_argument("--traces", 
-                        help="Path to the vllm traces file to be read.")
-    parser.add_argument("--vllm_config", 
-                        help="Path to vllm server config file.")
-    parser.add_argument("--results_path",
-                        default=".",
-                        help="Location to save intermediate files")
-    
-    args = parser.parse_args()
-    sweep_info_filepath = os.path.join(args.results_path, "sweep_info.json")
+def perform_postprocessing_blis(guidellm_profile_path, traces_path, vllm_config_path, results_path):
+    """
+    Perform BLIS-style postprocessing to generate a BLIS_train.json and other necessary files.
+    """
+    sweep_info_filepath = os.path.join(results_path, "sweep_info.json")
 
     # read GuideLLM sweep info
     try:
@@ -77,9 +68,8 @@ if __name__=="__main__":
         sys.exit()
 
     # read GuideLLM profile file
-    guidellm_profile_filepath = args.guidellm_profile
     try:
-        with open(guidellm_profile_filepath, 'r') as f:
+        with open(guidellm_profile_path, 'r') as f:
             guidellm_profile = yaml.safe_load(f)
             if "prefix_tokens" not in guidellm_profile["data"]:
                 guidellm_profile["data"]["prefix_tokens"] = 0 # set to default if unspecified
@@ -88,9 +78,8 @@ if __name__=="__main__":
         sys.exit()
 
     # read vllm YAML config file
-    vllm_config_filepath = args.vllm_config
     try:
-        with open(vllm_config_filepath, 'r') as f:
+        with open(vllm_config_path, 'r') as f:
             vllm_config = yaml.safe_load(f)
     except:
         print("Could not read vllm config file.")
@@ -98,12 +87,12 @@ if __name__=="__main__":
     
 
     # process traces to get server-side latencies
-    traces_raw_data = read_traces_jsonl(args.traces)
+    traces_raw_data = read_traces_jsonl(traces_path)
     all_requests = get_server_side_metrics_from_traces(traces_raw_data)
     requests_df = pd.DataFrame(all_requests)
 
     # read GuideLLM sweep info
-    sweep_info_filepath = os.path.join(args.results_path, SWEEP_INFO_FILENAME)
+    sweep_info_filepath = os.path.join(results_path, SWEEP_INFO_FILENAME)
     try:
         with open(sweep_info_filepath, 'r') as f:
             sweep_info = json.load(f)
@@ -111,8 +100,8 @@ if __name__=="__main__":
         print("Could not read sweep info file.")
         sys.exit()
     
-    # check if args.blis_reqgen_config_folder exists, otherwise create
-    blis_reqgen_config_folder = os.path.join(args.results_path, BLIS_REQGEN_CONFIG_FOLDER)
+    # check if blis_reqgen_config_folder exists, otherwise create
+    blis_reqgen_config_folder = os.path.join(results_path, BLIS_REQGEN_CONFIG_FOLDER)
     os.makedirs(blis_reqgen_config_folder, exist_ok=True)
 
     blis_training_data = {}
@@ -152,7 +141,23 @@ if __name__=="__main__":
     blis_training_data["vllm_config"] = vllm_config
 
     # save postprocessed JSON
-    blis_training_filename = os.path.join(args.results_path, BLIS_TRAINING_FILEPATH)
+    blis_training_filename = os.path.join(results_path, BLIS_TRAINING_FILEPATH)
     with open(blis_training_filename, 'w+') as f:
         json.dump(blis_training_data, f, indent=4)
     print(f"BLIS Postprocessing complete. Training data saved to {blis_training_filename}")
+
+if __name__=="__main__":
+    parser = argparse.ArgumentParser(description="Read and parse traces JSON file.")
+    parser.add_argument("--guidellm_profile", 
+                        help="Path to the GuideLLM YAML profile file to be read.")
+    parser.add_argument("--traces", 
+                        help="Path to the vllm traces file to be read.")
+    parser.add_argument("--vllm_config", 
+                        help="Path to vllm server config file.")
+    parser.add_argument("--results_path",
+                        default=".",
+                        help="Location to save intermediate files")
+    
+    args = parser.parse_args()
+    perform_postprocessing_blis(args.guidellm_profile, args.traces, args.vllm_config, args.results_path)
+    

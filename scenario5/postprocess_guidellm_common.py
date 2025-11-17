@@ -37,22 +37,12 @@ def get_sweep_info(guidellm_results, rps_list):
         sweep_info.append(current_sweep)
     return sweep_info
 
-
-if __name__=="__main__":
-    parser = argparse.ArgumentParser(description="Read and parse traces JSON file.")
-    parser.add_argument("--guidellm_results", 
-                        help="Path to the GuideLLM JSON output file to be read.")
-    parser.add_argument("--results_path",
-                        default=".", 
-                        help="Location to save intermediate files")
-    args = parser.parse_args()
-
-    guidellm_results_filepath = args.guidellm_results
-    sweep_info_filepath = os.path.join(args.results_path, SWEEP_INFO_FILENAME)
+def perform_postprocessing_common(guidellm_results_path, results_path):
+    sweep_info_filepath = os.path.join(results_path, SWEEP_INFO_FILENAME)
 
     # read GuideLLM results file
     try:
-        with open(guidellm_results_filepath, 'r') as f:
+        with open(guidellm_results_path, 'r') as f:
             guidellm_results = json.load(f)
     except:
         print("Could not read GuideLLM results file.")
@@ -67,3 +57,13 @@ if __name__=="__main__":
     # Save sweep info to JSON file
     with open(sweep_info_filepath, 'w+') as f:
         json.dump(sweep_info, f, indent=4)
+
+if __name__=="__main__":
+    parser = argparse.ArgumentParser(description="Read and parse traces JSON file.")
+    parser.add_argument("--guidellm_results", 
+                        help="Path to the GuideLLM JSON output file to be read.")
+    parser.add_argument("--results_path",
+                        default=".", 
+                        help="Location to save intermediate files")
+    args = parser.parse_args()
+    perform_postprocessing_common(args.guidellm_results, args.results_path)    
