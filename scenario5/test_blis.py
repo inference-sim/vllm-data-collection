@@ -117,12 +117,12 @@ def get_per_test_exp_result(model_path, test_full_path):
         for idx, metric in enumerate(METRICS_TO_COMPARE):
             mape = abs(sim_metrics[metric] - benchmark_metrics[metric])/benchmark_metrics[metric] * 100
             row[f"{metric} MAPE"] = mape
-            row["rps"] = rps
-            row["tp"] = tp
-            row["category"] = test_full_path.split("-")[-2]
-            row["model_path"] = model_tp_path
-            row["beta_coeffs"] = beta_coeffs
-            row["alpha_coeffs"] = alpha_coeffs
+        row["rps"] = rps
+        row["tp"] = tp
+        row["category"] = test_full_path.split("-")[-2]
+        row["model_path"] = model_tp_path
+        row["beta_coeffs"] = beta_coeffs
+        row["alpha_coeffs"] = alpha_coeffs
         all_benchmark_mapes.append(row)
     return pd.DataFrame(all_benchmark_mapes)
 
@@ -142,6 +142,7 @@ if __name__=="__main__":
         test_mape_df = get_per_test_exp_result(args.model_path, test_path)
         all_error_dfs_list.append(test_mape_df)
     combined_error_df = pd.concat(all_error_dfs_list, ignore_index=True)
+    combined_error_df.to_csv("combined_test_errors.csv", index=False)
     plot_vllm_vs_sim(combined_error_df, "tp")
         
 
