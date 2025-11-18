@@ -38,8 +38,6 @@ def get_sweep_info(guidellm_results, rps_list):
     return sweep_info
 
 def perform_postprocessing_common(guidellm_results_path, results_path):
-    sweep_info_filepath = os.path.join(results_path, SWEEP_INFO_FILENAME)
-
     # read GuideLLM results file
     try:
         with open(guidellm_results_path, 'r') as f:
@@ -55,6 +53,8 @@ def perform_postprocessing_common(guidellm_results_path, results_path):
     sweep_info = get_sweep_info(guidellm_results, rps_list)
 
     # Save sweep info to JSON file
+    sweep_info_filepath = os.path.join(results_path, SWEEP_INFO_FILENAME)
+
     with open(sweep_info_filepath, 'w+') as f:
         json.dump(sweep_info, f, indent=4)
 
