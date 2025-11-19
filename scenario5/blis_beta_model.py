@@ -78,15 +78,15 @@ class InferenceSimOptimizer:
         Compare against vllm ground truth metrics and return cost per experiment
         """
         # get vllm ground truth
-        vllm_metrics = [x for x in training_data["benchmarks"] if x["rps"] == request_rate][0]
+        vllm_metrics = [x for x in self.training_data["benchmarks"] if x["rps"] == request_rate][0]
         
         # get sim metrics
         reqgen_config_file = os.path.join(self.reqgen_config_folder, 
                                           f"requestgenconfig_RPS={round(request_rate, 3)}.yaml")
         args = {
-            "max-num-running-reqs": training_data["vllm_config"]["max_num_seqs"], 
-            "total-kv-blocks": training_data["vllm_config"]["total_kv_blocks"],
-            "max-num-scheduled-tokens": training_data["vllm_config"]["max_num_batched_tokens"], 
+            "max-num-running-reqs": self.training_data["vllm_config"]["max_num_seqs"], 
+            "total-kv-blocks": self.training_data["vllm_config"]["total_kv_blocks"],
+            "max-num-scheduled-tokens": self.training_data["vllm_config"]["max_num_batched_tokens"], 
             "block-size-in-tokens": 16,
             "horizon": "922337203685477580", # Golang int64 max value
             "regression-coeffs": ','.join(beta_coeffs),
@@ -233,15 +233,9 @@ def with_inp(args):
     i, optimizer = args
     optimizer.optimize_multitrial()
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Read and parse traces JSON file.")
-    parser.add_argument("--results_path",
-                            default=".", 
-                            help="Location to save alpha model")
-    args = parser.parse_args()
-
+def train_beta_model(results_path, model_path):
     # read pretrained alpha coeffs
-    alpha_metrics_filename = os.path.join(args.results_path, ALPHA_METRICS_FILENAME)
+    alpha_metrics_filename = os.path.join(model_path, ALPHA_METRICS_FILENAME)
     try:
         with open(alpha_metrics_filename, 'r') as f:
             alpha_metrics = json.load(f)
@@ -251,7 +245,7 @@ if __name__ == "__main__":
         sys.exit()
 
     # read heuristic bounds & benchmark metrics for betas
-    training_data_filename = os.path.join(args.results_path, BLIS_TRAINING_FILEPATH)
+    training_data_filename = os.path.join(results_path, BLIS_TRAINING_FILEPATH)
     try:
         with open(training_data_filename, 'r') as f:
             training_data = json.load(f)
@@ -265,7 +259,7 @@ if __name__ == "__main__":
         "beta2": (0, 2 * training_data["bounds"]["beta2"])
     }
 
-    reqgen_config_folder = os.path.join(args.results_path, BLIS_REQGEN_CONFIG_FOLDER)
+    reqgen_config_folder = os.path.join(results_path, BLIS_REQGEN_CONFIG_FOLDER)
 
     # Initialize optimizer
     optimizer = InferenceSimOptimizer(
@@ -293,7 +287,19 @@ if __name__ == "__main__":
     # best_params = optimizer.get_best_trial()
 
     # save best optimizer parameters
-    beta_metrics_filename = os.path.join(args.results_path, BETA_METRICS_FILENAME)
+    beta_metrics_filename = os.path.join(model_path, BETA_METRICS_FILENAME)
     with open(beta_metrics_filename, 'w+') as file:
         json.dump(best_params, file, indent=4)
     print(f"Beta model metrics and coefficients saved to {beta_metrics_filename}")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Read and parse traces JSON file.")
+    parser.add_argument("--model_path", 
+                        help="Folder path to save trained beta models")
+    parser.add_argument("--train_results_path",
+                            default=".", 
+                            help="Location to get training data from.")
+    args = parser.parse_args()
+    train_beta_model(args.train_results_path, args.model_path)
+
+    

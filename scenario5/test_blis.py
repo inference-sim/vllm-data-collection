@@ -10,7 +10,7 @@ import yaml
 from postprocess_guidellm_common import perform_postprocessing_common
 from postprocess_blis import perform_postprocessing_blis
 from postprocessing_utils import run_go_binary
-from train_blis_beta import GO_BINARY_PATH
+from blis_beta_model import GO_BINARY_PATH
 
 METRICS_TO_COMPARE = ["Mean E2E(ms)", "Median E2E(ms)", "P99 E2E(ms)"]
 
@@ -134,7 +134,7 @@ if __name__=="__main__":
     parser.add_argument("--test_results_path", 
                         help="Path to the root test results folder")
     parser.add_argument("--groupby_field", default = "app",
-                        help="Field to group and mean errors by - app/chunk_size/tp")
+                        help="Field to group and mean errors by - app/chunk_size/tp/rps")
     args = parser.parse_args()
 
     # Evaluate across all test experiments

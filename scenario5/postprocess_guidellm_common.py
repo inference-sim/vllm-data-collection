@@ -57,6 +57,7 @@ def perform_postprocessing_common(guidellm_results_path, results_path):
 
     with open(sweep_info_filepath, 'w+') as f:
         json.dump(sweep_info, f, indent=4)
+    print("Common postprocessing finished successfully.")
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description="Read and parse traces JSON file.")

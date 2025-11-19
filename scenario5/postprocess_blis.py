@@ -126,7 +126,6 @@ def perform_postprocessing_blis(guidellm_profile_path, traces_path, vllm_config_
         # benchmark-wise metrics and heuristic totals
         benchmark_request_ids = sweep["requestIDs"]
         benchmark_df = requests_df[requests_df["request_id"].isin(benchmark_request_ids)].copy()
-        print("rr=", rps, benchmark_df.shape)
         benchmark_metrics = get_metrics_per_benchmark(benchmark_df, rps, guidellm_profile, vllm_config)
         all_benchmarks.append(benchmark_metrics)
         for heuristic in heuristic_totals:
