@@ -64,7 +64,7 @@ def get_per_test_exp_result(model_path, test_full_path):
 
     traces_path = os.path.join(test_full_path, "traces.json")
     perform_postprocessing_common(guidellm_results_path, test_full_path)
-    perform_postprocessing_blis(guidellm_profile_path, traces_path, vllm_config_path, test_full_path)
+    perform_postprocessing_blis(guidellm_profile_path, traces_path, vllm_config_path, test_full_path, train=False)
 
     # get TP value from vllm_config
     try:
@@ -79,7 +79,7 @@ def get_per_test_exp_result(model_path, test_full_path):
     model_tp_path = os.path.join(model_path, f"tp_{tp}")
     print(model_tp_path)
     alpha_coeffs, beta_coeffs = get_alpha_beta_coeffs(model_tp_path)
-    benchmark_file_path = os.path.join(test_full_path, "BLIS_train.json")
+    benchmark_file_path = os.path.join(test_full_path, "BLIS_test.json")
     try:
         with open(benchmark_file_path, 'r') as f:
             benchmark_data = json.load(f)
@@ -119,7 +119,8 @@ def get_per_test_exp_result(model_path, test_full_path):
             row[f"{metric} MAPE"] = mape
         row["rps"] = rps
         row["tp"] = tp
-        row["category"] = test_full_path.split("-")[-2]
+        row["chunk_size"] = benchmark_data["vllm_config"]["max_num_batched_tokens"]
+        row["app"] = vllm_config["app"]
         row["model_path"] = model_tp_path
         row["beta_coeffs"] = beta_coeffs
         row["alpha_coeffs"] = alpha_coeffs
@@ -132,6 +133,8 @@ if __name__=="__main__":
                         help="Path to trained beta models folder")
     parser.add_argument("--test_results_path", 
                         help="Path to the root test results folder")
+    parser.add_argument("--groupby_field", default = "app",
+                        help="Field to group and mean errors by - app/chunk_size/tp")
     args = parser.parse_args()
 
     # Evaluate across all test experiments
@@ -143,7 +146,7 @@ if __name__=="__main__":
         all_error_dfs_list.append(test_mape_df)
     combined_error_df = pd.concat(all_error_dfs_list, ignore_index=True)
     combined_error_df.to_csv("combined_test_errors.csv", index=False)
-    plot_vllm_vs_sim(combined_error_df, "tp")
+    plot_vllm_vs_sim(combined_error_df, args.groupby_field)
         
 
 

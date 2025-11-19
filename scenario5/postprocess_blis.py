@@ -5,7 +5,7 @@ import sys
 import yaml
 import pandas as pd
 
-from postprocessing_utils import BLIS_REQGEN_CONFIG_FOLDER, BLIS_TRAINING_FILEPATH, SWEEP_INFO_FILENAME
+from postprocessing_utils import BLIS_REQGEN_CONFIG_FOLDER, BLIS_TRAINING_FILEPATH, BLIS_TESTING_FILEPATH, SWEEP_INFO_FILENAME
 from postprocessing_utils import read_traces_jsonl, get_server_side_metrics_from_traces
 
 def construct_BLIS_reqgenconfig(guidellm_profile, rps):
@@ -53,7 +53,7 @@ def get_heuristic_bounds(heuristic_totals):
     beta2_bound = heuristic_totals["sum_decode_time(s)"] / heuristic_totals["sum_output_tokens"]
     return beta0_bound, beta1_bound, beta2_bound
 
-def perform_postprocessing_blis(guidellm_profile_path, traces_path, vllm_config_path, results_path):
+def perform_postprocessing_blis(guidellm_profile_path, traces_path, vllm_config_path, results_path, train = True):
     """
     Perform BLIS-style postprocessing to generate a BLIS_train.json and other necessary files.
     """
@@ -104,7 +104,7 @@ def perform_postprocessing_blis(guidellm_profile_path, traces_path, vllm_config_
     blis_reqgen_config_folder = os.path.join(results_path, BLIS_REQGEN_CONFIG_FOLDER)
     os.makedirs(blis_reqgen_config_folder, exist_ok=True)
 
-    blis_training_data = {}
+    blis_data = {}
     all_benchmarks = [] # record metrics for each benchmark
     heuristic_totals = {"sum_prefill_time(s)": 0, "sum_decode_time(s)": 0, "sum_inference_time(s)": 0, "sum_output_tokens": 0,
                         "sum_prefill_tokens": 0, "sum_steps": 0} # heuristic sums across benchmarks
@@ -136,15 +136,19 @@ def perform_postprocessing_blis(guidellm_profile_path, traces_path, vllm_config_
     beta0_bound, beta1_bound, beta2_bound = get_heuristic_bounds(heuristic_totals)
 
     # combine all training data - metrics, bounds, vllm config etc. into file
-    blis_training_data["bounds"] = {"beta0": beta0_bound, "beta1": beta1_bound, "beta2": beta2_bound}
-    blis_training_data["benchmarks"] = all_benchmarks
-    blis_training_data["vllm_config"] = vllm_config
+    blis_data["bounds"] = {"beta0": beta0_bound, "beta1": beta1_bound, "beta2": beta2_bound}
+    blis_data["benchmarks"] = all_benchmarks
+    blis_data["vllm_config"] = vllm_config
 
     # save postprocessed JSON
-    blis_training_filename = os.path.join(results_path, BLIS_TRAINING_FILEPATH)
-    with open(blis_training_filename, 'w+') as f:
-        json.dump(blis_training_data, f, indent=4)
-    print(f"BLIS Postprocessing complete. Training data saved to {blis_training_filename}")
+    if train:
+        blis_final_filename = os.path.join(results_path, BLIS_TRAINING_FILEPATH)
+    else:
+        blis_final_filename = os.path.join(results_path, BLIS_TESTING_FILEPATH)
+    with open(blis_final_filename, 'w+') as f:
+        json.dump(blis_data, f, indent=4)
+    print(f"BLIS Postprocessing complete. Training data saved to {blis_final_filename}")
+    return blis_data
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description="Read and parse traces JSON file.")

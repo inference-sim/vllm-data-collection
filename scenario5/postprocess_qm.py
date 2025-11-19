@@ -4,7 +4,7 @@ import yaml
 import os
 import sys
 import pandas as pd
-from postprocessing_utils import QM_TRAINING_FILEPATH, SWEEP_INFO_FILENAME
+from postprocessing_utils import QM_TRAINING_FILEPATH, QM_TESTING_FILEPATH, SWEEP_INFO_FILENAME
 from postprocessing_utils import read_traces_jsonl, get_server_side_metrics_from_traces
 
 def get_metrics_per_benchmark(benchmark_df, request_rate, vllm_config):
@@ -24,7 +24,7 @@ def get_metrics_per_benchmark(benchmark_df, request_rate, vllm_config):
     }
     return benchmark_averages
 
-def perform_postprocessing_qm(traces_path, vllm_config_path, results_path):
+def perform_postprocessing_qm(traces_path, vllm_config_path, results_path, train = True):
     traces_raw_data = read_traces_jsonl(traces_path)
     all_requests = get_server_side_metrics_from_traces(traces_raw_data)
     requests_df = pd.DataFrame(all_requests)
@@ -46,20 +46,24 @@ def perform_postprocessing_qm(traces_path, vllm_config_path, results_path):
         print("Could not read vllm config file.")
         sys.exit()
 
-    qm_training_data = []
+    qm_data = []
     for sweep in sweep_info:
         # each request-rate forms a new benchmark
         rps = sweep["rps"]
         benchmark_request_ids = sweep["requestIDs"]
         benchmark_df = requests_df[requests_df["request_id"].isin(benchmark_request_ids)].copy()
         benchmark_averages = get_metrics_per_benchmark(benchmark_df, rps, vllm_config)
-        qm_training_data.append(benchmark_averages)
+        qm_data.append(benchmark_averages)
     
     # save postprocessed JSON
-    qm_training_filename = os.path.join(results_path, QM_TRAINING_FILEPATH)
-    with open(qm_training_filename, 'w+') as file:
-        json.dump(qm_training_data, file, indent=4)
-    print(f"QM Postprocessing complete. Saved to {qm_training_filename}")
+    if train:
+        qm_final_filename = os.path.join(results_path, QM_TRAINING_FILEPATH)
+    else:
+        qm_final_filename = os.path.join(results_path, QM_TESTING_FILEPATH)
+    with open(qm_final_filename, 'w+') as file:
+        json.dump(qm_data, file, indent=4)
+    print(f"QM Postprocessing complete. Saved to {qm_final_filename}")
+    return qm_data
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description="Read and parse traces JSON file.")
@@ -68,7 +72,7 @@ if __name__=="__main__":
     parser.add_argument("--vllm_config", 
                         help="Path to vllm server config file.")
     parser.add_argument("--results_path",
-                        default=".", 
+                        default=".",
                         help="Location to load intermediate files from")
     args = parser.parse_args()
     perform_postprocessing_qm(args.traces, args.vllm_config, args.results_path)

@@ -5,7 +5,9 @@ import subprocess
 BLIS_REQGEN_CONFIG_FOLDER = "blis_reqgenconfigs"
 SWEEP_INFO_FILENAME = "sweep_info.json"
 QM_TRAINING_FILEPATH = "QM_train.json"
+QM_TESTING_FILEPATH = "QM_test.json"
 BLIS_TRAINING_FILEPATH = "BLIS_train.json"
+BLIS_TESTING_FILEPATH = "BLIS_test.json"
 ALPHA_WEIGHTS_FILENAME = 'BLIS_alpha_weights.pkl'
 ALPHA_METRICS_FILENAME = 'BLIS_alpha_metrics.json'
 BETA_METRICS_FILENAME = 'BLIS_beta_metrics.json'
