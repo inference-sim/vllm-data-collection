@@ -232,3 +232,6 @@ scenario3/results_processed
 scenario4/*_plots
 scenario4/results_*
 scenario4/*.png
+scenario5/*.json
+scenario5/*.yaml
+scenario5/blis_reqgenconfigs
