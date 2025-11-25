@@ -9,7 +9,7 @@ GO_BINARY_NAME = "simulation_worker"
 GO_BINARY_PATH = os.path.join(os.path.dirname(
     os.path.abspath(__file__)), GO_BINARY_NAME)
 TRAINING_DATA_FILEPATH = "blis_rh_final.xlsx"
-METRICS_TO_COMPARE = ["ttft_mean", "itl_mean", "e2e_mean", "ttft_p99", "itl_p99", "e2e_p99"]
+METRICS_TO_COMPARE = ["ttft_mean", "itl_mean", "e2e_mean", "ttft_p90", "itl_p90", "e2e_p90"]
 
 def plot_vllm_vs_sim(data_df, plot_title=""):
     overall_errors = {}
@@ -61,10 +61,10 @@ def test_blis_model(LLM_name = None, tp = None, gpu = None, vllm_version = None)
     # read training CSV and filter to only train rows for LLM
     df = pd.read_excel(TRAINING_DATA_FILEPATH)
     filter_values = {
-    "model_hf_repo": LLM_name,
-    "hardware_count": int(tp) if tp is not None and str(tp).isdigit() else None,
-    "hardware": gpu,
-    "docker_image": vllm_version
+        "model_hf_repo": LLM_name,
+        "hardware_count": int(tp) if tp is not None and str(tp).isdigit() else None,
+        "hardware": gpu,
+        "docker_image": vllm_version
     }
 
     mandatory_conditions = (df["train_test"] == "test") & (df["saturated"] == False)

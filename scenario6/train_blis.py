@@ -17,10 +17,12 @@ GO_BINARY_NAME = "simulation_worker"
 GO_BINARY_PATH = os.path.join(os.path.dirname(
     os.path.abspath(__file__)), GO_BINARY_NAME)
 
-NUM_TPE_ITERS = 250
+NUM_TPE_ITERS = 1000
 MAX_NUM_PROCESSES = 20
 TRAINING_DATA_FILEPATH = "blis_rh_final.xlsx"
 TRAINED_COEFFICIENTS_FILEPATH = "coefficients.yaml"
+MILLISECONDS_TO_MICROSECONDS_CONVERSION = 1e3
+METRICS_IN_LOSS = ["ttft_mean", "ttft_p90", "e2e_mean", "e2e_p90"]
     
 class InferenceSimOptimizer:
     """
@@ -67,9 +69,8 @@ class InferenceSimOptimizer:
         self.metrics_lock = None
         
     def cost_function(self, vllm_metrics, sim_metrics):
-        metric_names = ["e2e_mean", "e2e_p90"]
         total_mape = 0
-        for _, metric in enumerate(metric_names):
+        for _, metric in enumerate(METRICS_IN_LOSS):
             mape = abs(sim_metrics[f"{metric}_ms"] - vllm_metrics[metric])/vllm_metrics[metric] * 100
             total_mape += mape
         return total_mape
@@ -225,7 +226,6 @@ class InferenceSimOptimizer:
             "best_loss": self.study.best_trial.value,
             "best_params": self.study.best_trial.params
         }
-        print(f"Best trial: {best_trial}")
         return best_trial
 
     def visualize_study(self):
@@ -241,13 +241,13 @@ def with_inp(args):
     optimizer.optimize_multitrial()
 
 def get_heuristic_bounds(train_df):
-    alpha0_ub = train_df["e2e_mean"].max()
-    alpha1_ub = (train_df["e2e_mean"]/train_df["mean_input_tokens"]).max()
-    alpha2_ub = (train_df["e2e_mean"]/train_df["mean_output_tokens"]).max()
-    train_df["avg_chunk_count"] = train_df["mean_input_tokens"]/train_df['max_num_scheduled_tokens']
-    beta0_ub = (train_df["e2e_mean"]/(train_df["mean_output_tokens"] + train_df["avg_chunk_count"])).max()
-    beta1_ub = (train_df["ttft_mean"]/train_df["mean_input_tokens"]).max()
-    beta2_ub = ((train_df["e2e_mean"] - train_df["ttft_mean"])/train_df["mean_output_tokens"]).max()
+    alpha0_ub = train_df["e2e_mean"].max() * MILLISECONDS_TO_MICROSECONDS_CONVERSION
+    alpha1_ub = (train_df["e2e_mean"]/train_df["mean_input_tokens"]).max() * MILLISECONDS_TO_MICROSECONDS_CONVERSION
+    alpha2_ub = (train_df["e2e_mean"]/train_df["mean_output_tokens"]).max() * MILLISECONDS_TO_MICROSECONDS_CONVERSION
+    train_df["avg_chunk_count"] = train_df["mean_input_tokens"]/train_df['max_num_scheduled_tokens'] * MILLISECONDS_TO_MICROSECONDS_CONVERSION
+    beta0_ub = (train_df["e2e_mean"]/(train_df["mean_output_tokens"] + train_df["avg_chunk_count"])).max() * MILLISECONDS_TO_MICROSECONDS_CONVERSION
+    beta1_ub = (train_df["ttft_mean"]/train_df["mean_input_tokens"]).max() * MILLISECONDS_TO_MICROSECONDS_CONVERSION
+    beta2_ub = ((train_df["e2e_mean"] - train_df["ttft_mean"])/train_df["mean_output_tokens"]).max() * MILLISECONDS_TO_MICROSECONDS_CONVERSION
     return alpha0_ub, alpha1_ub, alpha2_ub, beta0_ub, beta1_ub, beta2_ub
 
 def train_blis_model(LLM_name, tp, gpu, vllm_version):
@@ -257,8 +257,8 @@ def train_blis_model(LLM_name, tp, gpu, vllm_version):
     if "models" in all_data and all_data["models"] and len(all_data["models"]) > 0:
         for model in all_data["models"]:
             if model["id"] == LLM_name and model["GPU"] == gpu and model["tensor_parallelism"] == int(tp) and model["vllm_version"] == vllm_version:
-                print("You already have trained coefficients for this combination.")
-                retrain = input("Retrain (y/n)?")
+                print("You already have trained coefficients for this combination.", LLM_name, tp, gpu, vllm_version)
+                retrain = input("Retrain (y/n)? ")
                 if retrain == "n":
                     return
     # read training CSV and filter to only train rows for LLM
@@ -289,6 +289,7 @@ def train_blis_model(LLM_name, tp, gpu, vllm_version):
         "tensor_parallelism": int(tp),
         "GPU": gpu,
         "vllm_version": vllm_version,
+        "best_loss": optimizer.get_best_trial()["best_loss"],
         "alpha_coeffs": [best_params["alpha0"], best_params["alpha1"], best_params["alpha2"]],
         "beta_coeffs": [best_params["beta0"], best_params["beta1"], best_params["beta2"]]
     }
@@ -307,15 +308,25 @@ def train_blis_model(LLM_name, tp, gpu, vllm_version):
     # best_params = optimizer.get_best_trial()
 
     # save best optimizer parameters
+    is_updated = False
     if "models" in all_data:
         if all_data["models"] and len(all_data["models"]) > 0:
-            all_data["models"].append(model_results)
+            for model in all_data["models"]:
+                # overwrite existing coeffs if user wants
+                if model["id"] == LLM_name and model["GPU"] == gpu and model["tensor_parallelism"] == int(tp) and model["vllm_version"] == vllm_version:
+                    model["best_loss"] = model_results["best_loss"]
+                    model["alpha_coeffs"] = model_results["alpha_coeffs"]
+                    model["beta_coeffs"] = model_results["beta_coeffs"]
+                    is_updated = True
+                    break
+            if not is_updated:
+                all_data["models"].append(model_results)
         else:
             all_data["models"] = [model_results]
     else:
         all_data["models"] = [model_results]
     with open(TRAINED_COEFFICIENTS_FILEPATH, 'w+') as file:
-        yaml.dump(all_data, file)
+        yaml.dump(all_data, file, default_flow_style=False)
     print(f"BLIS model metrics and coefficients saved to {TRAINED_COEFFICIENTS_FILEPATH}")
 
 if __name__ == "__main__":
@@ -329,4 +340,16 @@ if __name__ == "__main__":
     parser.add_argument("--vllm-version", 
                         help="vllm version to train BLIS coefficients for, pick one from the Excel file")
     args = parser.parse_args()
-    train_blis_model(args.LLM_name, args.tp, args.GPU, args.vllm_version)
+    if not (args.LLM_name and args.tp and args.GPU and args.vllm_version):
+        print("Args not found. Training everything")
+        specs_file = "training_specs.csv"
+        df = pd.read_csv(specs_file)
+        for idx in range(len(df)):
+            row_dict = df.iloc[idx].to_dict()
+            print("############################################################################")
+            print(f"Training BLIS for LLM={row_dict["LLM_name"]}, tp={row_dict["tp"]}, GPU={row_dict["GPU"]}, vllm-version={row_dict["vllm_version"]}")
+            print("############################################################################")
+            train_blis_model(row_dict["LLM_name"], row_dict["tp"], row_dict["GPU"], row_dict["vllm_version"])
+    else:
+        train_blis_model(args.LLM_name, args.tp, args.GPU, args.vllm_version)
+    
