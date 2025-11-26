@@ -10,6 +10,7 @@ import optuna
 from optuna.storages import JournalStorage
 from optuna.storages.journal import JournalFileBackend
 # from multiprocessing import Pool
+from filelock import FileLock
 
 from postprocessing_utils import run_go_binary
 
@@ -17,11 +18,10 @@ GO_BINARY_NAME = "simulation_worker"
 GO_BINARY_PATH = os.path.join(os.path.dirname(
     os.path.abspath(__file__)), GO_BINARY_NAME)
 
-NUM_TPE_ITERS = 1000
+NUM_TPE_ITERS = 2000
 MAX_NUM_PROCESSES = 20
-TRAINING_DATA_FILEPATH = "blis_rh_final.xlsx"
-TRAINED_COEFFICIENTS_FILEPATH = "coefficients.yaml"
 MILLISECONDS_TO_MICROSECONDS_CONVERSION = 1e3
+# modify this list to change which metrics contribute to cost fn
 METRICS_IN_LOSS = ["ttft_mean", "ttft_p90", "e2e_mean", "e2e_p90"]
     
 class InferenceSimOptimizer:
@@ -250,19 +250,10 @@ def get_heuristic_bounds(train_df):
     beta2_ub = ((train_df["e2e_mean"] - train_df["ttft_mean"])/train_df["mean_output_tokens"]).max() * MILLISECONDS_TO_MICROSECONDS_CONVERSION
     return alpha0_ub, alpha1_ub, alpha2_ub, beta0_ub, beta1_ub, beta2_ub
 
-def train_blis_model(LLM_name, tp, gpu, vllm_version):
+def train_blis_model(training_filepath, LLM_name, tp, gpu, vllm_version, coeffs_filepath):
     # check if coefficients already exist to prevent overwriting
-    with open(TRAINED_COEFFICIENTS_FILEPATH, 'r+') as file:
-        all_data = yaml.safe_load(file)
-    if "models" in all_data and all_data["models"] and len(all_data["models"]) > 0:
-        for model in all_data["models"]:
-            if model["id"] == LLM_name and model["GPU"] == gpu and model["tensor_parallelism"] == int(tp) and model["vllm_version"] == vllm_version:
-                print("You already have trained coefficients for this combination.", LLM_name, tp, gpu, vllm_version)
-                retrain = input("Retrain (y/n)? ")
-                if retrain == "n":
-                    return
     # read training CSV and filter to only train rows for LLM
-    df = pd.read_excel(TRAINING_DATA_FILEPATH)
+    df = pd.read_excel(training_filepath)
     train_df = df[(df["train_test"] == "train") & (df["saturated"] == False) & (df["model_hf_repo"] == LLM_name) & (df["hardware_count"] == int(tp)) & (df["hardware"] == gpu) & (df["docker_image"] == vllm_version)]
 
     heuristic_upper_bounds = get_heuristic_bounds(train_df)
@@ -307,31 +298,36 @@ def train_blis_model(LLM_name, tp, gpu, vllm_version):
 
     # best_params = optimizer.get_best_trial()
 
-    # save best optimizer parameters
-    is_updated = False
-    if "models" in all_data:
-        if all_data["models"] and len(all_data["models"]) > 0:
-            for model in all_data["models"]:
-                # overwrite existing coeffs if user wants
-                if model["id"] == LLM_name and model["GPU"] == gpu and model["tensor_parallelism"] == int(tp) and model["vllm_version"] == vllm_version:
-                    model["best_loss"] = model_results["best_loss"]
-                    model["alpha_coeffs"] = model_results["alpha_coeffs"]
-                    model["beta_coeffs"] = model_results["beta_coeffs"]
-                    is_updated = True
-                    break
-            if not is_updated:
-                all_data["models"].append(model_results)
+    # read again, and save best optimizer parameters
+    lock = FileLock(f"{coeffs_filepath}.lock")
+    with lock:
+        with open(coeffs_filepath, 'r+') as file:
+            all_data = yaml.safe_load(file)
+        is_updated = False
+        if "models" in all_data:
+            if all_data["models"] and len(all_data["models"]) > 0:
+                for model in all_data["models"]:
+                    # overwrite existing coeffs if exists
+                    if model["id"] == LLM_name and model["GPU"] == gpu and model["tensor_parallelism"] == int(tp) and model["vllm_version"] == vllm_version:
+                        print("You already have trained coefficients for this combination.", LLM_name, tp, gpu, vllm_version, "Overwriting coeffs...")
+                        model["best_loss"] = model_results["best_loss"]
+                        model["alpha_coeffs"] = model_results["alpha_coeffs"]
+                        model["beta_coeffs"] = model_results["beta_coeffs"]
+                        is_updated = True
+                        break
+                if not is_updated:
+                    all_data["models"].append(model_results)
+            else:
+                all_data["models"] = [model_results]
         else:
             all_data["models"] = [model_results]
-    else:
-        all_data["models"] = [model_results]
-    with open(TRAINED_COEFFICIENTS_FILEPATH, 'w+') as file:
-        yaml.dump(all_data, file, default_flow_style=False)
-    print(f"BLIS model metrics and coefficients saved to {TRAINED_COEFFICIENTS_FILEPATH}")
+        with open(coeffs_filepath, 'w+') as file:
+            yaml.dump(all_data, file, default_flow_style=False)
+        print(f"BLIS model metrics and coefficients saved to {coeffs_filepath}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Read and parse traces JSON file.")
-    parser.add_argument("--LLM_name", 
+    parser.add_argument("--LLM-name", 
                         help="LLM to train BLIS coefficients for, pick one from the Excel file")
     parser.add_argument("--tp", 
                         help="TP value to train BLIS coefficients for, pick one from the Excel file")
@@ -339,17 +335,25 @@ if __name__ == "__main__":
                         help="GPU to train BLIS coefficients for, pick one from the Excel file")
     parser.add_argument("--vllm-version", 
                         help="vllm version to train BLIS coefficients for, pick one from the Excel file")
+    parser.add_argument("--training-filepath",
+                        default="blis_rh_final.xlsx",
+                        help="Path to Excel file with GuideLLM RH data.")
+    parser.add_argument("--coeffs-filepath",
+                        default="coefficients.yaml", 
+                        help="Path to save trained BLIS coeffs.")
+    parser.add_argument("--specs-filepath",
+                        default="training_specs.csv", 
+                        help="Path to all combinations to train.")
     args = parser.parse_args()
     if not (args.LLM_name and args.tp and args.GPU and args.vllm_version):
         print("Args not found. Training everything")
-        specs_file = "training_specs.csv"
-        df = pd.read_csv(specs_file)
+        df = pd.read_csv(args.specs_filepath)
         for idx in range(len(df)):
             row_dict = df.iloc[idx].to_dict()
             print("############################################################################")
             print(f"Training BLIS for LLM={row_dict["LLM_name"]}, tp={row_dict["tp"]}, GPU={row_dict["GPU"]}, vllm-version={row_dict["vllm_version"]}")
             print("############################################################################")
-            train_blis_model(row_dict["LLM_name"], row_dict["tp"], row_dict["GPU"], row_dict["vllm_version"])
+            train_blis_model(args.training_filepath, row_dict["LLM_name"], row_dict["tp"], row_dict["GPU"], row_dict["vllm_version"], args.coeffs_filepath)
     else:
-        train_blis_model(args.LLM_name, args.tp, args.GPU, args.vllm_version)
+        train_blis_model(args.training_filepath, args.LLM_name, args.tp, args.GPU, args.vllm_version, args.coeffs_filepath)
     
