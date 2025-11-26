@@ -45,8 +45,9 @@ def get_per_exp_error(exp_dict, coeffs_filepath):
         blis_args.extend([f"--{key}", str(extra_args_with_coeffs[key])])
     try:
         sim_metrics = run_go_binary(blis_args, GO_BINARY_PATH)
+        print(f"Found trained coefficients for model={exp_dict["model_hf_repo"]}, \
+tp={exp_dict["hardware_count"]}, GPU={exp_dict["hardware"]}, vllm_version={exp_dict["framework_version"]}")
     except:
-        print("Could not run BLIS for given parameters. Check if you have pretrained coefficients")
         return None
     for idx, metric in enumerate(METRICS_TO_COMPARE):
         mape = abs(sim_metrics[f"{metric}_ms"] - exp_dict[metric])/exp_dict[metric] * 100

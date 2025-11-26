@@ -9,7 +9,6 @@ import pandas as pd
 import optuna
 from optuna.storages import JournalStorage
 from optuna.storages.journal import JournalFileBackend
-# from multiprocessing import Pool
 from filelock import FileLock
 
 from postprocessing_utils import run_go_binary

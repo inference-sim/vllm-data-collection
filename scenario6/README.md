@@ -23,6 +23,8 @@ By default the following files are picked by the training script. You can also p
 * `coeffs-filepath` - Path to save the trained BLIS coefficients to. Default: `coefficients.yaml`
 * `specs-filepath` - Path to the CSV file containing all combinations of (LLM, TP, GPU, vllm-version) to train over. Default: `training_specs.csv`.
 
+Note: If you rerun the exact same (LLM, TP, GPU, vllm-version) multiple times, the script simply overwrites existing coefficients in coeffs-filepath.
+
 ### FAQs:
 
 * How do I change the cost function for the optimizer?

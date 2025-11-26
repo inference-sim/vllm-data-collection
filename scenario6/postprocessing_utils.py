@@ -1,58 +1,5 @@
-import json
 import re
 import subprocess
-
-BLIS_REQGEN_CONFIG_FOLDER = "blis_reqgenconfigs"
-SWEEP_INFO_FILENAME = "sweep_info.json"
-QM_TRAINING_FILEPATH = "QM_train.json"
-QM_TESTING_FILEPATH = "QM_test.json"
-BLIS_TRAINING_FILEPATH = "BLIS_train.json"
-BLIS_TESTING_FILEPATH = "BLIS_test.json"
-ALPHA_WEIGHTS_FILENAME = 'BLIS_alpha_weights.pkl'
-ALPHA_METRICS_FILENAME = 'BLIS_alpha_metrics.json'
-BETA_METRICS_FILENAME = 'BLIS_beta_metrics.json'
-
-def read_traces_jsonl(filepath):
-    """
-    vLLM traces is a JSONL file.
-    This function loads raw data from traces file.
-    """
-    traces_raw_data = []
-    with open(filepath, 'r', encoding='utf-8') as f:
-        for line in f:
-            json_object = json.loads(line.strip())
-            traces_raw_data.append(json_object)
-    return traces_raw_data
-
-def get_server_side_metrics_from_traces(traces_raw_data):
-    """
-    Fetch server-side info from traces file per request.
-    We currently fetch vLLM requestID, input, output tokens, 
-    e2e latency, waiting, prefill and decode time per request.
-    """
-    all_requests = []
-    for data in traces_raw_data:
-        for resourceSpan in data["resourceSpans"]:
-            for scopeSpan in resourceSpan["scopeSpans"]:
-                for span in scopeSpan["spans"]:
-                    request = {}
-                    for attribute in span["attributes"]:
-                        if attribute["key"] == "gen_ai.request.id":
-                            request["request_id"] = attribute["value"]["stringValue"].rsplit("-0", 1)[0]
-                        if attribute["key"] == "gen_ai.usage.prompt_tokens":
-                            request["input_tokens"] = int(attribute["value"]["intValue"])
-                        if attribute["key"] == "gen_ai.usage.completion_tokens":
-                            request["output_tokens"] = int(attribute["value"]["intValue"])
-                        if attribute["key"] == "gen_ai.latency.e2e":
-                            request["e2e_latency"] = attribute["value"]["doubleValue"]
-                        if attribute["key"] == "gen_ai.latency.time_in_queue":
-                            request["queued_time"] = attribute["value"]["doubleValue"]
-                        if attribute["key"] == "gen_ai.latency.time_in_model_prefill":
-                            request["prefill_time"] = attribute["value"]["doubleValue"]
-                        if attribute["key"] == "gen_ai.latency.time_in_model_decode":
-                            request["decode_time"] = attribute["value"]["doubleValue"]
-                    all_requests.append(request)
-    return all_requests
 
 def run_go_binary(arguments, go_binary_path, metrics_lock = None):
     result = subprocess.run(
