@@ -11,7 +11,7 @@ This trains each combination in the file.
 python train_blis.py --specs-filepath specs.csv
 ```
 
-* Train over a specific (LLM, TPU, GPU, vllm-version) combination:
+* Train over a specific (LLM, TP, GPU, vllm-version) combination:
 
 ```
 python train_blis.py --LLM_name ... --tp 1 --GPU H100 --vllm-version ...
@@ -21,7 +21,7 @@ By default the following files are picked by the training script. You can also p
 
 * `training-filepath` - Path to the RH GuideLLM data to train BLIS over. Default: `blis_rh_final.xlsx`
 * `coeffs-filepath` - Path to save the trained BLIS coefficients to. Default: `coefficients.yaml`
-* `specs-filepath` - Path to the CSV file containing all combinations of (LLM, TPU, GPU, vllm-version) to train over. Default: `training_specs.csv`.
+* `specs-filepath` - Path to the CSV file containing all combinations of (LLM, TP, GPU, vllm-version) to train over. Default: `training_specs.csv`.
 
 ### FAQs:
 
@@ -37,10 +37,16 @@ Similar to above, go to `train_blis.py` and update the constant `NUM_TPE_ITERS` 
 
 ## Test
 
-When you want to test BLIS's performance, you might want to group your error numbers by various fields. Currently, you can see average results across **all** "Test" row in the GuideLLM RH `.xlsx` file (provided you have pretrained coefficients for the relevant (LLM, TP, GPU, vllm-version) combination) as follows:
+When you want to test BLIS's performance, you might want to group your error numbers by various fields. Currently, you can see average results across **all** "Test" row in the GuideLLM RH `.xlsx` file (provided you have pretrained coefficients for the relevant (LLM, TP, GPU, vllm-version) combination). You can also pass your custom `coeffs-filepath` and `training-filepath` (defaults are similar to the train script):
 
 ```
 python test_blis.py
+```
+
+Or with custom `coeffs-filepath`:
+
+```
+python test_blis.py --coeffs-filepath coefficients.yaml
 ```
 
 If you want to groupby LLM, TP, GPU or vllm-version, simply pass the argument to the test script. For example, the command below will group your test results by the `LLM-name == ibm-granite/granite-3.1-8b-instruct`:
