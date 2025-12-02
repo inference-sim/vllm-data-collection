@@ -7,15 +7,12 @@ from tqdm import tqdm
 from typing import Dict, Optional
 import pandas as pd
 import optuna
+from pathlib import Path
 from optuna.storages import JournalStorage
 from optuna.storages.journal import JournalFileBackend
 from filelock import FileLock
 
 from postprocessing_utils import run_go_binary
-
-GO_BINARY_NAME = "simulation_worker"
-GO_BINARY_PATH = os.path.join(os.path.dirname(
-    os.path.abspath(__file__)), GO_BINARY_NAME)
 
 NUM_TPE_ITERS = 2000
 MAX_NUM_PROCESSES = 20
@@ -36,6 +33,7 @@ class InferenceSimOptimizer:
         training_df: pd.DataFrame = None,
         pbounds: Optional[Dict] = None,
         scaling: Optional[Dict] = None,
+        blis_binary_path: str = None,
         seed: int = 42
     ):
         """
@@ -64,6 +62,7 @@ class InferenceSimOptimizer:
         }
         self.seed = seed
         self.training_df = training_df
+        self.blis_binary_path = blis_binary_path
 
         self.metrics_lock = None
         
@@ -92,7 +91,7 @@ class InferenceSimOptimizer:
         }
         for key in extra_args_with_coeffs:
             blis_args.extend([f"--{key}", str(extra_args_with_coeffs[key])])
-        sim_metrics = run_go_binary(blis_args, GO_BINARY_PATH, self.metrics_lock)
+        sim_metrics = run_go_binary(blis_args, self.blis_binary_path, self.metrics_lock)
         if not sim_metrics:
             return None
         cost = self.cost_function(vllm_exp, sim_metrics)
@@ -249,8 +248,22 @@ def get_heuristic_bounds(train_df):
     beta2_ub = ((train_df["e2e_mean"] - train_df["ttft_mean"])/train_df["mean_output_tokens"]).max() * MILLISECONDS_TO_MICROSECONDS_CONVERSION
     return alpha0_ub, alpha1_ub, alpha2_ub, beta0_ub, beta1_ub, beta2_ub
 
-def train_blis_model(training_filepath, LLM_name, tp, gpu, vllm_version, coeffs_filepath):
-    # check if coefficients already exist to prevent overwriting
+def train_blis_model(training_filepath, LLM_name, tp, gpu, vllm_version, coeffs_filepath, blis_binary_path):
+
+    # check if coefficients already exists, otherwise create
+    default_coeffs_data = {
+        "version": "0.0.1",
+        "models": None
+    }
+
+    if not Path(coeffs_filepath).exists():
+        print(f"'{coeffs_filepath}' not found. Creating it...")
+        
+        with open(coeffs_filepath, 'w') as f:
+            yaml.dump(default_coeffs_data, f, default_flow_style=False, sort_keys=False)
+            
+        print(f"'{coeffs_filepath}' created successfully.")
+        
     # read training CSV and filter to only train rows for LLM
     df = pd.read_excel(training_filepath)
     train_df = df[(df["train_test"] == "train") & (df["saturated"] == False) & (df["model_hf_repo"] == LLM_name) & (df["hardware_count"] == int(tp)) & (df["hardware"] == gpu) & (df["docker_image"] == vllm_version)]
@@ -268,7 +281,8 @@ def train_blis_model(training_filepath, LLM_name, tp, gpu, vllm_version, coeffs_
     # Initialize optimizer
     optimizer = InferenceSimOptimizer(
         training_df=train_df,
-        pbounds=heuristics_bounds
+        pbounds=heuristics_bounds,
+        blis_binary_path=blis_binary_path
     )
 
     # Sequential TPE sampling
@@ -297,7 +311,7 @@ def train_blis_model(training_filepath, LLM_name, tp, gpu, vllm_version, coeffs_
 
     # best_params = optimizer.get_best_trial()
 
-    # read again, and save best optimizer parameters
+    # read coeffs file and save best optimizer parameters
     lock = FileLock(f"{coeffs_filepath}.lock")
     with lock:
         with open(coeffs_filepath, 'r+') as file:
@@ -343,6 +357,9 @@ if __name__ == "__main__":
     parser.add_argument("--specs-filepath",
                         default="training_specs.csv", 
                         help="Path to all combinations to train.")
+    parser.add_argument("--blis-binary-path",
+                        default="./simulation_worker", 
+                        help="Path to prebuilt BLIS binary path.")
     args = parser.parse_args()
     if not (args.LLM_name and args.tp and args.GPU and args.vllm_version):
         print("Args not found. Training everything")
@@ -352,7 +369,7 @@ if __name__ == "__main__":
             print("############################################################################")
             print(f"Training BLIS for LLM={row_dict["LLM_name"]}, tp={row_dict["tp"]}, GPU={row_dict["GPU"]}, vllm-version={row_dict["vllm_version"]}")
             print("############################################################################")
-            train_blis_model(args.training_filepath, row_dict["LLM_name"], row_dict["tp"], row_dict["GPU"], row_dict["vllm_version"], args.coeffs_filepath)
+            train_blis_model(args.training_filepath, row_dict["LLM_name"], row_dict["tp"], row_dict["GPU"], row_dict["vllm_version"], args.coeffs_filepath, args.blis_binary_path)
     else:
-        train_blis_model(args.training_filepath, args.LLM_name, args.tp, args.GPU, args.vllm_version, args.coeffs_filepath)
+        train_blis_model(args.training_filepath, args.LLM_name, args.tp, args.GPU, args.vllm_version, args.coeffs_filepath, args.blis_binary_path)
     
