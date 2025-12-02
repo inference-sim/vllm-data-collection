@@ -14,7 +14,11 @@ from filelock import FileLock
 
 from postprocessing_utils import run_go_binary
 
-NUM_TPE_ITERS = 2000
+NUM_TPE_ITERS = os.getenv("NUM_ITER",2000)
+
+
+NUM_TPE_ITERS = int(NUM_TPE_ITERS)
+
 MAX_NUM_PROCESSES = 20
 MILLISECONDS_TO_MICROSECONDS_CONVERSION = 1e3
 # modify this list to change which metrics contribute to cost fn
