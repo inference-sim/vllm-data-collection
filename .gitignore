@@ -235,3 +235,9 @@ scenario4/*.png
 scenario5/*.json
 scenario5/*.yaml
 scenario5/blis_reqgenconfigs
+scenario6/test_plots
+scenario6/__pycache__
+scenario6/*.xlsx
+scenario6/*.yaml
+scenario6/*.lock
+scenario6/simulation_worker
