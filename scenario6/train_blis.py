@@ -367,7 +367,7 @@ if __name__ == "__main__":
         for idx in range(len(df)):
             row_dict = df.iloc[idx].to_dict()
             print("############################################################################")
-            print(f"Training BLIS for LLM={row_dict["LLM_name"]}, tp={row_dict["tp"]}, GPU={row_dict["GPU"]}, vllm-version={row_dict["vllm_version"]}")
+            print(f"Training BLIS for LLM={row_dict['LLM_name']}, tp={row_dict['tp']}, GPU={row_dict['GPU']}, vllm-version={row_dict['vllm_version']}")
             print("############################################################################")
             train_blis_model(args.training_filepath, row_dict["LLM_name"], row_dict["tp"], row_dict["GPU"], row_dict["vllm_version"], args.coeffs_filepath, args.blis_binary_path)
     else:
