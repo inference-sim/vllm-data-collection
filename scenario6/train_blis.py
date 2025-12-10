@@ -295,7 +295,8 @@ def train_blis_model(training_filepath, LLM_name, tp, gpu, vllm_version, coeffs_
         "vllm_version": vllm_version,
         "best_loss": optimizer.get_best_trial()["best_loss"],
         "alpha_coeffs": [best_params["alpha0"], best_params["alpha1"], best_params["alpha2"]],
-        "beta_coeffs": [best_params["beta0"], best_params["beta1"], best_params["beta2"]]
+        "beta_coeffs": [best_params["beta0"], best_params["beta1"], best_params["beta2"]],
+        "total_kv_blocks": int(train_df["total_kv_blocks"].iloc[0])
     }
 
     # Parallel Grid sampling
