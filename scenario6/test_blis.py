@@ -11,15 +11,33 @@ GO_BINARY_PATH = os.path.join(os.path.dirname(
 # modify this list to change which metrics to calculate error over
 METRICS_TO_COMPARE = ["ttft_mean", "itl_mean", "e2e_mean", "ttft_p90", "itl_p90", "e2e_p90"]
 
-def plot_vllm_vs_sim(data_df, plot_title=""):
+def plot_vllm_vs_sim(real_df, sim_df, error_df, plot_title=""):
     overall_errors = {}
     for metric in METRICS_TO_COMPARE:
         metric_error = f"{metric} MAPE"
-        overall_errors[metric_error] = data_df.loc[:, metric_error].mean()
+        overall_errors[metric_error] = error_df.loc[:, metric_error].mean()
     plt.figure(figsize=(10, 6))
     colors = ['orange', 'red', 'green', 'blue', 'purple', 'yellow']
     plt.bar(list(overall_errors.keys()), list(overall_errors.values()), label=list(overall_errors.keys()), color=colors)
     
+    plt.title(f'MAPE error - vllm vs sim - {plot_title}')
+    plt.xlabel("Metrics")
+    plt.ylabel("Error %")
+    plt.legend()
+    plots_folder = f"test_plots/blis"
+    os.makedirs(plots_folder, exist_ok=True)
+    plt.savefig(f'{plots_folder}/{plot_title}_error.png')
+
+    for metric in METRICS_TO_COMPARE[:3]:
+        plt.figure(figsize=(10, 6))
+        plt.plot(real_df.loc[:, f"{metric}_real"], color = "blue")
+        plt.plot(sim_df.loc[:, f"{metric}_sim"], color = "red")
+        plt.title(f'Real vs BLIS - {metric}')
+        plt.xlabel("Exp idx")
+        plt.ylabel("Error %")
+        plt.legend(["Real", "Predicted - BLIS"])
+        plt.savefig(f'{plots_folder}/blis_{metric}.png')
+
     plt.title(f'MAPE error - vllm vs sim - {plot_title}')
     plt.xlabel("Metrics")
     plt.ylabel("Error %")
@@ -30,6 +48,8 @@ def plot_vllm_vs_sim(data_df, plot_title=""):
 
 def get_per_exp_error(exp_dict, coeffs_filepath):
     per_exp_error = {}
+    per_exp_real = {}
+    per_exp_sim = {}
     blis_cmd = exp_dict["blis_cmd"]
     blis_args = ["run"]
     blis_args.extend(blis_cmd.split(" "))
@@ -48,15 +68,17 @@ def get_per_exp_error(exp_dict, coeffs_filepath):
         print(f"Found trained coefficients for model={exp_dict["model_hf_repo"]}, \
 tp={exp_dict["hardware_count"]}, GPU={exp_dict["hardware"]}, vllm_version={exp_dict["framework_version"]}")
     except:
-        return None
+        return None, None, None
     for idx, metric in enumerate(METRICS_TO_COMPARE):
         mape = abs(sim_metrics[f"{metric}_ms"] - exp_dict[metric])/exp_dict[metric] * 100
         per_exp_error[f"{metric} MAPE"] = mape
+        per_exp_real[f"{metric}_real"] = exp_dict[metric]
+        per_exp_sim[f"{metric}_sim"] = sim_metrics[f"{metric}_ms"]
     per_exp_error["tp"] = exp_dict["hardware_count"]
     per_exp_error["GPU"] = exp_dict["hardware"]
     per_exp_error["model"] = exp_dict["model_hf_repo"]
     per_exp_error["vllm-version"] = exp_dict["docker_image"]
-    return per_exp_error
+    return per_exp_real, per_exp_sim, per_exp_error
 
 def test_blis_model(training_filepath, coeffs_filepath, LLM_name = None, tp = None, gpu = None, vllm_version = None):
     # read training CSV and filter to only train rows for LLM
@@ -79,13 +101,21 @@ def test_blis_model(training_filepath, coeffs_filepath, LLM_name = None, tp = No
         final_mask = final_mask & cond
 
     test_df = df[final_mask]
+    # test_df = test_df.groupby(["model_hf_repo", "hardware", "hardware_count", "prompt_tokens", "output_tokens"]).first().reset_index() # take only the first request rate for a group
+    # test_df = test_df[test_df["model_hf_repo"] != "mistralai/mistral-small-3.1-24b-instruct-2503"]
+    all_exp_real = []
+    all_exp_sim = []
     all_exp_mapes = []
     for idx in range(len(test_df)):
         exp_dict = test_df.iloc[idx].to_dict()
-        exp_error = get_per_exp_error(exp_dict, coeffs_filepath)
+        exp_real, exp_sim, exp_error = get_per_exp_error(exp_dict, coeffs_filepath)
+        if exp_real:
+            all_exp_real.append(exp_real)
+        if exp_sim:
+            all_exp_sim.append(exp_sim)
         if exp_error:
             all_exp_mapes.append(exp_error)
-    return pd.DataFrame(all_exp_mapes)
+    return pd.DataFrame(all_exp_real), pd.DataFrame(all_exp_sim), pd.DataFrame(all_exp_mapes)
 
     # Parallel Grid sampling
     # optimizer.search_space = {
@@ -119,7 +149,7 @@ if __name__ == "__main__":
                         default="coefficients.yaml", 
                         help="Path to trained BLIS coeffs.")
     args = parser.parse_args()
-    error_df = test_blis_model(args.training_filepath, args.coeffs_filepath, args.LLM_name, args.tp, args.GPU, args.vllm_version)
+    real_df, sim_df, error_df = test_blis_model(args.training_filepath, args.coeffs_filepath, args.LLM_name, args.tp, args.GPU, args.vllm_version)
     print(error_df)
     model_name_for_plot_name = "*"
     vllm_version_for_plot_name = "*"
@@ -133,4 +163,4 @@ if __name__ == "__main__":
         tp = args.tp
     if args.GPU:
         gpu = args.GPU
-    plot_vllm_vs_sim(error_df, plot_title=f"LLM={model_name_for_plot_name} TP={tp} GPU={gpu} vllmVersion={vllm_version_for_plot_name}")
+    plot_vllm_vs_sim(real_df, sim_df, error_df, plot_title=f"LLM={model_name_for_plot_name} TP={tp} GPU={gpu} vllmVersion={vllm_version_for_plot_name}")
