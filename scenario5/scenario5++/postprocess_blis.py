@@ -53,13 +53,14 @@ def get_metrics_per_benchmark(benchmark_df, sweep, rps, guidellm_profile, vllm_c
     benchmark_metrics["sum_steps"] = int(((benchmark_df["input_tokens"] - guidellm_profile["data"]["prefix_tokens"])/chunk_size + benchmark_df["output_tokens"]).sum())
     return benchmark_metrics
 
-def get_heuristic_bounds(heuristic_aggs):
+def get_heuristic_bounds(heuristic_aggs, vllm_config):
     # all bounds should be in ticks (microseconds)
     alpha2_bound = heuristic_aggs["max_output_delay(s)"] * 1e6
     beta0_bound = heuristic_aggs["sum_inference_time(s)"] / heuristic_aggs["sum_steps"] * 1e6
     beta1_bound = heuristic_aggs["sum_prefill_time(s)"] / heuristic_aggs["sum_prefill_tokens"] * 1e6
     beta2_bound = heuristic_aggs["sum_decode_time(s)"] / heuristic_aggs["sum_output_tokens"] * 1e6
-    return alpha2_bound, beta0_bound, beta1_bound, beta2_bound
+    gamma_bound = (heuristic_aggs["sum_inference_time(s)"] / heuristic_aggs["sum_steps"]) / vllm_config["f_tokens"] * 1e6
+    return alpha2_bound, beta0_bound, beta1_bound, beta2_bound, gamma_bound
 
 def perform_postprocessing_blis(guidellm_profile_path, traces_path, vllm_config_path, results_path, train = True):
     """
@@ -115,7 +116,8 @@ def perform_postprocessing_blis(guidellm_profile_path, traces_path, vllm_config_
     blis_data = {}
     all_benchmarks = [] # record metrics for each benchmark
     heuristic_aggs = {"sum_prefill_time(s)": 0, "sum_decode_time(s)": 0, "sum_inference_time(s)": 0, "sum_output_tokens": 0,
-                        "sum_prefill_tokens": 0, "sum_steps": 0, "max_output_delay(s)": 0} # heuristic aggregates across benchmarks
+                        "sum_prefill_tokens": 0, "sum_steps": 0, 
+                        "max_output_delay(s)": 0} # heuristic aggregates across benchmarks
     for sweep in sweep_info:
         rps = sweep["rps"]
 
@@ -140,15 +142,14 @@ def perform_postprocessing_blis(guidellm_profile_path, traces_path, vllm_config_
         for heuristic in heuristic_aggs:
             if "sum" in heuristic:
                 heuristic_aggs[heuristic] += benchmark_metrics[heuristic]
-        # this heuristic is client-side - for alpha2
-        heuristic_aggs["max_output_delay(s)"] = max(heuristic_aggs["max_output_delay(s)"],
-            benchmark_metrics["e2e_mean_ms"] / benchmark_metrics["mean_output_tokens"])/1e3
+        # these heuristics are client-side - for alpha2
+        heuristic_aggs["max_output_delay(s)"] = max(heuristic_aggs["max_output_delay(s)"], benchmark_metrics["itl_mean_ms"])/1e3
     
     # calculate heuristic bounds for betas in blackbox optimizer
-    alpha2_bound, beta0_bound, beta1_bound, beta2_bound = get_heuristic_bounds(heuristic_aggs)
+    alpha2_bound, beta0_bound, beta1_bound, beta2_bound, gamma_bound = get_heuristic_bounds(heuristic_aggs, vllm_config)
 
     # combine all training data - metrics, bounds, vllm config etc. into file
-    blis_data["bounds"] = {"alpha2": alpha2_bound, "beta0": beta0_bound, "beta1": beta1_bound, "beta2": beta2_bound}
+    blis_data["bounds"] = {"alpha2": alpha2_bound, "beta0": beta0_bound, "beta1": beta1_bound, "beta2": beta2_bound, "gamma": gamma_bound}
     blis_data["benchmarks"] = all_benchmarks
     blis_data["vllm_config"] = vllm_config
 

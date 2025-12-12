@@ -53,12 +53,14 @@ class InferenceSimOptimizer:
             'beta0': (1e-4, 1e4),
             'beta1': (1e-4, 1e4),
             'beta2': (1e-4, 1e4),
+            'gamma': (1e-4, 1e4)
         }
         self.scaling = scaling or {
             'alpha2': 1,
             'beta0': 1,
             'beta1': 1,
-            'beta2': 1
+            'beta2': 1,
+            'gamma': 1
         }
         self.seed = seed
         self.reqgen_config_folder = reqgen_config_folder
@@ -77,7 +79,7 @@ class InferenceSimOptimizer:
             total_mape += mape
         return total_mape
     
-    def per_thread_cost(self, request_rate, alpha2, beta_coeffs):
+    def per_thread_cost(self, request_rate, alpha2, beta_coeffs, gamma):
         """
         Run simulator per experiment thread and obtain simulator results. 
         Compare against vllm ground truth metrics and return cost per experiment
@@ -98,6 +100,8 @@ class InferenceSimOptimizer:
             "beta-coeffs": ','.join(beta_coeffs),
             "long-prefill-token-threshold": 0,
             "alpha-coeffs": f"{self.alpha0},{self.alpha1},{alpha2}",
+            "gamma-coeffs": gamma,
+            "flop-per-token": self.training_data["vllm_config"]["f_tokens"],
             "log": "error"
         }
         args_list = ["run"]
@@ -128,12 +132,13 @@ class InferenceSimOptimizer:
         beta0 = trial.suggest_float('beta0', *self.pbounds['beta0'])
         beta1 = trial.suggest_float('beta1', *self.pbounds['beta1'])
         beta2 = trial.suggest_float('beta2', *self.pbounds['beta2'])
+        gamma = trial.suggest_float('gamma', *self.pbounds['gamma'])
         beta_coeffs = [beta0, beta1, beta2]
         beta_coeffs = list(map(str, beta_coeffs))
 
         for exp in self.training_data["benchmarks"]:
             rps = exp["rps"]
-            tasks.append((rps, alpha2, beta_coeffs))
+            tasks.append((rps, alpha2, beta_coeffs, gamma))
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             all_costs = executor.map(self.run_task_from_tuple, tasks)
@@ -180,12 +185,13 @@ class InferenceSimOptimizer:
         beta0 = trial.suggest_float('beta0', *self.pbounds['beta0'])
         beta1 = trial.suggest_float('beta1', *self.pbounds['beta1'])
         beta2 = trial.suggest_float('beta2', *self.pbounds['beta2'])
+        gamma = trial.suggest_float('gamma', *self.pbounds['gamma'])
         beta_coeffs = [beta0, beta1, beta2]
         beta_coeffs = list(map(str, beta_coeffs))
 
         for exp in self.training_data["benchmarks"]:
             rps = exp["rps"]
-            tasks.append((rps, alpha2, beta_coeffs))
+            tasks.append((rps, alpha2, beta_coeffs, gamma))
         
         all_costs = []
         for task in tqdm(tasks):
@@ -272,9 +278,10 @@ def train_beta_model(results_path, model_path):
         "alpha2": (0, 2 * training_data["bounds"]["alpha2"]),
         "beta0": (0, 2 * training_data["bounds"]["beta0"]),
         "beta1": (0, 2 * training_data["bounds"]["beta1"]),
-        "beta2": (0, 2 * training_data["bounds"]["beta2"])
+        "beta2": (0, 2 * training_data["bounds"]["beta2"]),
+        "gamma": (0, 2 * training_data["bounds"]["gamma"])
     }
-
+    
     reqgen_config_folder = os.path.join(results_path, BLIS_REQGEN_CONFIG_FOLDER)
 
     # Initialize optimizer
