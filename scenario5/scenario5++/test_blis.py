@@ -39,7 +39,7 @@ def plot_vllm_vs_sim(data_df, groupby = "tp"):
         os.makedirs(plots_folder, exist_ok=True)
         plt.savefig(f'{plots_folder}/{plot_title}_error.png')
 
-def get_alpha_beta_coeffs(model_tp_path):
+def get_alpha_beta_gamma_coeffs(model_tp_path):
     # read alpha coeffs
     alpha_metrics_file = os.path.join(model_tp_path, "BLIS_alpha_metrics.json")
     try:
@@ -58,12 +58,13 @@ def get_alpha_beta_coeffs(model_tp_path):
             beta_metrics = json.load(f)
             alpha2 = beta_metrics["best_params"]["alpha2"]
             beta_coeffs = list(map(str, list(beta_metrics["best_params"].values())))
+            gamma = beta_metrics["best_params"]["gamma"]
     except:
         print("Could not load BLIS beta coeffs.")
         sys.exit()
     alpha_coeffs.append(str(alpha2))
     beta_coeffs = beta_coeffs[1:]
-    return alpha_coeffs, beta_coeffs
+    return alpha_coeffs, beta_coeffs, gamma
 
 def get_per_test_exp_result(model_path, test_full_path):
     guidellm_profile_path = os.path.join(test_full_path, "profile.yaml")
@@ -86,8 +87,7 @@ def get_per_test_exp_result(model_path, test_full_path):
 
     # get pretrained BLIS coeffs
     model_tp_path = os.path.join(model_path, f"model_{model}_tp_{tp}")
-    print(model_tp_path)
-    alpha_coeffs, beta_coeffs = get_alpha_beta_coeffs(model_tp_path)
+    alpha_coeffs, beta_coeffs, gamma = get_alpha_beta_gamma_coeffs(model_tp_path)
     benchmark_file_path = os.path.join(test_full_path, "BLIS_test.json")
     try:
         with open(benchmark_file_path, 'r') as f:
@@ -113,6 +113,8 @@ def get_per_test_exp_result(model_path, test_full_path):
             "block-size-in-tokens": 16,
             "horizon": "922337203685477580", # Golang int64 max value
             "beta-coeffs": ','.join(beta_coeffs),
+            "gamma-coeffs": gamma,
+            "flop-per-token": benchmark_data["vllm_config"]["f_tokens"],
             "long-prefill-token-threshold": 0,
             "alpha-coeffs": ','.join(alpha_coeffs),
             "log": "error"
@@ -128,6 +130,7 @@ def get_per_test_exp_result(model_path, test_full_path):
                 args_list.extend([config_field, str(workload_config["data"][config])])
         args_list.extend(["--rate", str(workload_config["rate"]["rate"])])
         args_list.extend(["--max-prompts", str(workload_config["rate"]["max-requests"])])
+        print(" ".join(list(map(str, args_list))))
         sim_metrics = run_go_binary(args_list, GO_BINARY_PATH, rps)
         if not sim_metrics:
             return None

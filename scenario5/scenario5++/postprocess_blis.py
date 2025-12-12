@@ -59,7 +59,7 @@ def get_heuristic_bounds(heuristic_aggs, vllm_config):
     beta0_bound = heuristic_aggs["sum_inference_time(s)"] / heuristic_aggs["sum_steps"] * 1e6
     beta1_bound = heuristic_aggs["sum_prefill_time(s)"] / heuristic_aggs["sum_prefill_tokens"] * 1e6
     beta2_bound = heuristic_aggs["sum_decode_time(s)"] / heuristic_aggs["sum_output_tokens"] * 1e6
-    gamma_bound = (heuristic_aggs["sum_inference_time(s)"] / heuristic_aggs["sum_steps"]) / vllm_config["f_tokens"] * 1e6
+    gamma_bound = (heuristic_aggs["sum_inference_time(s)"] / heuristic_aggs["sum_steps"]) / vllm_config["f_tokens"]
     return alpha2_bound, beta0_bound, beta1_bound, beta2_bound, gamma_bound
 
 def perform_postprocessing_blis(guidellm_profile_path, traces_path, vllm_config_path, results_path, train = True):
