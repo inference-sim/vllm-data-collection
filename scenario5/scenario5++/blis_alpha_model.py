@@ -32,20 +32,21 @@ def train_alpha_model(results_path, model_path):
     Linear Regression model:
     alpha0 + alpha1 * input_len = e2e_time - (queued + prefill + decode)
     """
-    # get training data for alpha model
-    training_data_filename = os.path.join(results_path, BLIS_TRAINING_FILEPATH)
-    try:
-        with open(training_data_filename, 'r') as f:
-            training_data = json.load(f)
-    except:
-        print("Could not load BLIS training data.")
-        sys.exit()
     processing_times = []
     input_lengths = []
-    for benchmark in training_data["benchmarks"]:
-        all_processing_times_microsec = [x*1e6 for x in benchmark["all_processing_times(s)"]]
-        processing_times.extend(all_processing_times_microsec) # in microsecs for BLIS
-        input_lengths.extend(benchmark["all_input_lens"])
+    for result_path in results_path:
+        # get training data for alpha model
+        training_data_filename = os.path.join(result_path, BLIS_TRAINING_FILEPATH)
+        try:
+            with open(training_data_filename, 'r') as f:
+                training_data = json.load(f)
+        except:
+            print("Could not load BLIS training data.")
+            sys.exit()
+        for benchmark in training_data["benchmarks"]:
+            all_processing_times_microsec = [x*1e6 for x in benchmark["all_processing_times(s)"]]
+            processing_times.extend(all_processing_times_microsec) # in microsecs for BLIS
+            input_lengths.extend(benchmark["all_input_lens"])
 
     input_features = [[1, input_length] for input_length in input_lengths]
     alpha_model = LinearRegression(positive=True, fit_intercept=False)

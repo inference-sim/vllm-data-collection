@@ -39,9 +39,9 @@ def plot_vllm_vs_sim(data_df, groupby = "tp"):
         os.makedirs(plots_folder, exist_ok=True)
         plt.savefig(f'{plots_folder}/{plot_title}_error.png')
 
-def get_alpha_beta_gamma_coeffs(model_tp_path):
+def get_alpha_beta_gamma_coeffs(all_models_path, model_tp_path):
     # read alpha coeffs
-    alpha_metrics_file = os.path.join(model_tp_path, "BLIS_alpha_metrics.json")
+    alpha_metrics_file = os.path.join(all_models_path, "BLIS_alpha_metrics.json")
     try:
         with open(alpha_metrics_file, 'r') as f:
             alpha_metrics = json.load(f)
@@ -51,7 +51,8 @@ def get_alpha_beta_gamma_coeffs(model_tp_path):
         sys.exit()
     
     # read beta coeffs
-    beta_metrics_file = os.path.join(model_tp_path, "BLIS_beta_metrics.json")
+    qwen3_path = "models/model_qwen2.5-3b-instruct_tp_1"
+    beta_metrics_file = os.path.join(qwen3_path, "BLIS_beta_metrics.json")
     alpha2 = 0
     try:
         with open(beta_metrics_file, 'r') as f:
@@ -87,7 +88,7 @@ def get_per_test_exp_result(model_path, test_full_path):
 
     # get pretrained BLIS coeffs
     model_tp_path = os.path.join(model_path, f"model_{model}_tp_{tp}")
-    alpha_coeffs, beta_coeffs, gamma = get_alpha_beta_gamma_coeffs(model_tp_path)
+    alpha_coeffs, beta_coeffs, gamma = get_alpha_beta_gamma_coeffs(model_path, model_tp_path)
     benchmark_file_path = os.path.join(test_full_path, "BLIS_test.json")
     try:
         with open(benchmark_file_path, 'r') as f:

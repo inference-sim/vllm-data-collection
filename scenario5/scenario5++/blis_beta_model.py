@@ -254,9 +254,9 @@ def with_inp(args):
     i, optimizer = args
     optimizer.optimize_multitrial()
 
-def train_beta_model(results_path, model_path):
+def train_beta_model(results_path, all_models_path, model_path):
     # read pretrained alpha coeffs
-    alpha_metrics_filename = os.path.join(model_path, ALPHA_METRICS_FILENAME)
+    alpha_metrics_filename = os.path.join(all_models_path, ALPHA_METRICS_FILENAME)
     try:
         with open(alpha_metrics_filename, 'r') as f:
             alpha_metrics = json.load(f)
@@ -281,7 +281,7 @@ def train_beta_model(results_path, model_path):
         "beta2": (0, 2 * training_data["bounds"]["beta2"]),
         "gamma": (0, 2 * training_data["bounds"]["gamma"])
     }
-    
+
     reqgen_config_folder = os.path.join(results_path, BLIS_REQGEN_CONFIG_FOLDER)
 
     # Initialize optimizer
