@@ -14,7 +14,7 @@ from filelock import FileLock
 
 from postprocessing_utils import run_go_binary
 
-NUM_TPE_ITERS = int(os.getenv("num_iter", 2000))
+NUM_TPE_ITERS = int(os.getenv("NUM_ITER", 2000))
 print("--- NUM_TPE_ITERS", NUM_TPE_ITERS)
 
 MAX_NUM_PROCESSES = 20
