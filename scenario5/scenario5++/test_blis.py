@@ -12,7 +12,7 @@ from postprocess_blis import perform_postprocessing_blis
 from postprocessing_utils import run_go_binary
 from blis_beta_model import GO_BINARY_PATH
 
-METRICS_TO_COMPARE = ["e2e_mean_ms", "e2e_p90_ms", "ttft_mean_ms", "ttft_p90_ms", "itl_mean_ms", "itl_p90_ms"]
+METRICS_TO_COMPARE = ["e2e_mean_ms", "e2e_p90_ms", "ttft_mean_ms", "ttft_p90_ms", "itl_mean_ms"]
 
 def plot_vllm_vs_sim(data_df, groupby = "tp"):
     grouped_df = data_df.groupby(groupby).mean(numeric_only=True)
@@ -52,17 +52,14 @@ def get_alpha_beta_coeffs(model_tp_path):
     
     # read beta coeffs
     beta_metrics_file = os.path.join(model_tp_path, "BLIS_beta_metrics.json")
-    alpha2 = 0
     try:
         with open(beta_metrics_file, 'r') as f:
             beta_metrics = json.load(f)
-            alpha2 = beta_metrics["best_params"]["alpha2"]
             beta_coeffs = list(map(str, list(beta_metrics["best_params"].values())))
     except:
         print("Could not load BLIS beta coeffs.")
         sys.exit()
-    alpha_coeffs.append(str(alpha2))
-    beta_coeffs = beta_coeffs[1:]
+    alpha_coeffs.extend(["0"])
     return alpha_coeffs, beta_coeffs
 
 def get_per_test_exp_result(model_path, test_full_path):
@@ -123,17 +120,19 @@ def get_per_test_exp_result(model_path, test_full_path):
         with open(reqgen_config_file, "r+") as f:
             workload_config = yaml.safe_load(f)
         for config in workload_config["data"]:
-            if config != "prefix_tokens":
-                config_field = f"--{config.replace("_", "-")}"
-                args_list.extend([config_field, str(workload_config["data"][config])])
+            config_field = f"--{config.replace("_", "-")}"
+            args_list.extend([config_field, str(workload_config["data"][config])])
         args_list.extend(["--rate", str(workload_config["rate"]["rate"])])
         args_list.extend(["--max-prompts", str(workload_config["rate"]["max-requests"])])
+        print(" ".join(list(map(str, args_list))))
         sim_metrics = run_go_binary(args_list, GO_BINARY_PATH, rps)
         if not sim_metrics:
             return None
         for idx, metric in enumerate(METRICS_TO_COMPARE):
             mape = abs(sim_metrics[metric] - benchmark_metrics[metric])/benchmark_metrics[metric] * 100
             row[f"{metric} MAPE"] = mape
+            if "ttft" in metric:
+                print(metric, "sim:", sim_metrics[metric], "vllm:", benchmark_metrics[metric], "mape:", mape)
         row["rps"] = rps
         row["tp"] = tp
         row["chunk_size"] = benchmark_data["vllm_config"]["max_num_batched_tokens"]

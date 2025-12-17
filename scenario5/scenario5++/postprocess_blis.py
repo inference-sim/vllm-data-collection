@@ -26,21 +26,21 @@ def construct_BLIS_reqgenconfig(guidellm_profile, rps):
     blis_reqgen_config["data"] = guidellm_profile["data"]
     return blis_reqgen_config
 
-def get_metrics_per_benchmark(benchmark_df, sweep, rps, guidellm_profile, vllm_config):
+def get_metrics_per_benchmark(benchmark_df, rps, guidellm_profile, vllm_config):
     """
     Get BLIS-style benchmark metrics in milliseconds.
     """
     benchmark_metrics = {"rps": rps}
-    # client-side values for cost fn
-    benchmark_metrics["e2e_mean_ms"] = sweep["e2e_mean_ms"]
-    benchmark_metrics["e2e_p90_ms"] = sweep["e2e_p90_ms"]
-    benchmark_metrics["ttft_mean_ms"] = sweep["ttft_mean_ms"]
-    benchmark_metrics["ttft_p90_ms"] = sweep["ttft_p90_ms"]
-    benchmark_metrics["itl_mean_ms"] = sweep["itl_mean_ms"]
-    benchmark_metrics["itl_p90_ms"] = sweep["itl_p90_ms"]
+    # server-side values for cost fn
+    benchmark_metrics["e2e_mean_ms"] = benchmark_df["e2e_latency"].mean() * 1e3
+    benchmark_metrics["e2e_p90_ms"] = benchmark_df["e2e_latency"].quantile(0.9) * 1e3
+    benchmark_metrics["ttft_mean_ms"] = benchmark_df["ttft"].mean() * 1e3
+    benchmark_metrics["ttft_p90_ms"] = benchmark_df["ttft"].quantile(0.9) * 1e3
+    benchmark_metrics["itl_mean_ms"] = (benchmark_df["prefill_time"] + benchmark_df["decode_time"]).sum()/benchmark_df["output_tokens"].sum() * 1e3
     # server-side values for bounds, and alpha regression
     benchmark_metrics["all_processing_times(s)"] = (benchmark_df["e2e_latency"] - (benchmark_df["queued_time"] + benchmark_df["prefill_time"] + benchmark_df["decode_time"])).tolist()
     benchmark_metrics["all_input_lens"] = benchmark_df["input_tokens"].tolist()
+    benchmark_metrics["all_output_lens"] = benchmark_df["output_tokens"].tolist()
     # metrics needed for heuristic beta bounds
     benchmark_metrics["sum_prefill_time(s)"] = benchmark_df["prefill_time"].sum()
     benchmark_metrics["sum_decode_time(s)"] = benchmark_df["decode_time"].sum()
@@ -55,11 +55,10 @@ def get_metrics_per_benchmark(benchmark_df, sweep, rps, guidellm_profile, vllm_c
 
 def get_heuristic_bounds(heuristic_aggs):
     # all bounds should be in ticks (microseconds)
-    alpha2_bound = heuristic_aggs["max_output_delay(s)"] * 1e6
     beta0_bound = heuristic_aggs["sum_inference_time(s)"] / heuristic_aggs["sum_steps"] * 1e6
     beta1_bound = heuristic_aggs["sum_prefill_time(s)"] / heuristic_aggs["sum_prefill_tokens"] * 1e6
     beta2_bound = heuristic_aggs["sum_decode_time(s)"] / heuristic_aggs["sum_output_tokens"] * 1e6
-    return alpha2_bound, beta0_bound, beta1_bound, beta2_bound
+    return beta0_bound, beta1_bound, beta2_bound
 
 def perform_postprocessing_blis(guidellm_profile_path, traces_path, vllm_config_path, results_path, train = True):
     """
@@ -134,21 +133,18 @@ def perform_postprocessing_blis(guidellm_profile_path, traces_path, vllm_config_
         # benchmark-wise metrics and heuristic totals
         benchmark_request_ids = sweep["requestIDs"]
         benchmark_df = requests_df[requests_df["request_id"].isin(benchmark_request_ids)].copy()
-        benchmark_metrics = get_metrics_per_benchmark(benchmark_df, sweep, rps, guidellm_profile, vllm_config)
+        benchmark_metrics = get_metrics_per_benchmark(benchmark_df, rps, guidellm_profile, vllm_config)
         all_benchmarks.append(benchmark_metrics)
         # sum heuristics are server-side - for betas
         for heuristic in heuristic_aggs:
             if "sum" in heuristic:
                 heuristic_aggs[heuristic] += benchmark_metrics[heuristic]
-        # this heuristic is client-side - for alpha2
-        heuristic_aggs["max_output_delay(s)"] = max(heuristic_aggs["max_output_delay(s)"],
-            benchmark_metrics["e2e_mean_ms"] / benchmark_metrics["mean_output_tokens"])/1e3
     
     # calculate heuristic bounds for betas in blackbox optimizer
-    alpha2_bound, beta0_bound, beta1_bound, beta2_bound = get_heuristic_bounds(heuristic_aggs)
+    beta0_bound, beta1_bound, beta2_bound = get_heuristic_bounds(heuristic_aggs)
 
     # combine all training data - metrics, bounds, vllm config etc. into file
-    blis_data["bounds"] = {"alpha2": alpha2_bound, "beta0": beta0_bound, "beta1": beta1_bound, "beta2": beta2_bound}
+    blis_data["bounds"] = {"beta0": beta0_bound, "beta1": beta1_bound, "beta2": beta2_bound}
     blis_data["benchmarks"] = all_benchmarks
     blis_data["vllm_config"] = vllm_config
 

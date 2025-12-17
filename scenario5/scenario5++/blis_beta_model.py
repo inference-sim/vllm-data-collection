@@ -49,13 +49,11 @@ class InferenceSimOptimizer:
         """
         # Set default parameter bounds, scaling
         self.pbounds = pbounds or {
-            'alpha2': (1e-4, 1e4),
             'beta0': (1e-4, 1e4),
             'beta1': (1e-4, 1e4),
             'beta2': (1e-4, 1e4),
         }
         self.scaling = scaling or {
-            'alpha2': 1,
             'beta0': 1,
             'beta1': 1,
             'beta2': 1
@@ -77,7 +75,7 @@ class InferenceSimOptimizer:
             total_mape += mape
         return total_mape
     
-    def per_thread_cost(self, request_rate, alpha2, beta_coeffs):
+    def per_thread_cost(self, request_rate, beta_coeffs):
         """
         Run simulator per experiment thread and obtain simulator results. 
         Compare against vllm ground truth metrics and return cost per experiment
@@ -97,7 +95,7 @@ class InferenceSimOptimizer:
             "horizon": "922337203685477580", # Golang int64 max value
             "beta-coeffs": ','.join(beta_coeffs),
             "long-prefill-token-threshold": 0,
-            "alpha-coeffs": f"{self.alpha0},{self.alpha1},{alpha2}",
+            "alpha-coeffs": f"{self.alpha0},{self.alpha1},0",
             "log": "error"
         }
         args_list = ["run"]
@@ -106,9 +104,8 @@ class InferenceSimOptimizer:
         with open(reqgen_config_file, "r+") as f:
             workload_config = yaml.safe_load(f)
         for config in workload_config["data"]:
-            if config != "prefix_tokens":
-                config_field = f"--{config.replace("_", "-")}"
-                args_list.extend([config_field, str(workload_config["data"][config])])
+            config_field = f"--{config.replace("_", "-")}"
+            args_list.extend([config_field, str(workload_config["data"][config])])
         args_list.extend(["--rate", str(workload_config["rate"]["rate"])])
         args_list.extend(["--max-prompts", str(workload_config["rate"]["max-requests"])])
         sim_metrics = run_go_binary(args_list, GO_BINARY_PATH, request_rate, self.metrics_lock)
@@ -124,7 +121,6 @@ class InferenceSimOptimizer:
         total_cost = 0.0
         tasks = []
         self.metrics_lock = threading.Lock()
-        alpha2 = trial.suggest_float('alpha2', *self.pbounds['alpha2'])
         beta0 = trial.suggest_float('beta0', *self.pbounds['beta0'])
         beta1 = trial.suggest_float('beta1', *self.pbounds['beta1'])
         beta2 = trial.suggest_float('beta2', *self.pbounds['beta2'])
@@ -133,7 +129,7 @@ class InferenceSimOptimizer:
 
         for exp in self.training_data["benchmarks"]:
             rps = exp["rps"]
-            tasks.append((rps, alpha2, beta_coeffs))
+            tasks.append((rps, beta_coeffs))
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             all_costs = executor.map(self.run_task_from_tuple, tasks)
@@ -176,7 +172,6 @@ class InferenceSimOptimizer:
     def multitrial_obj(self, trial: optuna.trial.Trial):
         print(f"Running trial {trial.number=} in process {os.getpid()}")
         tasks = []
-        alpha2 = trial.suggest_float('alpha2', *self.pbounds['alpha2'])
         beta0 = trial.suggest_float('beta0', *self.pbounds['beta0'])
         beta1 = trial.suggest_float('beta1', *self.pbounds['beta1'])
         beta2 = trial.suggest_float('beta2', *self.pbounds['beta2'])
@@ -185,7 +180,7 @@ class InferenceSimOptimizer:
 
         for exp in self.training_data["benchmarks"]:
             rps = exp["rps"]
-            tasks.append((rps, alpha2, beta_coeffs))
+            tasks.append((rps, beta_coeffs))
         
         all_costs = []
         for task in tqdm(tasks):
@@ -269,7 +264,6 @@ def train_beta_model(results_path, model_path):
         sys.exit()
 
     heuristics_bounds = {
-        "alpha2": (0, 2 * training_data["bounds"]["alpha2"]),
         "beta0": (0, 2 * training_data["bounds"]["beta0"]),
         "beta1": (0, 2 * training_data["bounds"]["beta1"]),
         "beta2": (0, 2 * training_data["bounds"]["beta2"])
