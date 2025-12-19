@@ -23,7 +23,7 @@ By default the following files are picked by the training script. You can also p
 * `coeffs-filepath` - Path to save the trained BLIS coefficients to. Default: `coefficients.yaml`
 * `specs-filepath` - Path to the CSV file containing all combinations of (LLM, TP, GPU, vllm-version) to train over. Default: `training_specs.csv`.
 
-Note: If you rerun the exact same (LLM, TP, GPU, vllm-version) multiple times, the script simply overwrites existing coefficients in coeffs-filepath.
+> **Note:** If you rerun the exact same (LLM, TP, GPU, vllm-version) multiple times, the script simply overwrites existing coefficients in coeffs-filepath.
 
 ### FAQs:
 
@@ -33,9 +33,11 @@ For this, go to the `train_blis.py` script and modify the constant `METRICS_IN_L
 
 * How do I run optimization over more/less iterations?
 
-Similar to above, go to `train_blis.py` and update the constant `NUM_TPE_ITERS` to the number of iterations you want.
+Similar to above, go to `train_blis.py` and update the constant `NUM_TPE_ITERS` to the number of iterations you want. In addition, you can now set the environment variable `NUM_TPE_ITERS` to desired iteration count before running the training as follows:
 
-
+```
+export NUM_TPE_ITERS=50
+```
 
 ## Test
 
@@ -64,10 +66,30 @@ LLM=* TP=* GPU=* vllmVersion=*_error.png
 LLM=granite-3.1-8b-instruct TP=* GPU=* vllmVersion=*_error.png
 ```
 
-## Generate synthetic JSON file similar to [Compass](https://github.com/redhat-et/compass/blob/main/data/benchmarks.json):
+## Generate BLIS-simulated JSON file for [Compass](https://github.com/redhat-et/compass/blob/main/data/benchmarks.json):
 
-To generate the final formatted synthetic metrics file, we currently take all the "Test" rows in the GuideLLM RH `.xlsx` file. This means currently for each combination we report metrics for 50% of available data that we did not train over. We only take those (LLM, TP, GPU, vllm-version) combinations which have pretrained coefficients saved in the coeffs file. You can pass the config file and GuideLLM data filepath of your choice to the script. You can also pass the filename of the final synthetic metrics file to generate, as follows:
+To generate the final formatted synthetic metrics file, we currently take all the (LLM, TP, GPU, vllm-version) in the "Test" rows in the GuideLLM RH `.xlsx` file. We only take those (LLM, TP, GPU, vllm-version) combinations which have pretrained coefficients saved in the coeffs file. You can pass the config file and GuideLLM data filepath of your choice to the script. You can also pass the filename of the final synthetic metrics file to generate, as follows:
 
 ```
-python generate_inference_json.py --coeffs-filepath coefficients.yaml --testing-filepath blis_rh_final.xlsx --synthetic-results-filepath benchmarks_BLIS.json
+python generate_inference_json.py --coeffs-filepath coefficients.yaml --testing-filepath blis_rh_final.xlsx --synthetic-results-filepath benchmarks_BLIS.json --specs-filepath training_specs.csv
+```
+
+> **Note**: If you already have Compass data for a combination in `benchmarks_BLIS.json` and repeat the same combination in `training_specs.csv`, it will append the same results again to `benchmarks_BLIS.json`. To avoid this, **please ensure you do not repeat specs that you already have data for in `benchmarks_BLIS.json` in `training_specs.csv`.**
+
+## Other util scripts
+
+In this folder, you will also find two util scripts - `generate_training_specs.py` and `process_coeffs_yaml.py`. Here are their use-cases
+
+* `generate_training_specs.py`: This script is used to extract all possible (LLM,TP,GPU,vllm-version) combinations from `blis_rh_final.xlsx` such that for each combination number of training rows >=4 and number of test rows >=2. Run this script to get an exhaustive list of all combinations to train BLIS over from RH GuideLLM data and save the combinations into `training_specs.csv`. 
+
+```
+python generate_training_specs.py
+```
+
+Beware: this will overwrite your existing `training_specs.csv`.
+
+* `process_coeffs_yaml.py`: BLIS, when run only with `--model` expects default (TP,GPU,vllm-version) values. Currently the defaults are set by the logic: for each LLM, what is the (TP,GPU,vllm-version) combination that is most frequent in `blis_rh_final.xlsx`. Running this script modifies `coefficients.yaml` and populates these default values in the field `defaults` for all models present in `training_specs.csv`.
+
+```
+python process_coeffs_yaml.py
 ```

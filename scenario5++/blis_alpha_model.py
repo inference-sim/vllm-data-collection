@@ -30,7 +30,7 @@ def get_metrics_and_coeffs(X_train, y_train, alpha_model):
 def train_alpha_model(results_path, model_path):
     """
     Linear Regression model:
-    alpha0 + alpha1 * input_len = e2e_time - (queued + prefill + decode)
+    alpha0 = mean(e2e_time - (queued + prefill + decode))
     """
     # get training data for alpha model
     training_data_filename = os.path.join(results_path, BLIS_TRAINING_FILEPATH)
@@ -50,6 +50,7 @@ def train_alpha_model(results_path, model_path):
     input_features = [[1, input_length] for input_length in input_lengths]
     alpha_model = LinearRegression(positive=True, fit_intercept=False)
     alpha_model.fit(input_features, processing_times)
+
 
     metrics_coeffs = get_metrics_and_coeffs(input_features, processing_times, alpha_model) # alpha0, alpha1
     print("Alpha training complete.")
@@ -77,5 +78,3 @@ if __name__=="__main__":
     args = parser.parse_args()
 
     train_alpha_model(args.train_results_path, args.model_path)
-
-

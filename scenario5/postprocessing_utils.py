@@ -103,4 +103,3 @@ def parse_sim_metrics_to_json(stdout, request_rate):
             except ValueError:
                 continue
     return metrics_data
-

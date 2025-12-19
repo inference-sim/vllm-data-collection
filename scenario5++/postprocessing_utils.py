@@ -45,6 +45,8 @@ def get_server_side_metrics_from_traces(traces_raw_data):
                             request["output_tokens"] = int(attribute["value"]["intValue"])
                         if attribute["key"] == "gen_ai.latency.e2e":
                             request["e2e_latency"] = attribute["value"]["doubleValue"]
+                        if attribute["key"] == "gen_ai.latency.time_to_first_token":
+                            request["ttft"] = attribute["value"]["doubleValue"]
                         if attribute["key"] == "gen_ai.latency.time_in_queue":
                             request["queued_time"] = attribute["value"]["doubleValue"]
                         if attribute["key"] == "gen_ai.latency.time_in_model_prefill":
@@ -103,4 +105,3 @@ def parse_sim_metrics_to_json(stdout, request_rate):
             except ValueError:
                 continue
     return metrics_data
-

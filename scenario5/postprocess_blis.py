@@ -146,7 +146,7 @@ def perform_postprocessing_blis(guidellm_profile_path, traces_path, vllm_config_
         blis_final_filename = os.path.join(results_path, BLIS_TESTING_FILEPATH)
     with open(blis_final_filename, 'w+') as f:
         json.dump(blis_data, f, indent=4)
-    print(f"BLIS Postprocessing complete. Training data saved to {blis_final_filename}")
+    print(f"BLIS Postprocessing complete. Data saved to {blis_final_filename}")
     return blis_data
 
 if __name__=="__main__":
@@ -163,4 +163,3 @@ if __name__=="__main__":
     
     args = parser.parse_args()
     perform_postprocessing_blis(args.guidellm_profile, args.traces, args.vllm_config, args.results_path)
-    

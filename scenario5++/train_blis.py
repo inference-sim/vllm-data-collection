@@ -23,11 +23,12 @@ if __name__=="__main__":
     for train_path in all_train:
         guidellm_profile_path = os.path.join(train_path, "profile.yaml")
         guidellm_results_path = os.path.join(train_path, "guidellm-results.json")
+        vllm_logs = os.path.join(train_path, "vllm.log")
         vllm_config_path = os.path.join(train_path, "exp-config.yaml")
 
         traces_path = os.path.join(train_path, "traces.json")
         perform_postprocessing_common(guidellm_results_path, train_path)
-        perform_postprocessing_blis(guidellm_profile_path, traces_path, vllm_config_path, train_path, train=True)
+        perform_postprocessing_blis(guidellm_profile_path, traces_path, vllm_config_path, train_path, vllm_logs, train=True)
         # get TP value from vllm_config
         try:
             with open(vllm_config_path, 'r') as f:
