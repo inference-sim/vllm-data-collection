@@ -70,7 +70,14 @@ This gives you a combined file `QM_test_TP=2/4/8.json` to feed into the Go binar
 
 # Scenario5++:
 
-Same as Scenario5, with additional file `vllm.log` present in `train/` and `test/` folders. `total-kv-blocks` in `exp-config.yaml` is populated directly by parsing `vllm.log`. No support (yet) for Queueing model training/testing, but the same scripts should ideally work (untested).
+Same as Scenario5, with additional file `vllm.log` present in `train/` and `test/` folders. `total-kv-blocks` in `exp-config.yaml` is populated directly by parsing `vllm.log`. No support (yet) for Queueing model training/testing, but the same scripts should ideally work (untested). You can also use the `main` branch of BLIS for this scenario.
+
+## Build BLIS
+
+```
+git clone git@github.com:inference-sim/inference-sim.git
+go build -o simulation_worker main.go
+```
 
 # Scenario6:
 
