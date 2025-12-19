@@ -121,9 +121,8 @@ def get_per_test_exp_result(model_path, test_full_path):
         with open(reqgen_config_file, "r+") as f:
             workload_config = yaml.safe_load(f)
         for config in workload_config["data"]:
-            if config != "prefix_tokens":
-                config_field = f"--{config.replace("_", "-")}"
-                args_list.extend([config_field, str(workload_config["data"][config])])
+            config_field = f"--{config.replace("_", "-")}"
+            args_list.extend([config_field, str(workload_config["data"][config])])
         args_list.extend(["--rate", str(workload_config["rate"]["rate"])])
         args_list.extend(["--max-prompts", str(workload_config["rate"]["max-requests"])])
         sim_metrics = run_go_binary(args_list, GO_BINARY_PATH, rps)
