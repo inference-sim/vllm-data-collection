@@ -243,6 +243,7 @@ scenario5++/*.json
 scenario5++/*.yaml
 scenario5++/models
 scenario5++/test
+scenario5++/other_test
 scenario5++/train
 scenario5++/test_plots
 scenario5++/simulation_worker
