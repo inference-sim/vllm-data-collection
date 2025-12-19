@@ -1,158 +1,126 @@
 # vLLM Benchmark Data Collector
 
-The scripts in this folder are for gathering performance data from vLLM. This data can be used for various purposes, including building a vLLM simulator. This repository focuses on making the process of benchmarking and data collection straightforward.
+The scripts in this folder are for training and testing BLIS (https://github.com/inference-sim/inference-sim). This repository focuses on making the process of benchmarking vLLM and data collection straightforward. In terms of workloads and BLIS capabilities, the evolution of BLIS has been split into multiple scenarios. The folders `scenario1` to `scenario6` capture the differences in workloads used to train and test BLIS.
 
-## Setup
+The instructions below mainly focus on training and testing BLIS for the following three scenarios:
 
-1. Install vLLM:
+| Scenario | vLLM Features | Workload | Prompt data source | Results Used (Metrics) |
+| :--- | :--- | :--- | :--- |
+| **Scenario 5** | `stream=False` | Concurrent requests, GuideLLM-style workload | Synthetic | Traces, GuideLLM results |
+| **Scenario 5++** | `stream=True` | Concurrent requests, GuideLLM-style workload | Synthetic | Traces, GuideLLM results |
+| **Scenario 6** | `stream=True` | Concurrent requests, GuideLLM-style workload | RedHat GuideLLM data | GuideLLM results | 
 
-For our vllm experiments we made edits to the source code, to gather data for our simulation.
-That is no longer needed and the scripts of this folder can be used independent of vllm.
+You can also look into directories `scenario1` to `scenario4` to get an understanding of the preceding scenarios that evolved eventually into these scenarios.
 
-For latest installation: https://docs.vllm.ai/en/latest/getting_started/installation/gpu.html#create-a-new-python-environment
+# Scenario5++:
 
-From source (python only edits):
-``` bash
-git clone https://github.com/vllm-project/vllm.git
-cd vllm
-VLLM_USE_PRECOMPILED=1 pip install --editable .
+> These instructions assume that you already have pretrained benchmark data from vLLM in the folder `train/` that contains the following files:
+* `vllm.log`: vLLM server logs.
+* `exp-config.yaml`: Benchmark specifications, containing mainly vllm server args (model, tp etc.) and `total-kv-blocks`. `total-kv-blocks` is currently parsed from `vllm.log` but you can also estimate it using Capacity Planner.
+* `guidellm-results.json`: GuideLLM output file containing client-side benchmark metrics
+* `profile.yaml`: Workload profile in GuideLLM format
+* `traces.json`: vLLM server-side traces
+
+For test, you should have similar benchmark data saved under the folder `test/`.
+
+## Build BLIS
+
+```
+git clone git@github.com:inference-sim/inference-sim.git
+go build -o simulation_worker main.go
 ```
 
-Compiled install (nvidia gpus) :
-```bash
-uv venv --python 3.12 --seed
-source .venv/bin/activate
+## Train BLIS
 
-# Install vLLM with CUDA 12.8.
-# If you are using pip.
-pip install vllm --extra-index-url https://download.pytorch.org/whl/cu128
-# If you are using uv.
-uv pip install vllm --torch-backend=auto
+To train both BLIS alpha and beta models for all benchmarks you have saved under `train/`:
+
+`python train_blis.py --train_results_path train/ --model_path models/`
+
+This gives you BLIS alpha and beta coefficients saved under `models/` to be used for testing/inference.
+
+## Test BLIS
+
+`python test_blis.py --test_results_path test/ --model_path models/ --groupby_field tp/chunk_size/app/rps/model_path`
+
+Under `test_plots/blis`, you will find barplots showing average errors grouped by the field specified in the args.
+
+# Scenario6:
+
+> These instructions assume that you already have the pretrained RedHat GuideLLM data file, e.g: `blis_rh_final.xlsx`. If you do not have this file, please contact us for access.
+
+## Build BLIS
+
+```
+git clone git@github.com:inference-sim/inference-sim.git
+go build -o simulation_worker main.go
 ```
 
-## Running Benchmarks
+## Train BLIS
 
-The `benchmarks/benchmark_runner_simulator.py` script is the main entrypoint for running the benchmark experiments. It takes a configuration file and an output directory as arguments.
+There are two ways you can train BLIS for Scenario6:
 
-```bash
-python benchmarks/benchmark_runner_simulator.py <config_file.yaml> --output <output_directory>
+* Pick preset (LLM, TP, GPU, vllm-version) combinations from a `specs.csv` file. 
+This trains each combination in the file.
+
+```
+python train_blis.py --specs-filepath specs.csv
 ```
 
-The script orchestrates the benchmarking process as follows:
-1.  It parses the specified configuration file, which contains a set of experiments to run.
-2.  For each experiment, it performs the following steps:
-    a.  **Start vLLM Server**: It programmatically starts a vLLM server instance with the parameters defined in the `vllm` section of the experiment's configuration.
-    b.  **Wait for Server**: It waits until the vLLM server is up and ready to accept requests.
-    c.  **Run Benchmark**: It then executes the benchmark against the server using the parameters from the `benchmark` section of the config.
-3.  After each experiment is completed, the vLLM server is shut down. This ensures that each experiment runs in a clean, isolated environment, and all state is flushed between runs.
+* Train over a specific (LLM, TP, GPU, vllm-version) combination:
 
-### Benchmark Output
-
-For information on how data is outputted from the benchmark runner, see the documentation here: [Benchmark Output Format](./docs/output_format.md) (placeholder).
-
-## Configuration
-
-### Generating Configurations
-
-A configuration file containing a sweep of experiments can be generated using the `benchmarks/config_generator.py` script.
-
-```bash
-python benchmarks/config_generator.py
+```
+python train_blis.py --LLM_name ... --tp 1 --GPU H100 --vllm-version ...
 ```
 
-This script creates a `vllm_benchmark_config.yaml` file in the `benchmarks` directory. It generates a comprehensive set of experiment configurations by creating a Cartesian product of all parameter lists defined in its `main()` function.
+By default the following files are picked by the training script. You can also pass these flags as args to the training script to provide custom values:
 
-The generator includes logic to skip invalid or redundant parameter combinations. For example, it will skip scenarios where `long_prefill_token_threshold` is greater than `max_num_batched_tokens`, as this represents a non-unique behavior.
+* `training-filepath` - Path to the RH GuideLLM data to train BLIS over. Default: `blis_rh_final.xlsx`
+* `coeffs-filepath` - Path to save the trained BLIS coefficients to. Default: `coefficients.yaml`
+* `specs-filepath` - Path to the CSV file containing all combinations of (LLM, TP, GPU, vllm-version) to train over. Default: `training_specs.csv`.
 
-### Configuration Structure
+Note: If you rerun the exact same (LLM, TP, GPU, vllm-version) multiple times, the script simply overwrites existing coefficients in coeffs-filepath.
 
-Each generated configuration is structured into two main parts: `vllm` parameters and `benchmark` parameters.
+### FAQs:
 
--   `vllm`: Contains parameters for configuring the vLLM server itself.
--   `benchmark`: Contains parameters for the benchmarking client that sends requests to the server.
+* How do I change the cost function for the optimizer?
 
-Here is an example of a single experiment configuration:
+For this, go to the `train_blis.py` script and modify the constant `METRICS_IN_LOSS` list to include metrics in the cost function. Note that these metric names must match the column names in the GuideLLM Excel file.
 
-```yaml
-  baseline:
-    name: "exp1"
-    description: "Basic vLLM performance test"
-    model: "Qwen/Qwen2.5-0.5B"
-    runs: 1
+* How do I run optimization over more/less iterations?
 
-    # vLLM server parameters
-    vllm:
-      gpu_memory_utilization: 0.9
-      enable_prefix_caching: true
-      disable_log_requests: false
-      block_size: 16 
-      max_model_len: 2048
-      max_num_batched_tokens: 2048
-      max_num_seqs: 256
-      long_prefill_token_threshold: 1000000
-      seed: 42
+Similar to above, go to `train_blis.py` and update the constant `NUM_TPE_ITERS` to the number of iterations you want.
 
-    # Benchmark parameters
-    benchmark:
-      backend: "vllm"
-      dataset_name: "sharegpt"
-      dataset_path: "ShareGPT_V3_unfiltered_cleaned_split.json"
-      num_prompts: 100
-      request_rate: 16
-      sharegpt_output_len: 0
-      temperature: 0.0
-      seed: 42
+## Test BLIS
+
+When you want to test BLIS's performance, you might want to group your error numbers by various fields. Currently, you can see average results across **all** "Test" row in the GuideLLM RH `.xlsx` file (provided you have pretrained coefficients for the relevant (LLM, TP, GPU, vllm-version) combination). You can also pass your custom `coeffs-filepath` and `training-filepath` (defaults are similar to the train script):
+
+```
+python test_blis.py
 ```
 
-### Adding New Parameters
+Or with custom `coeffs-filepath`:
 
-To add a new parameter to the sweep, you need to modify `benchmarks/config_generator.py`. Follow these steps:
+```
+python test_blis.py --coeffs-filepath coefficients.yaml
+```
 
-1.  **Define Parameter Values**: In the `main()` function of `config_generator.py`, add a new list containing the values you want to sweep over for your new parameter.
-    ```python
-    # In main()
-    my_new_param_list = [value1, value2, value3]
-    ```
+If you want to groupby LLM, TP, GPU or vllm-version, simply pass the argument to the test script. For example, the command below will group your test results by the `LLM-name == ibm-granite/granite-3.1-8b-instruct`:
 
-2.  **Update `generate_config` Call**: Pass the new list as an argument to the `generate_config` function call within `main()`.
+```
+python test_blis.py --LLM-name ibm-granite/granite-3.1-8b-instruct
+```
 
-3.  **Add to Parameter Product**: In the `generate_config` function, add your new parameter list to the function signature and to the `itertools.product()` call. This will ensure it's included in the parameter sweep.
-    ```python
-    # In generate_config()
-    for ..., my_new_param in product(
-        ..., my_new_param_list
-    ):
-        # ...
-    ```
+The test error plots will be saved to a folder `test_plots/blis` in your current working directory. Depending on what arguments you provided for groupby, the plots will be saved as:
 
-4.  **Place in Experiment Config**: Add the new parameter to the `exp_config` dictionary. Make sure to place it under the correct key (`vllm` for server parameters or `benchmark` for benchmark client parameters).
-    ```python
-    # In generate_config()
-    exp_config = {
-        # ...
-        'vllm': {
-            # ...
-            'my_new_vllm_param': my_new_param,
-        },
-        'benchmark': {
-            # ...
-            'my_new_benchmark_param': my_new_param,
-        }
-    }
-    ```
+```
+LLM=* TP=* GPU=* vllmVersion=*_error.png
+LLM=granite-3.1-8b-instruct TP=* GPU=* vllmVersion=*_error.png
+```
 
-5.  **Verify**: Run `python benchmarks/config_generator.py` to generate the new configuration file and verify that your new parameter is included correctly in the experiments.
+## Generate BLIS-simulated JSON file for [Compass](https://github.com/redhat-et/compass/blob/main/data/benchmarks.json):
 
-## OpenShift configuration
+To generate the final formatted synthetic metrics file, we currently take all the (LLM, TP, GPU, vllm-version) in the "Test" rows in the GuideLLM RH `.xlsx` file. We only take those (LLM, TP, GPU, vllm-version) combinations which have pretrained coefficients saved in the coeffs file. You can pass the config file and GuideLLM data filepath of your choice to the script. You can also pass the filename of the final synthetic metrics file to generate, as follows:
 
-
-1. Create new ns
-2. `oc adm policy add-scc-to-user anyuid -z default` to allow containers to run as root, required for vLLM images
-3. Delete all jobs: `oc delete job --all`
-
-## Things to setup pvc-debugger pod for model download:
-
-1. `pip install torch`
-2. `pip install transformers`
-3. `python -c "from transformers import AutoModelForCausalLM, AutoTokenizer; m='MODEL_NAME'; AutoTokenizer.from_pretrained(m, trust_remote_code=True); AutoModelForCausalLM.from_pretrained(m, trust_remote_code=True)"`
-
+```
+python generate_inference_json.py --coeffs-filepath coefficients.yaml --testing-filepath blis_rh_final.xlsx --synthetic-results-filepath benchmarks_BLIS.json
+```
