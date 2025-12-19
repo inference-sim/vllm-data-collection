@@ -78,4 +78,3 @@ if __name__=="__main__":
 
     train_alpha_model(args.train_results_path, args.model_path)
 
-

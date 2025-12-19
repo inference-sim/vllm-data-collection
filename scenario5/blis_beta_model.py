@@ -302,4 +302,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
     train_beta_model(args.train_results_path, args.model_path)
 
-    

@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 import re
+from pathlib import Path
 import pandas as pd
 import numpy as np
 
@@ -122,11 +123,22 @@ if __name__=="__main__":
         df_groups = df_filtered.groupby(by=SPEC_DEFINITION).agg(list)
         for idx in df_groups.index:
             saturation_rps = determine_saturation_rps(df_groups, idx, args.coeffs_filepath)
-            print(f"model={spec.LLM_name}, tp={int(spec.tp)}, GPU={spec.GPU}, vllm_version={spec.vllm_version}, saturation_rps={saturation_rps}")
+            print(f"model={spec.LLM_name}, tp={int(spec.tp)}, GPU={spec.GPU}, vllm_version={spec.vllm_version}, workload(input-output mean,std,min,max)={idx[6:]}, saturation_rps={saturation_rps}")
             rates_to_report = np.sort(np.unique(np.linspace(start=1, stop=saturation_rps, num=NUM_SWEEPS)))
             for rate in rates_to_report:
                 sim_results, _ = run_blis(df_groups, idx, args.coeffs_filepath, rate)
                 if sim_results:
                     results["benchmarks"].append(sim_results)
-    with open(args.synthetic_results_filepath, "w+") as f:
-        json.dump(results, f)
+
+    # Append to benchmarks_BLIS.json if it exists
+    path = Path(args.synthetic_results_filepath)
+
+    if path.exists() and path.stat().st_size > 0:
+        with path.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+    else:
+        data = {"_metadata": results["_metadata"], "benchmarks": []}
+
+    data["benchmarks"].extend(results["benchmarks"])
+    with path.open("w") as f:
+        json.dump(data, f)
