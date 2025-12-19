@@ -1,4 +1,4 @@
-# vLLM Benchmark Data Collector
+# BLIS training and testing
 
 The scripts in this folder are for training and testing BLIS (https://github.com/inference-sim/inference-sim). This repository focuses on making the process of benchmarking vLLM and data collection straightforward. In terms of workloads and BLIS capabilities, the evolution of BLIS has been split into multiple scenarios. The folders `scenario1` to `scenario6` capture the differences in workloads used to train and test BLIS.
 
@@ -14,7 +14,7 @@ You can also look into directories `scenario1` to `scenario4` to get an understa
 
 # Scenario5:
 
-These instructions assume that you already have pretrained benchmark data from vLLM in the folder `train/` that contains the following files:
+These instructions assume that you already have pretrained benchmark data from vLLM in the folder `train/`. Each benchmark data folder under `train/` must contain the following files:
 
 * `exp-config.yaml`: Benchmark specifications, containing mainly vllm server args (model, tp etc.) and `total-kv-blocks`. `total-kv-blocks` is currently estimated using Capacity Planner.
 * `guidellm-results.json`: GuideLLM output file containing client-side benchmark metrics
