@@ -105,6 +105,7 @@ def get_per_test_exp_result(test_full_path):
             return None
         for idx, metric in enumerate(METRICS_TO_COMPARE):
             mape = abs(sim_metrics[metric] - benchmark_metrics[metric])/benchmark_metrics[metric] * 100
+            print(metric, sim_metrics[metric], benchmark_metrics[metric])
             row[f"{metric} MAPE"] = mape
         row["rps"] = rps
         row["tp"] = tp
