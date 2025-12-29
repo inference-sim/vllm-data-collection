@@ -3,6 +3,7 @@ import json
 import os
 import csv
 import sys
+import argparse
 
 def read_traces_jsonl(filepath):
     """
@@ -104,7 +105,12 @@ def process_traces(input_file, output_file, requestIDs, global_min_start_time):
     print(f"Successfully processed {len(rows)} phase entries into {output_file}")
 
 if __name__ == "__main__":
-    train_path = os.path.join("test", "*/")
+    parser = argparse.ArgumentParser(description="Read and parse traces JSON file.")
+    parser.add_argument("--data_path", 
+                        default="train",
+                        help="Path to training/test data folder")
+    args = parser.parse_args()
+    train_path = os.path.join(args.data_path, "*/")
     all_train = glob.glob(train_path)
     for train_path in all_train:
         traces_path = os.path.join(train_path, "traces.json")
