@@ -35,7 +35,6 @@ def plot_vllm_vs_sim(data_df, groupby = "tp"):
         
         plt.title(f'MAPE error - vllm vs sim - {plot_title}')
         plt.xlabel("Metrics")
-        plt.xticks(rotation=90)
         plt.ylabel("Error %")
         plt.legend()
         plots_folder = f"test_plots/blis"
