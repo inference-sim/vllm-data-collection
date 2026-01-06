@@ -5,6 +5,9 @@ import csv
 import sys
 import argparse
 
+from postprocess_guidellm_common import perform_postprocessing_common
+from postprocess_blis import perform_postprocessing_blis
+
 def read_traces_jsonl(filepath):
     """
     vLLM traces is a JSONL file.
@@ -71,7 +74,7 @@ def process_traces(input_file, output_file, requestIDs, global_min_start_time):
                             # Prefill starts at start_time + time_in_queue
                             # Prefill ends at start_time + prefill_latency
                             prefill_start = start_time + float(get_val(attrs, "gen_ai.latency.time_in_queue", 0))
-                            prefill_end = start_time + prefill_latency
+                            prefill_end = prefill_start + prefill_latency
                             rows.append({
                                 "request_id": request_id,
                                 "phase_type": "prefill",
@@ -83,9 +86,8 @@ def process_traces(input_file, output_file, requestIDs, global_min_start_time):
 
                             # 2. Create Decode Row
                             # Decode starts where prefill ended
-                            # Decode starts where prefill ended
                             decode_start = prefill_end
-                            decode_end = prefill_end + decode_latency
+                            decode_end = decode_start + decode_latency
                             rows.append({
                                 "request_id": request_id,
                                 "phase_type": "decode",
@@ -115,6 +117,10 @@ if __name__ == "__main__":
     for train_path in all_train:
         traces_path = os.path.join(train_path, "traces.json")
         sweep_info_filepath = os.path.join(train_path, "sweep_info.json")
+        guidellm_results_path = os.path.join(train_path, "guidellm-results.json")
+        guidellm_profile_path = os.path.join(train_path, "profile.yaml")
+        vllm_config_path = os.path.join(train_path, "exp-config.yaml")
+        vllm_logs = os.path.join(train_path, "vllm.log")
         # read GuideLLM sweep info and find relevant requestIDs
         requestIDs = []
         try:
@@ -129,3 +135,8 @@ if __name__ == "__main__":
         vllm_phases_filepath = os.path.join(train_path, "vllm_phases.csv")
         global_min_start_time = find_global_min_start(traces_path, requestIDs)
         process_traces(traces_path, vllm_phases_filepath, requestIDs, global_min_start_time)
+        perform_postprocessing_common(guidellm_results_path, train_path)
+        is_train = True
+        if args.data_path == "test":
+            is_train = False
+        perform_postprocessing_blis(guidellm_profile_path, traces_path, vllm_config_path, train_path, vllm_logs, train=is_train)
