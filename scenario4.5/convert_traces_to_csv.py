@@ -3,6 +3,7 @@ import json
 import os
 import csv
 import sys
+import yaml
 import argparse
 
 from postprocess_guidellm_common import perform_postprocessing_common
@@ -48,7 +49,7 @@ def find_global_min_start(input_file, requestIDs):
     return global_start
 
 
-def process_traces(input_file, output_file, requestIDs, global_min_start_time):
+def process_traces(input_file, output_file, requestIDs, global_min_start_time, prefix_tokens):
     traces_data = read_traces_jsonl(input_file)
 
     rows = []
@@ -64,6 +65,7 @@ def process_traces(input_file, output_file, requestIDs, global_min_start_time):
                     request_id = get_val(attrs, "gen_ai.request.id", "unknown").rsplit("-0", 1)[0]
                     if request_id in requestIDs:
                         prompt_tokens = int(get_val(attrs, "gen_ai.usage.prompt_tokens", 0))
+                        uncached_prompt_tokens = prompt_tokens - prefix_tokens
                         completion_tokens = int(get_val(attrs, "gen_ai.usage.completion_tokens", 0))
                         
                         # Phase latencies
@@ -80,7 +82,7 @@ def process_traces(input_file, output_file, requestIDs, global_min_start_time):
                                 "phase_type": "prefill",
                                 "t_start": (prefill_start - global_min_start_time)*1e6,
                                 "t_end": (prefill_end - global_min_start_time)*1e6,
-                                "prefill_tokens": prompt_tokens,
+                                "prefill_tokens": uncached_prompt_tokens,
                                 "decode_tokens": 0
                             })
 
@@ -129,12 +131,21 @@ if __name__ == "__main__":
         except:
             print("Could not read sweep info file.")
             sys.exit()
+        # get prefix tokens to subtract from prompt_tokens
+        try:
+            with open(guidellm_profile_path, 'r') as f:
+                guidellm_profile = yaml.safe_load(f)
+        except:
+            print("Could not read GuideLLM profile file.")
+            sys.exit()
+        prefix_tokens = guidellm_profile["data"]["prefix_tokens"]
+        # get requestIDs
         for sweep in sweep_info:
             requestIDs.extend(sweep["requestIDs"])
         print(f"GuideLLM benchmark has a total of {len(requestIDs)} requests. Processing phases...")
         vllm_phases_filepath = os.path.join(train_path, "vllm_phases.csv")
         global_min_start_time = find_global_min_start(traces_path, requestIDs)
-        process_traces(traces_path, vllm_phases_filepath, requestIDs, global_min_start_time)
+        process_traces(traces_path, vllm_phases_filepath, requestIDs, global_min_start_time, prefix_tokens)
         perform_postprocessing_common(guidellm_results_path, train_path)
         is_train = True
         if args.data_path == "test":
