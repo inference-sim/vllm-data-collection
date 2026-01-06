@@ -232,6 +232,11 @@ scenario3/results_processed
 scenario4/*_plots
 scenario4/results_*
 scenario4/*.png
+scenario4.5/train
+scenario4.5/test
+scenario4.5/test_plots
+scenario4.5/models
+scenario4.5/simulation_worker
 scenario5/*.json
 scenario5/*.yaml
 scenario5/models
