@@ -88,7 +88,8 @@ def get_per_test_exp_result(test_full_path):
             "long-prefill-token-threshold": 0,
             "model-config-folder": model_config_folder,
             "log": "error",
-            "hardware": benchmark_data["vllm_config"]["hardware"]
+            "hardware": benchmark_data["vllm_config"]["hardware"],
+            "tp": benchmark_data["vllm_config"]["tensor_parallelism"]
         }
         args_list = ["run"]
         for key in args:
