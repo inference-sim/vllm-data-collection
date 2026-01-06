@@ -76,7 +76,8 @@ def get_per_test_exp_result(test_full_path):
         reqgen_config_folder = os.path.join(test_full_path, "blis_reqgenconfigs")
         reqgen_config_file = os.path.join(reqgen_config_folder, 
                                           f"requestgenconfig_RPS={round(rps, 3)}.yaml")
-        model_config_folder = os.path.join("model_configs", benchmark_data["vllm_config"]["model"].split("/")[1])
+        model_name = benchmark_data["vllm_config"]["model"].split("/")[1]
+        model_config_folder = os.path.join("model_configs", model_name.lower())
         args = {
             "max-num-running-reqs": benchmark_data["vllm_config"]["max_num_seqs"], 
             "total-kv-blocks": benchmark_data["vllm_config"]["total_kv_blocks"],
@@ -105,7 +106,7 @@ def get_per_test_exp_result(test_full_path):
             return None
         for idx, metric in enumerate(METRICS_TO_COMPARE):
             mape = abs(sim_metrics[metric] - benchmark_metrics[metric])/benchmark_metrics[metric] * 100
-            print(metric, sim_metrics[metric], benchmark_metrics[metric])
+            print(metric, "sim", sim_metrics[metric], "vllm", benchmark_metrics[metric])
             row[f"{metric} MAPE"] = mape
         row["rps"] = rps
         row["tp"] = tp

@@ -215,6 +215,62 @@ def calculate_memory_access_bytes(
 
     return memory_breakdown
 
+def calculate_arithmetic_intensity(
+    flops: float,
+    memory_bytes: float,
+) -> float:
+    """
+    Calculate arithmetic intensity following roofline analysis methodology.
+
+    Arithmetic Intensity (AI) = Total FLOPS / Total Bytes Moved
+
+    This is the key metric in roofline analysis that determines whether
+    an operation is compute-bound or memory-bound.
+
+    Args:
+        flops: Total floating-point operations
+        memory_bytes: Total bytes moved from memory
+
+    Returns:
+        Arithmetic intensity in operations per byte
+    """
+    if memory_bytes <= 0:
+        return float('inf')
+    return flops / memory_bytes
+
+def determine_performance_bound(
+    arithmetic_intensity: float,
+    hardware_ops_per_byte: float,
+) -> bool:
+    """
+    Determine if operation is memory-bound based on roofline analysis.
+
+    Args:
+        arithmetic_intensity: Operations per byte for this workload
+        hardware_ops_per_byte: Hardware's peak ops/byte ratio (TFLOPS / TB/s)
+
+    Returns:
+        True if memory-bound, False if compute-bound
+    """
+    return arithmetic_intensity < hardware_ops_per_byte
+
+def get_compute_memory_ratio(bw_eff, tflops_eff) -> float:
+    """Calculate compute to memory bandwidth ratio.
+
+    This ratio is useful for determining whether a workload is
+    compute-bound or memory-bound.
+
+    Args:
+        gpu_resources: GPU resources to analyze
+
+    Returns:
+        Ratio of TFLOPS to memory bandwidth
+    """
+    # Convert TFLOPS to FLOPS
+    flops = tflops_eff * 1e12
+    return flops / bw_eff
+
+
 def get_hf_config_and_precision_from_hf(model_id: str, hf_config: dict, step_config: dict, model_config: dict, GPU: str) -> ModelConfig:
     """
     Extracts model configuration with inferred precision.
@@ -271,6 +327,10 @@ def get_hf_config_and_precision_from_hf(model_id: str, hf_config: dict, step_con
     
     t_compute_s = 0
     t_memory_s = 0
+    total_prefill_flops = 0
+    total_prefill_mem = 0
+    total_decode_flops = 0
+    total_decode_mem = 0
 
     for request in step_config["prefill_requests"]:
         input_length = request["progress_index"]
@@ -289,10 +349,15 @@ def get_hf_config_and_precision_from_hf(model_id: str, hf_config: dict, step_con
             batch_size=concurrency,
             bytes_per_param=model_config["bytes_per_param"],
             include_kv_cache=True,
-        )
+        )   
 
         prefill_memory_bytes = prefill_memory_breakdown['total']
-        t_compute_s += (prefill_flops_per_token * request["num_new_prefill_tokens"])
+        total_prefill_flops += (prefill_flops_per_token * request["num_new_prefill_tokens"])
+        total_prefill_mem += prefill_memory_bytes
+
+        mfu_prefill = 0.45 # default from Bento
+        effective_prefill_tflops = hw.tflops_eff * mfu_prefill
+        t_compute_s += (prefill_flops_per_token * request["num_new_prefill_tokens"]) / (effective_prefill_tflops * 1e12)
         t_memory_s += (prefill_memory_bytes / hw.bw_eff_bytes_s)
 
     for request in step_config["decode_requests"]:
@@ -312,13 +377,30 @@ def get_hf_config_and_precision_from_hf(model_id: str, hf_config: dict, step_con
             include_kv_cache=True,
         )
         decode_memory_bytes = decode_memory_breakdown['total']
-        t_compute_s += decode_flops_per_token * request["num_new_decode_tokens"]
+        total_decode_flops += (decode_flops_per_token * request["num_new_decode_tokens"])
+        total_decode_mem += decode_memory_bytes
+
+        mfu_decode = 0.3 # default from Bento
+        effective_decode_tflops = hw.tflops_eff * mfu_decode
+        t_compute_s += (decode_flops_per_token * request["num_new_decode_tokens"]) / (effective_decode_tflops * 1e12)
         t_memory_s += (decode_memory_bytes / hw.bw_eff_bytes_s)
-    
+
+    # Prefill arithmetic intensity and bound determination
+    hardware_ops_per_byte = get_compute_memory_ratio(hw.bw_eff_bytes_s, hw.tflops_eff)
+
+    total_arithmetic_intensity = calculate_arithmetic_intensity(
+        total_prefill_flops + total_decode_flops, total_prefill_mem + total_decode_mem
+    )
+    is_memory_bound = determine_performance_bound(
+        total_arithmetic_intensity, hardware_ops_per_byte
+    )
+
     t_compute_micros = int((t_compute_s / (hw.tflops_eff * 1e12)) * 1e6)
     t_memory_micros = int(t_memory_s * 1e6)
-    return max(t_compute_micros, t_memory_micros) + hw.t_overhead_micros
-
+    if is_memory_bound:
+        return t_memory_micros + hw.t_overhead_micros
+    return t_compute_micros + hw.t_overhead_micros
+    
 def get_param_configs(model_id, model_config):
     from llm_optimizer.common import get_precision_bytes_per_param, infer_precision_from_config, calculate_model_parameters_from_config
     precision = infer_precision_from_config(model_config, model_id)
