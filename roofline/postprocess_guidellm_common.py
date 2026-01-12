@@ -1,0 +1,76 @@
+import argparse
+import json
+import os
+import sys
+
+from postprocessing_utils import SWEEP_INFO_FILENAME
+
+def get_GuideLLM_rps_list(guidellm_results):
+    """
+    Read GuideLLM results file and extract list of
+    uniformly spaced constant RPS values.
+    Returns:
+
+    rps_list: List of constant RPS values in GuideLLM benchmark
+    """
+    rps_list = []
+    profile = guidellm_results["benchmarks"][0]["config"]["profile"]
+    for strategies in profile["completed_strategies"]:
+        if strategies["type_"] == "constant":
+            rps_list.append(float(strategies["rate"]))
+    return rps_list
+
+def get_sweep_info(guidellm_results, rps_list):
+    """
+    Get details about each GuideLLM sweep trial (unique RPS).
+    Details include: constant rps value and response-ids (vLLM requestIDs)
+    """
+    sweep_info = []
+    for rps_idx, rps in enumerate(rps_list):
+        current_sweep = {}
+        current_sweep["rps"] = rps
+        current_sweep["requestIDs"] = []
+        # exclude synchronous(idx: 0) and throughput(idx: 1)
+        all_requests = guidellm_results["benchmarks"][rps_idx + 2]["requests"]
+        for req in all_requests["successful"]:
+            current_sweep["requestIDs"].append(req["response_id"])
+        current_sweep["ttft_mean_ms"] = guidellm_results["benchmarks"][rps_idx + 2]["metrics"]["time_to_first_token_ms"]["successful"]["mean"]
+        current_sweep["ttft_p90_ms"] = guidellm_results["benchmarks"][rps_idx + 2]["metrics"]["time_to_first_token_ms"]["successful"]["percentiles"]["p90"]
+        current_sweep["itl_mean_ms"] = guidellm_results["benchmarks"][rps_idx + 2]["metrics"]["inter_token_latency_ms"]["successful"]["mean"]
+        current_sweep["itl_p90_ms"] = guidellm_results["benchmarks"][rps_idx + 2]["metrics"]["inter_token_latency_ms"]["successful"]["percentiles"]["p90"]
+        current_sweep["e2e_mean_ms"] = guidellm_results["benchmarks"][rps_idx + 2]["metrics"]["request_latency"]["successful"]["mean"] * 1e3
+        current_sweep["e2e_p90_ms"] = guidellm_results["benchmarks"][rps_idx + 2]["metrics"]["request_latency"]["successful"]["percentiles"]["p90"] * 1e3
+        sweep_info.append(current_sweep)
+    return sweep_info
+
+def perform_postprocessing_common(guidellm_results_path, results_path):
+    # read GuideLLM results file
+    try:
+        with open(guidellm_results_path, 'r') as f:
+            guidellm_results = json.load(f)
+    except:
+        print("Could not read GuideLLM results file.")
+        sys.exit()
+
+    # Get list of constant request rates (RPS)
+    rps_list = get_GuideLLM_rps_list(guidellm_results)
+
+    # Get sweep trial info - RPS, vLLM-assigned requestIDs
+    sweep_info = get_sweep_info(guidellm_results, rps_list)
+
+    # Save sweep info to JSON file
+    sweep_info_filepath = os.path.join(results_path, SWEEP_INFO_FILENAME)
+
+    with open(sweep_info_filepath, 'w+') as f:
+        json.dump(sweep_info, f, indent=4)
+    print("Common postprocessing finished successfully.")
+
+if __name__=="__main__":
+    parser = argparse.ArgumentParser(description="Read and parse traces JSON file.")
+    parser.add_argument("--guidellm_results", 
+                        help="Path to the GuideLLM JSON output file to be read.")
+    parser.add_argument("--results_path",
+                        default=".", 
+                        help="Location to save intermediate files")
+    args = parser.parse_args()
+    perform_postprocessing_common(args.guidellm_results, args.results_path)    
