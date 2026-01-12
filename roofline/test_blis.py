@@ -87,6 +87,7 @@ def get_per_test_exp_result(test_full_path):
             "horizon": "922337203685477580", # Golang int64 max value
             "long-prefill-token-threshold": 0,
             "model-config-folder": model_config_folder,
+            "hardware-config": "hardware_config.json",
             "log": "error",
             "hardware": benchmark_data["vllm_config"]["hardware"],
             "tp": benchmark_data["vllm_config"]["tensor_parallelism"]
@@ -101,13 +102,13 @@ def get_per_test_exp_result(test_full_path):
             args_list.extend([config_field, str(workload_config["data"][config])])
         args_list.extend(["--rate", str(workload_config["rate"]["rate"])])
         args_list.extend(["--max-prompts", str(workload_config["rate"]["max-requests"])])
-        print(" ".join(list(map(str, args_list))))
+        # print(" ".join(list(map(str, args_list))))
         sim_metrics = run_go_binary(args_list, GO_BINARY_PATH, rps)
         if not sim_metrics:
             return None
         for idx, metric in enumerate(METRICS_TO_COMPARE):
             mape = abs(sim_metrics[metric] - benchmark_metrics[metric])/benchmark_metrics[metric] * 100
-            print(metric, "sim", sim_metrics[metric], "vllm", benchmark_metrics[metric])
+            # print(metric, "sim", sim_metrics[metric], "vllm", benchmark_metrics[metric])
             row[f"{metric} MAPE"] = mape
         row["rps"] = rps
         row["tp"] = tp
